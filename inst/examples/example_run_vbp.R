@@ -226,7 +226,7 @@ def_vbp <- define_vbp(
 ### Run VBP 
 res_vbp <- run_vbp(model = res_mod, 
                    vbp = def_vbp,
-                   strategy_vbp = "med",
+                   strategy_vbp = "surg",
                    wtp_thresholds = c(0, 10000))
 plot(res_vbp)
 plot(res_vbp, bw = T)
