@@ -3,13 +3,13 @@
 #' @param model An evaluated Markov model.
 #' @param vbp An object returned by 
 #'   [define_vbp()].
-#' @param strategy_vbp A string with strategy fro vbp analysis.
-#' @param wtp_thresholds A vector with WTP thresholds
+#' @param strategy_vbp A string with strategy for vbp analysis.
+#' @param wtp_thresholds A vector with WTP thresholds.
 #' @return A `data.frame` with one row per model and 
 #'   parameter value.
 #' @export
 #' 
-#' @example inst/examples/example_run_dsa.R
+#' @example inst/examples/example_run_vbp.R
 run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
@@ -115,7 +115,9 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     dplyr::mutate_(
       .dots = get_ce(model))
   
-  m.p_vs_wtp <- matrix(NA, nrow = length(lambda), ncol = (1+length(strategy_comp)))
+  m.p_vs_wtp <- matrix(NA, 
+                       nrow = length(lambda), 
+                       ncol = (1+length(strategy_comp)))
   colnames(m.p_vs_wtp) <- c("WTP", strategy_comp)
   m.p_vs_wtp[, "WTP"] <- lambda
   for (n in strategy_comp) {

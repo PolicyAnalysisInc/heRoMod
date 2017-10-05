@@ -218,12 +218,12 @@ res_mod <- run_model(
   method = "life-table")
 
 #### Value-Based Pricing (VBP) analysis ####
-### Run VBP on "surg"
-## VBP on cost_surg
+### VBP on "surg" strategy
+## VBP on cost_surg parameter
 def_vbp <- define_vbp(
   cost_surg, 0, 1000
 )
-
+## Run VBP
 res_vbp <- run_vbp(model = res_mod, 
                    vbp = def_vbp,
                    strategy_vbp = "surg",
@@ -231,11 +231,12 @@ res_vbp <- run_vbp(model = res_mod,
 plot(res_vbp)
 plot(res_vbp, bw = T)
 
-### Run VBP on "med"
-## VBP on cost_med
+### VBP on "med" strategy
+## VBP on cost_med parameter
 def_vbp <- define_vbp(
   cost_med, 0, 1000
 )
+## Run VBP
 res_vbp <- run_vbp(model = res_mod, 
                    vbp = def_vbp,
                    strategy_vbp = "med",
