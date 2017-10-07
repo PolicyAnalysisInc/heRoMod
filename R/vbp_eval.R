@@ -41,63 +41,40 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     "Running VBP on strategy '%s'...", strategy_vbp
   ))
   
-  tab <- eval_strategy_newdata(
-    model,
-    strategy = strategy_vbp,
-    newdata = vbp$vbp
-  )
-  res <- tab %>% 
-    dplyr::mutate_if(
-      names(tab) %in% vbp$variable,
-      dplyr::funs(to_text_dots),
-      name = FALSE
+  for (n in strategy_names) { # n <- strategy_names[1]
+    message(sprintf(
+      "Running linearization of cost on strategy '%s'...", n
+    ))
+    tab <- eval_strategy_newdata(
+      model,
+      strategy = n,
+      newdata = vbp$vbp
     )
-  list_res <- c(
-    list_res,
-    list(res)
-  )
-  e_newdata <- c(
-    e_newdata,
-    list(unlist(lapply(
-      tab$.mod,
-      function(x) x$complete_parameters[1, vbp$variable]))[pos_par]))
-  names(e_newdata)[length(e_newdata)] <- strategy_vbp
-  list_res[[1]]$.strategy_names <- strategy_vbp
+    
+    res <- tab %>% 
+      dplyr::mutate_if(
+        names(tab) %in% vbp$variable,
+        dplyr::funs(to_text_dots),
+        name = FALSE
+      )
+    
+    list_res <- c(
+      list_res,
+      list(res)
+    )
+    
+    e_newdata <- c(
+      e_newdata,
+      list(unlist(lapply(
+        tab$.mod,
+        function(x) x$complete_parameters[1, vbp$variable]))[pos_par]))
+    
+    names(e_newdata)[length(e_newdata)] <- n
+  }
   
-  # for (n in strategy_names) {
-  #   message(sprintf(
-  #     "Running DSA on strategy '%s'...", n
-  #   ))
-  #   tab <- eval_strategy_newdata(
-  #     model,
-  #     strategy = n,
-  #     newdata = vbp$vbp
-  #   )
-  #   
-  #   res <- tab %>% 
-  #     dplyr::mutate_if(
-  #       names(tab) %in% dsa$variables,
-  #       dplyr::funs(to_text_dots),
-  #       name = FALSE
-  #     )
-  #   
-  #   list_res <- c(
-  #     list_res,
-  #     list(res)
-  #   )
-  #   
-  #   e_newdata <- c(
-  #     e_newdata,
-  #     list(unlist(lapply(
-  #       tab$.mod,
-  #       function(x) x$complete_parameters[1, dsa$variables]))[pos_par]))
-  #   
-  #   names(e_newdata)[length(e_newdata)] <- n
-  # }
-  # 
-  # for (i in seq_along(strategy_names)) {
-  #   list_res[[i]]$.strategy_names <- strategy_names[i]
-  # }
+  for (i in seq_along(strategy_names)) {
+    list_res[[i]]$.strategy_names <- strategy_names[i]
+  }
   
   res <- 
     dplyr::bind_rows(list_res) %>%
@@ -119,15 +96,18 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
                        nrow = length(lambda), 
                        ncol = (1+length(strategy_comp)))
   colnames(m.p_vs_wtp) <- c("WTP", strategy_comp)
-  m.p_vs_wtp[, "WTP"] <- lambda
+  m.p_vs_wtp[, "WTP"]  <- lambda
+  
   for (n in strategy_comp) {
-    m.p_vs_wtp[, n] <- p_comp(e.comp = ce_comp(model, strategy_comp = n)$e.comp, 
-                              c.comp = ce_comp(model, strategy_comp = n)$c.comp, 
-                              e.P    = ce_vbp(model, strategy_vbp)$e.vbp, 
-                              beta0 = c_vbp_linear(res_vbp, strategy_vbp)$beta0, 
-                              beta1 = c_vbp_linear(res_vbp, strategy_vbp)$beta1, 
-                              lambda = lambda)
+    m.p_vs_wtp[, n] <- p_comp(e.comp     = ce_strategy(model, strategy = n)$e.strategy, 
+                              e.P        = ce_strategy(model, strategy = strategy_vbp)$e.strategy, 
+                              beta0.P    = c_linear(res_vbp, strategy = strategy_vbp)$beta0, 
+                              beta0.comp = c_linear(res_vbp, strategy = n)$beta0,
+                              beta1.P    = c_linear(res_vbp, strategy = strategy_vbp)$beta1, 
+                              beta1.comp = c_linear(res_vbp, strategy = n)$beta1, 
+                              lambda     = lambda)
   }
+  
   df.p_vs_wtp <- as.data.frame(m.p_vs_wtp)
   m.p_vs_wtp <- m.p_vs_wtp[, -1]
   index.str.vbp <- max.col(-m.p_vs_wtp)
@@ -156,36 +136,13 @@ get_model.vbp <- function(x) {
   x$model
 }
 
-ce_comp <- function(model, strategy_comp){
-  CE_comp <- get_model_results(model) %>% 
-    dplyr::filter(.strategy_names %in% strategy_comp) %>%
-    dplyr::select(.strategy_names,
-                  .cost,
-                  .effect)  
-  return(list(
-    e.comp = CE_comp$.effect, 
-    c.comp = CE_comp$.cost
-  ))
-}
-ce_vbp <- function(model, strategy_vbp){
-  CE_vbp <- get_model_results(model) %>% 
-    dplyr::filter(.strategy_names == strategy_vbp) %>%
-    dplyr::select(.strategy_names,
-                  .cost,
-                  .effect)
-  return(list(
-    e.vbp = CE_vbp$.effect, 
-    c.vbp = CE_vbp$.cost
-  )
-  )
-}
-c_vbp_linear <- function(res_vbp, strategy_vbp){
+c_linear <- function(res_vbp, strategy){
   C_linear <- res_vbp %>% 
     dplyr::select(.strategy_names,
                   .par_value,
                   .cost,
                   .effect) %>%
-    dplyr::filter(.strategy_names == strategy_vbp) %>%
+    dplyr::filter(.strategy_names == strategy) %>%
     dplyr::mutate(price = as.numeric(.par_value)) %>%
     dplyr::summarise(beta1 = diff(.cost)/diff(price),
                      beta0 = .cost[1]-beta1*price[1])
@@ -194,7 +151,21 @@ c_vbp_linear <- function(res_vbp, strategy_vbp){
   )
   )
 }
-p_comp <- function(e.comp, c.comp, e.P, beta0, beta1, lambda){
-  p <- lambda*(e.P - e.comp)/beta1 + (c.comp - beta0)/beta1
+
+ce_strategy <- function(model, strategy){
+  CE_vbp <- get_model_results(model) %>% 
+    dplyr::filter(.strategy_names == strategy) %>%
+    dplyr::select(.strategy_names,
+                  .cost,
+                  .effect)
+  return(list(
+    e.strategy = CE_vbp$.effect, 
+    c.strategy = CE_vbp$.cost
+  )
+  )
+}
+
+p_comp <- function(e.P, e.comp, beta0.P, beta0.comp,beta1.P, beta1.comp, lambda){
+  p <- lambda*(e.P - e.comp)/(beta1.P - beta1.comp) - (beta0.P - beta0.comp)/(beta1.P - beta1.comp)
   return(p)
 }
