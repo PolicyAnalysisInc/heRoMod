@@ -1,67 +1,4 @@
-# param <- define_parameters(
-#   p1 = .5,
-#   p2 = .2,
-#   r = .05
-# )
-# mod1 <- define_strategy(
-#   transition = define_transition(
-#     C, p1,
-#     p2, C
-#   ),
-#   define_state(
-#     cost = discount(543, r),
-#     ly = 1
-#   ),
-#   define_state(
-#     cost = discount(432, r),
-#     ly = .5
-#   )
-# )
-# 
-# mod2 <- define_strategy(
-#   transition = define_transition(
-#     C, p1,
-#     p2, C
-#   ),
-#   define_state(
-#     cost = 789,
-#     ly = 1
-#   ),
-#   define_state(
-#     cost = 456,
-#     ly = .8
-#   )
-# )
-# 
-# res2 <- run_model(
-#   mod1, mod2,
-#   parameters = param,
-#   init = c(100, 0),
-#   cycles = 10,
-#   cost = cost,
-#   effect = ly
-# )
-# 
-# ds <- define_dsa(
-#   p1, .1, .9,
-#   p2, .1, .3,
-#   r, .05, .1
-# )
-# print(ds)
-# 
-# x <- run_dsa(res2, ds)
-# 
-# plot(x, value = "cost")
-# 
-# # can be specified as a function of other parameters
-# 
-# 
-# ds2 <- define_dsa(
-#   p2, p1 - .1, p1 + .1
-# )
-# 
-# run_dsa(res2, ds2)
-
+#### Three-strategy example ####
 #### Define parameters ####
 par_mod <- define_parameters(
   age_base = 20, 
@@ -83,7 +20,10 @@ par_mod <- modify(
     time = state_time, 
     km_limit = 5))
 
-tab_surv <- structure(list(time = c(0.4, 8.7, 7, 5.1, 9.2, 1, 0.5, 3.3, 1.8, 3, 6.7, 3.7, 1.1, 5.9, 5.1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10), status = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)), .Names = c("time", "status"), row.names = c(NA, -25L), class = "data.frame")
+tab_surv <- structure(list(time = c(0.4, 8.7, 7, 5.1, 9.2, 1, 0.5, 3.3, 1.8, 3, 6.7, 3.7, 1.1, 5.9, 5.1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10), 
+                           status = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)), 
+                      .Names = c("time", "status"), 
+                      row.names = c(NA, -25L), class = "data.frame")
 
 fit_death_disease <- flexsurv::flexsurvreg(
   survival::Surv(time, status) ~ 1, 
