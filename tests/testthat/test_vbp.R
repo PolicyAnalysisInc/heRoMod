@@ -186,13 +186,6 @@ test_that(
     
     expect_error(run_vbp(res3, def_vbp))
     
-    sx <- summary(x)
-    
-    expect_equal(
-      round(sx$res_comp$.cost),
-      c(0, 1888, 0, 627, 0, 733, 0, 1107)
-    )
-    
     plot(x)
     plot(x, bw = T)
   })
