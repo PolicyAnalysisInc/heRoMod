@@ -32,7 +32,7 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
   n_par <- length(vbp$variable)
   pos_par <- cumsum(c(1, rep(c(n_par, n_par+1), n_par)))
-  pos_par <- pos_par[-length(pos_par)]
+  pos_par <- c(pos_par[-length(pos_par)], 3)
   
   list_res <- list()
   e_newdata <- list()
@@ -42,9 +42,6 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   ))
   
   for (n in strategy_names) { # n <- strategy_names[1]
-    message(sprintf(
-      "Running linearization of cost on strategy '%s'...", n
-    ))
     tab <- eval_strategy_newdata(
       model,
       strategy = n,
@@ -98,13 +95,32 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   colnames(m.p_vs_wtp) <- c("WTP", strategy_comp)
   m.p_vs_wtp[, "WTP"]  <- lambda
   
+  ### List to indicate if linear approximation is adopted
+  lin_approx <- vector("list", length = length(strategy_names))
+  names(lin_approx) <- strategy_names
+  
+  ### Linearization of VBP strategy
+  e.P     <- ce_strategy(model, strategy = strategy_vbp)$e.strategy
+  lin.params.P <- c_linear(res_vbp, strategy = strategy_vbp)
+  beta0.P <- lin.params.P$beta0
+  beta1.P <- lin.params.P$beta1
+  lin_approx[[strategy_vbp]] <- lin.params.P$lin_approx
+  
+  ### Linearization of comparison strategies
   for (n in strategy_comp) {
-    m.p_vs_wtp[, n] <- p_comp(e.comp     = ce_strategy(model, strategy = n)$e.strategy, 
-                              e.P        = ce_strategy(model, strategy = strategy_vbp)$e.strategy, 
-                              beta0.P    = c_linear(res_vbp, strategy = strategy_vbp)$beta0, 
-                              beta0.comp = c_linear(res_vbp, strategy = n)$beta0,
-                              beta1.P    = c_linear(res_vbp, strategy = strategy_vbp)$beta1, 
-                              beta1.comp = c_linear(res_vbp, strategy = n)$beta1, 
+    ### Linearization
+    e.comp     <- ce_strategy(model, strategy = n)$e.strategy
+    lin.params.comp <- c_linear(res_vbp, strategy = n)
+    beta0.comp <- lin.params.comp$beta0
+    beta1.comp <- lin.params.comp$beta1
+    lin_approx[[n]] <- lin.params.comp$lin_approx
+    ### Linear comparison
+    m.p_vs_wtp[, n] <- p_comp(e.comp     = e.comp, 
+                              e.P        = e.P, 
+                              beta0.P    = beta0.P, 
+                              beta0.comp = beta0.comp,
+                              beta1.P    = beta1.P, 
+                              beta1.comp = beta1.comp, 
                               lambda     = lambda)
   }
   
@@ -123,10 +139,11 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
   structure(
     list(
-      vbp = df_vbp,
-      p_vs_wtp = df_p_vs_wtp.lg,
-      variable = vbp$variable,
-      model = model
+      vbp        = df_vbp,
+      p_vs_wtp   = df_p_vs_wtp.lg,
+      variable   = vbp$variable,
+      lin_approx = lin_approx,
+      model      = model
     ),
     class = c("vbp", "list")
   )
@@ -137,17 +154,48 @@ get_model.vbp <- function(x) {
 }
 
 c_linear <- function(res_vbp, strategy){
+  message(sprintf(
+    "Running linearization of cost on strategy '%s'...", strategy
+  ))
   C_linear <- res_vbp %>% 
-    dplyr::select(.strategy_names,
-                  .par_value,
-                  .cost,
-                  .effect) %>%
     dplyr::filter(.strategy_names == strategy) %>%
+    dplyr::select(.par_value,
+                  .cost) %>%
     dplyr::mutate(price = as.numeric(.par_value)) %>%
-    dplyr::summarise(beta1 = diff(.cost)/diff(price),
+    dplyr::summarise(beta1 = diff(.cost[1:2])/diff(price[1:2]), # New
                      beta0 = .cost[1]-beta1*price[1])
+  ### Linearization test
+  lin_test <- res_vbp %>% 
+    dplyr::filter(.strategy_names == strategy) %>%
+    dplyr::select(.par_value,
+                  .cost)
+  p_vals <- as.numeric(lin_test$.par_value)
+  c_test <- lin_test$.cost
+  
+  ### Predicted cost using linear function
+  c_pred <- C_linear$beta0 + C_linear$beta1*p_vals
+  
+  ### Compute residual sum of squares (RSS)
+  rss <- sum((c_pred - c_test)^2)
+  
+  ### Detemrine if relantionshipe is linear based on RSS
+  if(isTRUE(all.equal(rss, 0))){
+    message(sprintf(
+      "--Relationship on strategy '%s' is linear", strategy
+    ))
+    ## No linear approximation is adopted
+    lin_approx <- 0
+  } else{
+    message(sprintf(
+      "--Relationship on strategy '%s' is NOT linear, using linear approximation", strategy
+    ))
+    ## Linear approximation is adopted
+    lin_approx <- 1
+  }
+  
   return(list(beta0 = C_linear$beta0,
-              beta1 = C_linear$beta1
+              beta1 = C_linear$beta1,
+              lin_approx = lin_approx
   )
   )
 }
