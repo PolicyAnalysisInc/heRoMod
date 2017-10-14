@@ -24,7 +24,7 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
   strategy_comp <- strategy_names[strategy_names!=strategy_vbp]
   
-  lambda <- seq(wtp_thresholds[1], wtp_thresholds[2])
+  lambda <- seq(wtp_thresholds[1], wtp_thresholds[2], length.out = 100)
   
   init <- get_uneval_init(model)
   cycles <- get_cycles(model)
