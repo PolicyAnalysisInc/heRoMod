@@ -169,7 +169,7 @@ res_vbp <- run_vbp(model = res_mod,
                    strategy_vbp = "surg",
                    wtp_thresholds = c(0, 10000))
 plot(res_vbp)
-plot(res_vbp, bw = T)
+plot(res_vbp, bw = TRUE)
 
 ### VBP on "med" strategy
 ## VBP on cost_med parameter
@@ -182,4 +182,4 @@ res_vbp <- run_vbp(model = res_mod,
                    strategy_vbp = "med",
                    wtp_thresholds = c(0, 10000))
 plot(res_vbp)
-plot(res_vbp, bw = T)
+plot(res_vbp, bw = TRUE)
