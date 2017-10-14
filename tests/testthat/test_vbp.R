@@ -7,7 +7,7 @@ test_that(
     )
     expect_identical(
       dim(vbp1$vbp),
-      c(2L, 1L)
+      c(3L, 1L)
     )
     expect_is(
       vbp1$vbp$price,
@@ -44,7 +44,8 @@ test_that(
   "run value-based pricing", {
     #### Define parameters ####
     param <- define_parameters(
-      cA = 10000,
+      pA = 10000,
+      cA = pA,
       cB = 2000, 
       cC = 100,
       qolDisabled  = .8,  #QoL of failing treatment
@@ -187,5 +188,64 @@ test_that(
     expect_error(run_vbp(res3, def_vbp))
     
     plot(x)
-    plot(x, bw = T)
+    plot(x, bw = TRUE)
+    
+    #### Test non-linearity ####
+    def_vbp <- define_vbp(
+      pA, 1, 20000
+    )
+    
+    param_log <- modify(
+      param,
+      cA = log(pA)
+    )
+    
+    res4 <- run_model(
+      parameters = param_log, 
+      base = strat_base, 
+      A    = strat_A, 
+      B    = strat_B, 
+      cycles = 50, 
+      cost = cost_total, 
+      effect = qaly, 
+      method = "life-table")
+    
+    x <- run_vbp(model = res4,
+                 vbp = def_vbp,
+                 strategy_vbp = "A",
+                 wtp_thresholds = c(0, 50000))
+    
+    expect_equal(
+      as.numeric(unlist(x$lin_approx)),
+      c(0, 1, 0)
+    )
+    
+    #### Price affecting multiple strategies ####
+    param <- modify(
+      param,
+      cA = pA,
+      cB = pA
+    )
+    
+    res5 <- run_model(
+      parameters = param, 
+      base = strat_base, 
+      A    = strat_A, 
+      B    = strat_B, 
+      cycles = 50, 
+      cost = cost_total, 
+      effect = qaly, 
+      method = "life-table")
+    
+    x <- run_vbp(model = res5,
+                 vbp = def_vbp,
+                 strategy_vbp = "A",
+                 wtp_thresholds = c(0, 50000))
+    plot(x)
+    
+    x <- run_vbp(model = res5,
+                 vbp = def_vbp,
+                 strategy_vbp = "B",
+                 wtp_thresholds = c(0, 50000))
+    plot(x)
   })
