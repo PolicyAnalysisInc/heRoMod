@@ -7,7 +7,7 @@
 \usage{
 define_vbp(...)
 
-define_vbp_(par_name, low_dots, high_dots)
+define_vbp_(par_name, low_dots, med_dots, high_dots)
 }
 \arguments{
 \item{...}{A parameter name and min/max values

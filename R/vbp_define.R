@@ -25,8 +25,9 @@ define_vbp <- function(...) {
     stop("Incorrect number of elements in vbp definition, the correct form is price, min(price), max(price)")
   }
   
-  par_name <- character()
-  low_dots <- lazyeval::lazy_dots()
+  par_name  <- character()
+  low_dots  <- lazyeval::lazy_dots()
+  med_dots  <- lazyeval::lazy_dots()
   high_dots <- lazyeval::lazy_dots()
   
   for (i in seq_along(.dots)) { # i <- 3
@@ -39,23 +40,31 @@ define_vbp <- function(...) {
     }
   }
   
-  names(low_dots) <- par_name
+  # Compute mid-value between low and high price values
+  med_dots <- high_dots
+  med_dots[[1]]$expr <- c((lazyeval::lazy_eval(low_dots[[1]]) + lazyeval::lazy_eval(high_dots[[1]]))/2)
+  
+  names(low_dots)  <- par_name
+  names(med_dots)  <- par_name
   names(high_dots) <- par_name
   
-  define_vbp_(par_name = par_name,
-              low_dots = low_dots, high_dots = high_dots)
+  define_vbp_(par_name  = par_name,
+              low_dots  = low_dots,
+              med_dots  = med_dots,
+              high_dots = high_dots)
 }
 
 #' @rdname define_vbp
-define_vbp_ <- function(par_name, low_dots, high_dots) {
+define_vbp_ <- function(par_name, low_dots, med_dots, high_dots) {
   
   check_names(par_name)
   
   stopifnot(
     all(par_name == names(low_dots)),
+    all(par_name == names(med_dots)),
     all(par_name == names(high_dots))
   )
-  dots <- interleave(low_dots, high_dots)
+  dots <- interleave(low_dots, med_dots, high_dots)
   
   # if (any(duplicated(par_name))) {
   #   stop("Some names are duplicated.")
@@ -82,8 +91,9 @@ define_vbp_ <- function(par_name, low_dots, high_dots) {
     list(
       vbp = tab %>% 
         dplyr::mutate_all(dplyr::funs(clean_null)),
-      variable = par_name,
-      low_dots = low_dots,
+      variable  = par_name,
+      low_dots  = low_dots,
+      med_dots  = med_dots,
       high_dots = high_dots
     ),
     class = c("vbp", class(tab))
