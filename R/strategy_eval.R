@@ -61,28 +61,39 @@ eval_strategy <- function(strategy, parameters, cycles,
   to_expand <- state_td | mat_td
   
   # Build table to determine number of tunnels for each state
-  expand_table <- tibble::tibble(
-    .state = factor(attr(states, "names"), levels = attr(states, "names")),
-    .expand = to_expand,
-    .limit = ifelse(to_expand, expand_limit, 1)
-  )%>%
-    plyr::ddply(
-      ".state",
-      function(st) {
-        if(st$.expand) full_names <- paste0(".", st$.state, "_", seq_len(st$.limit))
-        else full_names <- st$.state
-        tibble::tibble(
-          state_time = seq_len(st$.limit),
-          .limit = st$.limit,
-          .full_state = full_names,
-          .expand = st$.expand
-        )
-      }
+  if(any(to_expand)) {
+     expand_table <- tibble::tibble(
+      .state = factor(attr(states, "names"), levels = attr(states, "names")),
+      .expand = to_expand,
+      .limit = ifelse(to_expand, expand_limit, 1)
     ) %>%
-    dplyr::mutate(
-      .state = as.character(.state),
-      .full_state = as.character(.full_state)
+      plyr::ddply(
+        ".state",
+        function(st) {
+          if(st$.expand) full_names <- paste0(".", st$.state, "_", seq_len(st$.limit))
+          else full_names <- st$.state
+          tibble::tibble(
+            state_time = seq_len(st$.limit),
+            .limit = st$.limit,
+            .full_state = full_names,
+            .expand = st$.expand
+          )
+        }
+      ) %>%
+      dplyr::mutate(
+        .state = as.character(.state),
+        .full_state = as.character(.full_state)
+      )
+  } else {
+    st_name_vec <- attr(states, "names")
+    expand_table <- tibble::tibble(
+      .state = st_name_vec,
+      .full_state = st_name_vec,
+      state_time = 1,
+      .expand = to_expand,
+      .limit = 1
     )
+  }
   
   # Inform user about state expansion
   if(any(expand_table$.expand)){

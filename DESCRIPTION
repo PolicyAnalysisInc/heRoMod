@@ -33,7 +33,8 @@ Imports:
     tibble,
     tidyr,
     tools,
-    utils
+    utils,
+    purrr
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

@@ -18,6 +18,8 @@ eval_parameters <- function(x, cycles = 1,
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
   
+  expanding <- max_state_time > 1
+  
   # Long form tibble w/ state_time and model_time
   start_tibble <- tibble::tibble(
     model_time = rep(seq_len(cycles), max_state_time),
@@ -27,11 +29,16 @@ eval_parameters <- function(x, cycles = 1,
   )
   
   # other datastructure?
-  res <- try(
-    start_tibble %>%
-    dplyr::group_by_("state_time") %>%
-    dplyr::mutate_(.dots = x) %>%
-    dplyr::ungroup(),
+  res <- try({
+      if(expanding){
+        start_tibble %>%
+          dplyr::group_by_("state_time") %>%
+          dplyr::mutate_(.dots = x) %>%
+          dplyr::ungroup()
+      } else {
+        dplyr::mutate_(start_tibble, .dots = x)
+      }
+    },
     silent = TRUE
   )
   
@@ -91,21 +98,39 @@ eval_init <- function(x, parameters, expand) {
   
   to_keep <- names(x)
   
-  init_df <- parameters %>%
-    dplyr::filter(model_time == 1) %>%
-    dplyr::mutate_(.dots = x) %>%
-    .[c("state_time", to_keep)] %>%
-    reshape2::melt(
-      id.vars = c("state_time"),
-      variable.name = ".state",
-      value.name = ".value"
-    ) %>%
-    dplyr::mutate(.state = as.character(.state)) %>%
-    dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
-    dplyr::filter(state_time <= .limit) %>%
-    dplyr::mutate(
-      .value = ifelse(state_time > 1, 0, .value)
-    )
+  expanding <- any(expand$.expand)
+  
+  if(expanding) {
+    init_df <- parameters %>%
+      dplyr::filter(model_time == 1) %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(.state = as.character(.state)) %>%
+      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      dplyr::filter(state_time <= .limit) %>%
+      dplyr::mutate(
+        .value = ifelse(state_time > 1, 0, .value)
+      )
+  } else {
+    init_df <- parameters %>%
+      dplyr::filter(model_time == 1) %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(
+        .full_state = as.character(.state),
+        .state = as.character(.state)
+      )
+  }
   
   stopifnot(
     all(init_df$.value >= 0),
@@ -145,21 +170,40 @@ eval_inflow <- function(x, parameters, expand) {
   # Assinging NULLS to avoid CMD Check issues
   .state <- .limit <- state_time <- .value <- NULL
   
+  expanding <- any(expand$.expand)
+  
   to_keep <- names(x)
-  inflow_df <- parameters %>%
-    dplyr::mutate_(.dots = x) %>%
-    dplyr::ungroup() %>%
-    .[c("model_time", "state_time", to_keep)] %>%
-    reshape2::melt(
-      id.vars = c("model_time", "state_time"),
-      variable.name = ".state",
-      value.name = ".value"
-    ) %>%
-    dplyr::mutate(.state = as.character(.state)) %>%
-    dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
-    dplyr::filter(state_time <= .limit) %>%
-    dplyr::mutate(.value = ifelse(state_time > 1, 0, .value)) %>%
-    dplyr::ungroup()
+  if(expanding) {
+    inflow_df <- parameters %>%
+      dplyr::group_by(state_time) %>%
+      dplyr::mutate_(.dots = x) %>%
+      dplyr::ungroup() %>%
+      .[c("model_time", "state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("model_time", "state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(.state = as.character(.state)) %>%
+      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      dplyr::filter(state_time <= .limit) %>%
+      dplyr::mutate(.value = ifelse(state_time > 1, 0, .value)) %>%
+      dplyr::ungroup()
+  } else {
+    inflow_df <- parameters %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("model_time", "state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("model_time", "state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(
+        .full_state = as.character(.state),
+        .state = as.character(.state)
+      )
+  }
+  
   
   stopifnot(
     all(inflow_df$.value >= 0),

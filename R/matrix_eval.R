@@ -116,43 +116,61 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     )
   }
   
+  expanding <- any(expand$.expand)
+  
   nrow_param = nrow(parameters)
   
-  eval_trans_probs <- parameters %>%
-    dplyr::group_by_("state_time") %>%
-    dplyr::mutate_(.dots = x) %>%
-    dplyr::ungroup()
-  
-  trans_table <- tibble::tibble(
-    model_time = rep(parameters$model_time, times = n_state^2),
-    state_time = rep(parameters$state_time, times = n_state^2),
-    .from = rep(state_names, each = n_state * nrow_param),
-    .to = rep(state_names, times = n_state, each = nrow_param),
-    .value = unlist(eval_trans_probs[names(x)])
-  ) %>%
-    dplyr::left_join(
-      dplyr::transmute(
-        expand,
-        .state = .state,
-        state_time = state_time,
-        .from_e = .full_state,
-        .from_lim = .limit
-      ),
-      by = c(".from" = ".state", "state_time" = "state_time")
+  if(expanding) {
+    eval_trans_probs <- parameters %>%
+      dplyr::group_by_("state_time") %>%
+      dplyr::mutate_(.dots = x) %>%
+      dplyr::ungroup()
+    
+    trans_table <- tibble::tibble(
+      model_time = rep(parameters$model_time, times = n_state^2),
+      state_time = rep(parameters$state_time, times = n_state^2),
+      .from = rep(state_names, each = n_state * nrow_param),
+      .to = rep(state_names, times = n_state, each = nrow_param),
+      .value = unlist(eval_trans_probs[names(x)])
     ) %>%
-    dplyr::filter(.from_lim >= state_time) %>%
-    dplyr::mutate(
-      .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
+      dplyr::left_join(
+        dplyr::transmute(
+          expand,
+          .state = .state,
+          state_time = state_time,
+          .from_e = .full_state,
+          .from_lim = .limit
+        ),
+        by = c(".from" = ".state", "state_time" = "state_time")
+      ) %>%
+      dplyr::filter(.from_lim >= state_time) %>%
+      dplyr::mutate(
+        .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
+      ) %>%
+      dplyr::left_join(
+        dplyr::transmute(
+          expand,
+          .state = .state,
+          state_time = state_time,
+          .to_e = .full_state
+        ),
+        by = c(".to" = ".state", ".to_state_time" = "state_time")
+      )
+  } else {
+    eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
+    
+    trans_table <- tibble::tibble(
+      model_time = rep(parameters$model_time, times = n_state^2),
+      state_time = rep(parameters$state_time, times = n_state^2),
+      .from = rep(state_names, each = n_state * nrow_param),
+      .to = rep(state_names, times = n_state, each = nrow_param),
+      .value = unlist(eval_trans_probs[names(x)])
     ) %>%
-    dplyr::left_join(
-      dplyr::transmute(
-        expand,
-        .state = .state,
-        state_time = state_time,
-        .to_e = .full_state
-      ),
-      by = c(".to" = ".state", ".to_state_time" = "state_time")
-    )
+      dplyr::mutate(
+        .from_e = .from,
+        .to_e = .to
+      )
+  }
   
   # Reshape into 3d matrix and calculate complements
   trans_matrix <- trans_table %>%

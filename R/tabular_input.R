@@ -1,3 +1,169 @@
+
+#' @export
+run_model_api <- function(states, tm, param = NULL, st = NULL,
+                          options = NULL, demo = NULL, source = NULL,
+                          data = NULL, run_dsa = TRUE, run_psa = TRUE,
+                          run_demo = TRUE) {
+  
+  inputs <- gather_model_info_api(states, tm, param, st, options, demo,
+                                  source, data)
+  outputs <- eval_models_from_tabular(inputs,
+                                      run_dsa = run_dsa,
+                                      run_psa = run_psa,
+                                      run_demo = run_demo)
+  outputs
+}
+
+gather_model_info_api <- function(states, tm, param = NULL, st = NULL, options = NULL, demo = NULL, source = NULL, data = NULL) {
+  
+  # Create new environment
+  df_env <- new.env()
+  
+  # Setup models
+  models <- create_model_list_from_api(
+    states = states,
+    tm = tm,
+    st = st,
+    df_env = df_env
+  )
+  
+  # Read in datasets
+  if(!is.null(data)) {
+    plyr::l_ply(
+      seq_len(length(data)),
+      function(i) assign(names(data)[i], data[[i]], envir = df_env)
+    )
+  }
+  
+  # Evaluate R code
+  if(!is.null(source)) {
+    plyr::l_ply(
+      source,
+      function(x) eval(parse(text = x), envir = df_env)
+    )
+  }
+  
+  # Setup parameters
+  param_info <- NULL
+  if(!is.null(param)) {
+    param_info <- create_parameters_from_tabular(param, df_env)
+  }
+  
+  # Setup demographics
+  demographic_file <- NULL
+  if(!is.null(demo)) {
+    demographic_file <- create_demographic_table(
+      demo,
+      params = param_info$params
+    )
+  }
+  
+  model_options <- NULL
+  if(!is.null(options)) {
+    model_options <- create_options_from_tabular(options)
+  }
+
+  
+  list(
+    models = models,
+    param_info = param_info,
+    demographic_file = demographic_file,
+    model_options = model_options
+  )
+  
+}
+
+create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv()) {
+  
+  state_info <- parse_multi_spec(
+    states,
+    group_vars = ".state"
+  )
+  if(!is.null(st)) {
+    state_trans_info <- parse_multi_spec(
+      st,
+      group_vars = c(".transition")
+    )
+  } else {
+    state_trans_info <- NULL
+  }
+  
+  state_names <- state_info[[1]]$.state
+  ## to accomodate partitioned survival models, we will allow for
+  ##   the possibility that there is no transition matrix ...
+  
+  tm_info <- tm
+  trans_type <- transition_type(tm)
+  
+  if (trans_type == "matrix") {
+    tm_info <- parse_multi_spec(
+      tm_info,
+      group_vars = c("from", "to"))
+    tab_undefined <- 
+      dplyr::bind_rows(tm_info) %>%
+      dplyr::filter_(~ is.na(prob))
+    
+    if (nrow(tab_undefined) > 0) {
+      rownames(tab_undefined) <- NULL
+      print(tab_undefined)
+      stop("Undefined probabilities in the transition matrix (see above).")
+    }
+    one_way <- setdiff(names(state_info), names(tm_info))
+    other_way <- setdiff(names(tm_info), names(state_info))
+  }
+  
+  one_way <- setdiff(names(state_info), names(tm_info))
+  other_way <- setdiff(names(tm_info), names(state_info))
+  if (length(c(one_way, other_way))){
+    err_string <- "Mismatching model names between transition (TM) file and state file.\n"
+    if(length(one_way))
+      err_string <-
+        paste(err_string,
+              "In state file but not TM file:", 
+              paste(one_way, collapse = ", "),
+              "\n")
+    if(length(other_way))
+      err_string <-
+        paste(err_string,
+              "In TM but not state file:", 
+              paste(other_way, collapse = ", "),
+              "\n")
+    stop(err_string)
+  }
+  
+  if (trans_type == "part_surv") {
+    tm_info <- dplyr::filter_(tm_info, ~.strategy %in% names(state_info))
+  } else {
+    tm_info <- tm_info[names(state_info)]
+  }
+  
+  models <- lapply(
+    seq_along(state_info),
+    function(i) {
+      if (inherits(tm_info, "tbl_df")) {
+        this_tm <- dplyr::filter_(
+          tm_info,
+          ~ .strategy == names(state_info)[i])$part_surv[[1]]
+      } else {
+        this_tm <- tm_info[[i]]
+        if(is.null(state_trans_info)) {
+          this_state_trans <- NULL
+        } else{
+          this_state_trans <- state_trans_info[[i]]
+        }
+        create_model_from_tabular(state_info[[i]], 
+                                  this_tm,
+                                  df_env = df_env,
+                                  state_trans_info = this_state_trans)
+      }
+    })  
+  
+  names(models) <- names(state_info)
+  
+  models
+  
+}
+
 #' Run Analyses From Files
 #' 
 #' This function runs a model from tabular input.
