@@ -118,9 +118,9 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   
   expanding <- any(expand$.expand)
   
-  nrow_param = nrow(parameters)
-  
   if(expanding) {
+    
+    nrow_param = nrow(parameters)
     eval_trans_probs <- parameters %>%
       dplyr::group_by_("state_time") %>%
       dplyr::mutate_(.dots = x) %>%
@@ -157,6 +157,8 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
         by = c(".to" = ".state", ".to_state_time" = "state_time")
       )
   } else {
+    parameters <- dplyr::filter_(parameters, "state_time==1")
+    nrow_param = nrow(parameters)
     eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
     
     trans_table <- tibble::tibble(

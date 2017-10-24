@@ -174,7 +174,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   
   # Aggregate over states
   count_table_agg <- plyr::dlply(
-    expand_table,
+    expand_table %>% dplyr::mutate_(.state = ~factor(.state, unique(.state))),
     ".state",
     function(st) rowSums(count_table[st$.full_state])
   ) %>%

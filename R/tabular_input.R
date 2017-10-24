@@ -544,7 +544,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
                                   df_env = df_env,
                                   state_trans_info = this_state_trans)
       }
-    })  
+    )
   
   names(models) <- names(state_info)
   
@@ -886,7 +886,6 @@ create_parameters_from_tabular <- function(param_defs,
           "high" %in% names(param_defs))) {
     stop("Both 'low' and 'high' columns must be present in parameter file to define DSA.")
   }
-  
   parameters <- define_parameters_(
     lazyeval::as.lazy_dots(
       stats::setNames(
@@ -1592,7 +1591,8 @@ modify_param_defs_for_multinomials <- function(param_defs, psa) {
     function(x) {
       zz <- data.frame(
         parameter = names(x),
-        value = x)
+        value = x,
+        stringsAsFactors = F)
       rownames(zz) <- NULL
       zz
     })
