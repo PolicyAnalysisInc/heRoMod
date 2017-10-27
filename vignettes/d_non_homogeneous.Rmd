@@ -11,13 +11,13 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 library(ggplot2)
 ```
 
 ## Model description
 
-This example is an implementation of the assessment of a new total hip replacement (THR) technology described in chapter 3.5 of [Decision Modelling for Health Economic Evaluation](http://ukcatalogue.oup.com/product/9780198526629.do). A more detailed report is available [at this location](https://www.york.ac.uk/media/che/documents/papers/technicalpapers/CHE%20Technical%20Paper%2028.pdf). This reports goes a bit further in the analysis. For the sake of simplicity we will not reproduce exactly the analysis from the book. See vignette `vignette("i-reproduction", "heemod")` for an exact reproduction.
+This example is an implementation of the assessment of a new total hip replacement (THR) technology described in chapter 3.5 of [Decision Modelling for Health Economic Evaluation](http://ukcatalogue.oup.com/product/9780198526629.do). A more detailed report is available [at this location](https://www.york.ac.uk/media/che/documents/papers/technicalpapers/CHE%20Technical%20Paper%2028.pdf). This reports goes a bit further in the analysis. For the sake of simplicity we will not reproduce exactly the analysis from the book. See vignette `vignette("i-reproduction", "heRomod")` for an exact reproduction.
 
 This model has 5 states:
 
@@ -62,7 +62,7 @@ $$
 
 ## Parameter definition
 
-The key element to specify time-varying elements in `heemod` is through the use of the **package-defined variables** `markov_cycle` and `state_cycle`. See vignette `vignette("b-time-dependency", "heemod")` for more details.
+The key element to specify time-varying elements in `heRomod` is through the use of the **package-defined variables** `markov_cycle` and `state_cycle`. See vignette `vignette("b-time-dependency", "heRomod")` for more details.
 
 In order to build this more complex Markov model, parameters need to be defined through `define_parameters()` (for 2 reasons: to keep the transition matrix readable, and to avoid repetition by re-using parameters between strategies).
 
@@ -244,7 +244,7 @@ summary(res_mod)
 
 The new treatment costs £`r round(summary(res_mod)$res_comp$.icer[2])` more per QALY gained.
 
-It should be noted that this result differs from the original study. This difference is explained by higher population-level all-causes mortality rates in the original study than in the WHO database (used here). See vignette `vignette("i-reproduction", "heemod")` for an exact reproduction of the analysis.
+It should be noted that this result differs from the original study. This difference is explained by higher population-level all-causes mortality rates in the original study than in the WHO database (used here). See vignette `vignette("i-reproduction", "heRomod")` for an exact reproduction of the analysis.
 
 We can plot the counts per state:
 

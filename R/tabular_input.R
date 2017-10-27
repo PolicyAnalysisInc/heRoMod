@@ -1,3 +1,22 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2017  Matt Wiener
+#* Modifed work Copyright (C) 2017  Antoine Pierucci
+#* Modifed work Copyright (C) 2017  Jordan Amdahl
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
 
 #' @export
 run_model_api <- function(states, tm, param = NULL, st = NULL,
@@ -231,8 +250,8 @@ run_model_tabular <- function(location, reference = "REFERENCE.csv",
 #' @keywords internal
 gather_model_info <- function(base_dir, ref_file) {
   
-  if (options()$heemod.verbose) message("* Reading files...")
-  if (options()$heemod.verbose) message("** Reading reference file...")
+  if (options()$heRomod.verbose) message("* Reading files...")
+  if (options()$heRomod.verbose) message("** Reading reference file...")
   ref <- read_file(file.path(base_dir, ref_file))
   
   if (any(pb <- duplicated(ref$data))) {
@@ -245,7 +264,7 @@ gather_model_info <- function(base_dir, ref_file) {
   if (is.null(ref$absolute_path)) {
     ref$full_file <- file.path(base_dir, ref$file)
   } else {
-    if (options()$heemod.verbose) message(sprintf(
+    if (options()$heRomod.verbose) message(sprintf(
       "** Using absolute path for %s.",
       paste(ref$data[ref$absolute_path & ! is.na(ref$absolute_path)],
             collapse = ", ")
@@ -260,7 +279,7 @@ gather_model_info <- function(base_dir, ref_file) {
   
   df_env <- new.env()
   
-  if (options()$heemod.verbose) message("** Reading model list...")
+  if (options()$heRomod.verbose) message("** Reading model list...")
   models <- create_model_list_from_tabular(
     ref = ref,
     df_env = df_env
@@ -268,14 +287,14 @@ gather_model_info <- function(base_dir, ref_file) {
   
   model_options <- NULL
   if ("options" %in% ref$data) {
-    if (options()$heemod.verbose) message("** Reading options...")
+    if (options()$heRomod.verbose) message("** Reading options...")
     model_options <- create_options_from_tabular(
       read_file(ref$full_file[ref$data == "options"])
     )
   }
   
   if ("data" %in% ref$data) {
-    if (options()$heemod.verbose) message("** Reading external data...")
+    if (options()$heRomod.verbose) message("** Reading external data...")
     create_df_from_tabular(
       ref$full_file[ref$data == "data"],
       df_env
@@ -283,7 +302,7 @@ gather_model_info <- function(base_dir, ref_file) {
   }
   
   if ("source" %in% ref$data) {
-    if(options()$heemod.verbose) message("** Reading R source files...")
+    if(options()$heRomod.verbose) message("** Reading R source files...")
     source_dir <- ref$full_file[ref$data == "source"]
     short_source_dir <- ref$file[ref$data == "source"]
     if (! dir.exists(source_dir)) {
@@ -302,7 +321,7 @@ gather_model_info <- function(base_dir, ref_file) {
   ## note - the environment df_env gets included directly
   ##   into param_info, so anything that will load anything
   ##   into that environment needs to come before this statement
-  if (options()$heemod.verbose) message("** Reading parameters..")
+  if (options()$heRomod.verbose) message("** Reading parameters..")
   param_info <- create_parameters_from_tabular(
     read_file(ref$full_file[ref$data == "parameters"]),
     df_env
@@ -310,13 +329,13 @@ gather_model_info <- function(base_dir, ref_file) {
   
   output_dir <- NULL
   if("output" %in% ref$data) {
-    if (options()$heemod.verbose) message("** Reading path to output directory...")
+    if (options()$heRomod.verbose) message("** Reading path to output directory...")
     output_dir <- ref$full_file[ref$data == "output"]
   }
   
   demographic_file <- NULL
   if("demographics" %in% ref$data) {
-    if (options()$heemod.verbose) message("** Reading demographic data...")
+    if (options()$heRomod.verbose) message("** Reading demographic data...")
     demographic_file <- create_demographic_table(
       read_file(ref$full_file[ref$data == "demographics"]),
       params = param_info$params
@@ -361,7 +380,7 @@ eval_models_from_tabular <- function(inputs,
                                      run_psa = TRUE,
                                      run_demo = TRUE) {
   
-  if (options()$heemod.verbose) message("* Running files...")
+  if (options()$heRomod.verbose) message("* Running files...")
   
   list_args <- c(
     inputs$models,
@@ -389,7 +408,7 @@ eval_models_from_tabular <- function(inputs,
     )
   }
   
-  if (options()$heemod.verbose) message("** Running models...")
+  if (options()$heRomod.verbose) message("** Running models...")
   model_runs <- do.call(
     run_model,
     list_args
@@ -397,7 +416,7 @@ eval_models_from_tabular <- function(inputs,
   
   model_dsa <- NULL
   if (run_dsa & ! is.null(inputs$param_info$dsa)) {
-    if (options()$heemod.verbose) message("** Running DSA...")
+    if (options()$heRomod.verbose) message("** Running DSA...")
     model_dsa <- run_dsa(
       model_runs,
       inputs$param_info$dsa_params
@@ -406,7 +425,7 @@ eval_models_from_tabular <- function(inputs,
   
   model_psa <- NULL
   if (! is.null(inputs$param_info$psa_params) & run_psa) {
-    if (options()$heemod.verbose) message("** Running PSA...")
+    if (options()$heRomod.verbose) message("** Running PSA...")
     model_psa <- run_psa(
       model_runs,
       psa = inputs$param_info$psa_params,
@@ -416,7 +435,7 @@ eval_models_from_tabular <- function(inputs,
   
   demo_res <- NULL
   if (! is.null(inputs$demographic_file) & run_demo) {
-    if (options()$heemod.verbose) message("** Running demographic analysis...")
+    if (options()$heRomod.verbose) message("** Running demographic analysis...")
     demo_res <- stats::update(model_runs, inputs$demographic_file)
   }
   
@@ -444,7 +463,7 @@ eval_models_from_tabular <- function(inputs,
 create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
   if(! inherits(ref, "data.frame")) stop("'ref' must be a data frame.")
   
-  if (options()$heemod.verbose) message("*** Reading states...")
+  if (options()$heRomod.verbose) message("*** Reading states...")
   state_file_info <- 
     read_file(ref$full_file[ref$data == "state"])
   
@@ -464,7 +483,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
   state_names <- state_info[[1]]$.state
   ## to accomodate partitioned survival models, we will allow for
   ##   the possibility that there is no transition matrix ...
-  if (options()$heemod.verbose) message("*** Reading TM...")
+  if (options()$heRomod.verbose) message("*** Reading TM...")
   
   tm_info <- read_file(ref$full_file[ref$data == "tm"])
   trans_type <- transition_type(tm_info)
@@ -524,7 +543,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
     tm_info <- tm_info[names(state_info)]
 
 
-  if (options()$heemod.verbose) message("*** Defining models...")
+  if (options()$heRomod.verbose) message("*** Defining models...")
   models <- lapply(
     seq_along(state_info),
     function(i) {
@@ -554,7 +573,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
 #' Create State Definitions From Tabular Input
 #' 
 #' Transforms tabular input defining states into an 
-#' `heemod` object.
+#' `heRomod` object.
 #' 
 #' Columns of state_info besides .model and state include 
 #' costs and utilities we want to keep track of, with 
@@ -574,7 +593,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
 #' The input data frame is expected to contain state 
 #' information for all the models you will use in an 
 #' analysis. For more information see the vignette: 
-#' `vignette("file-input", package = "heemod")`.
+#' `vignette("file-input", package = "heRomod")`.
 #' 
 #' @param state_info Result for one model of 
 #'   [parse_multi_spec()].
@@ -598,7 +617,7 @@ create_states_from_tabular <- function(state_info,
     )
   }
   res <- define_state_list_(state_list)
-  if (options()$heemod.verbose) print(res)
+  if (options()$heRomod.verbose) print(res)
   res
 }
 
@@ -783,7 +802,7 @@ parse_state_trans_info <- function(x, df_env) {
 #' Create a Transition Matrix From Tabular Input
 #' 
 #' Transforms tabular input defining a transition matrix 
-#' into an `heemod` object.
+#' into an `heRomod` object.
 #' 
 #' The data frame `trans_probs` should have columns 
 #' `from`, `to`, and `prob`, where 
@@ -852,7 +871,7 @@ create_matrix_from_tabular <- function(trans_probs, state_names,
     lazyeval::as.lazy_dots(as.character(prob_mat), env = df_env),
     state_names = state_names
   )
-  if (options()$heemod.verbose) print(res)
+  if (options()$heRomod.verbose) print(res)
   res
 }
 
@@ -1046,13 +1065,13 @@ create_options_from_tabular <- function(opt) {
   if (! is.null(res$num_cores)){
     res$num_cores <- parse(text = res$num_cores)[[1]]
   }
-  if (options()$heemod.verbose) message(paste(
+  if (options()$heRomod.verbose) message(paste(
     names(res), unlist(res), sep = " = ", collapse = "\n"
   ))
   res
 }
 
-#' Create a `heemod` Model From Tabular Files Info
+#' Create a `heRomod` Model From Tabular Files Info
 #' 
 #' Calls [create_states_from_tabular()] and
 #' [create_matrix_from_tabular()].
@@ -1063,7 +1082,7 @@ create_options_from_tabular <- function(opt) {
 #'   path or parsed file).
 #' @param df_env An environment containing external data.
 #' 
-#' @return A `heemod` model as returned by 
+#' @return A `heRomod` model as returned by 
 #'   [define_strategy()].
 #'   
 #' @keywords internal
@@ -1086,11 +1105,11 @@ create_model_from_tabular <- function(state_info,
          "defining a partitioned survival model.")
   }
   
-  if (options()$heemod.verbose) message("**** Defining state list...")
+  if (options()$heRomod.verbose) message("**** Defining state list...")
   states <- create_states_from_tabular(state_info,
                                        df_env = df_env,
                                        state_trans_info = state_trans_info)
-  if (options()$heemod.verbose) message("**** Defining TM...")
+  if (options()$heRomod.verbose) message("**** Defining TM...")
   
   if (inherits(tm_info, "data.frame")) {
     TM <- create_matrix_from_tabular(
@@ -1411,7 +1430,7 @@ is_xls <- function(x) {
 #'   
 #' @keywords internal
 save_outputs <- function(outputs, output_dir, overwrite) {
-  if (options()$heemod.verbose) message("* Saving outputs...")
+  if (options()$heRomod.verbose) message("* Saving outputs...")
   if(is.null(output_dir)) {
     warning("Output directory not defined in the specification file - the outputs will not be saved.")
     return(NULL)
@@ -1435,7 +1454,7 @@ save_outputs <- function(outputs, output_dir, overwrite) {
   }
   
   ## some csv files
-  if (options()$heemod.verbose) message("** Writing tabular outputs to files ...")
+  if (options()$heRomod.verbose) message("** Writing tabular outputs to files ...")
   
   if (! is.null(outputs$demographics)) {
     utils::write.csv(
@@ -1475,7 +1494,7 @@ save_outputs <- function(outputs, output_dir, overwrite) {
   
   ## plots about individual models
   
-  if (options()$heemod.verbose) message("** Generating plots for individual models...")
+  if (options()$heRomod.verbose) message("** Generating plots for individual models...")
   this_plot <- plot(outputs$model_runs)
   this_file <- "state_count_plot"
   save_graph(this_plot, output_dir, this_file)
@@ -1487,7 +1506,7 @@ save_outputs <- function(outputs, output_dir, overwrite) {
   }
   
   ## plots about differences between models
-  if (options()$heemod.verbose) message("** Generating plots with model differences...")
+  if (options()$heRomod.verbose) message("** Generating plots with model differences...")
   
   if(!is.null(outputs$dsa)){
     this_plot <- plot(outputs$dsa, type = "difference")
@@ -1499,7 +1518,7 @@ save_outputs <- function(outputs, output_dir, overwrite) {
     this_file <- paste("psa")
     save_graph(this_plot, output_dir, this_file)
     ## acceptability curve
-    if (options()$heemod.verbose) message("** Generating acceptability curve...")
+    if (options()$heRomod.verbose) message("** Generating acceptability curve...")
     this_plot <- plot(outputs$psa, type = "ac")
     save_graph(this_plot,
                output_dir, "acceptability")

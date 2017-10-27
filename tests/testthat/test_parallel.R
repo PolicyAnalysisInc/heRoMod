@@ -5,12 +5,12 @@ test_that(
     
     library(parallel)
     result_1core <- run_model_tabular(
-      location = system.file("tabular/thr", package = "heemod"),
+      location = system.file("tabular/thr", package = "heRomod"),
       save = FALSE, overwrite = FALSE, run_psa = FALSE 
     )
     
     result_2core <- run_model_tabular(
-      location = system.file("tabular/thr", package = "heemod"),
+      location = system.file("tabular/thr", package = "heRomod"),
       reference = "REFERENCE_2core.csv",
       save = FALSE, overwrite = FALSE, run_psa = FALSE
     )

@@ -28,7 +28,7 @@ their correlation structure for probabilistic uncertainty
 analysis of Markov models.
 }
 \details{
-The distributions must be defined within \code{heemod}
+The distributions must be defined within \code{heRomod}
 (see \link{distributions}), or defined with
 \code{\link[=define_distribution]{define_distribution()}}.
 

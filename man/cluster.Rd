@@ -5,7 +5,7 @@
 \alias{use_cluster}
 \alias{status_cluster}
 \alias{close_cluster}
-\title{Run \code{heemod} on a Cluster}
+\title{Run \code{heRomod} on a Cluster}
 \usage{
 use_cluster(num_cores, cluster = NULL, close = TRUE)
 
@@ -31,8 +31,8 @@ is defined, \code{FALSE} otherwise.
 }
 \description{
 These functions create or delete a cluster for
-\code{heemod}. When the cluster is created it is
-automagically used by \code{heemod} functions.
+\code{heRomod}. When the cluster is created it is
+automagically used by \code{heRomod} functions.
 }
 \details{
 The usual wokflow is to create the cluster with

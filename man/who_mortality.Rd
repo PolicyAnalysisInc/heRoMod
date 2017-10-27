@@ -44,7 +44,7 @@ local data is only available for WHO high-income
 countries, and only for the latest year.
 
 The results of \code{get_who_mr} are memoised for
-\code{options("heemod.memotime")} (default: 1 hour) to
+\code{options("heRomod.memotime")} (default: 1 hour) to
 increase resampling performance.
 }
 \examples{

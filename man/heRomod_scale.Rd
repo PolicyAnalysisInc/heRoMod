@@ -4,7 +4,7 @@
 \name{scale.combined_model}
 \alias{scale.combined_model}
 \alias{scale.psa}
-\alias{heemod_scale}
+\alias{heRomod_scale}
 \alias{scale.run_model}
 \alias{scale.dsa}
 \title{Normalize Cost and Effect}

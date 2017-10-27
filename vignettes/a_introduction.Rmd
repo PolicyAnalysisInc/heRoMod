@@ -1,20 +1,20 @@
 ---
-title: "An Introduction to `heemod`"
+title: "An Introduction to `heRomod`"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{An Introduction to heemod}
+  %\VignetteIndexEntry{An Introduction to heRomod}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 ```
 
-This document is a presentation of the basic steps to define and run a model in `heemod`. Note that decision trees are actually a subset even of *Markov model*, and thus can be specified easily with this package.
+This document is a presentation of the basic steps to define and run a model in `heRomod`. Note that decision trees are actually a subset even of *Markov model*, and thus can be specified easily with this package.
 
 When building a Markov model the following steps must be performed:
 
@@ -37,7 +37,7 @@ When starting a cycle in state **A** (row **A**), the probability to still be in
 
 Similarly, when starting a cycle from state **B** (row **B**), the probability to be in state **A** or **B** at the end of the cycle are found in cells **3** or **4** respectively.
 
-In the context of Markov models, this 2-way table is called a *transition matrix*. A transition matrix can be defined easily in `heemod` with the `define_transition()` function. If we consider the previous example, where cell values have been replaced by actual probabilities:
+In the context of Markov models, this 2-way table is called a *transition matrix*. A transition matrix can be defined easily in `heRomod` with the `define_transition()` function. If we consider the previous example, where cell values have been replaced by actual probabilities:
 
 |       |  A  |  B  |
 |-------|-----|-----|
@@ -164,11 +164,11 @@ External data contained in user-defined data frames can be referenced in a model
 
 ## Compare strategies
 
-In order to compare different strategies it is possible to run a model with multiple strategies in parallel, examples are provided in `vignette("c-homogeneous", "heemod")` or `vignette("d-non-homogeneous", "heemod")`.
+In order to compare different strategies it is possible to run a model with multiple strategies in parallel, examples are provided in `vignette("c-homogeneous", "heRomod")` or `vignette("d-non-homogeneous", "heRomod")`.
 
 ## Time-variability
 
-Time varying transition probabilities and state values are available through the `markov_cycle` and `state_cycle` variables. Time-varying probabilities and values are explained in `vignette("b-time-dependency", "heemod")`.
+Time varying transition probabilities and state values are available through the `markov_cycle` and `state_cycle` variables. Time-varying probabilities and values are explained in `vignette("b-time-dependency", "heRomod")`.
 
 ## Transition costs
 
@@ -191,4 +191,4 @@ Results may vary depending on the machine, but we found speed gains to be quite 
 
 ## Going further
 
-Probabilistic uncertainty analysis `vignette("e-probabilistic", "heemod")` and deterministic sensitivity analysis `vignette("f-sensitivity", "heemod")` can be performed. Population-level estimates and heterogeneity can be computed : `vignette("g-heterogeneity", "heemod")`.
+Probabilistic uncertainty analysis `vignette("e-probabilistic", "heRomod")` and deterministic sensitivity analysis `vignette("f-sensitivity", "heRomod")` can be performed. Population-level estimates and heterogeneity can be computed : `vignette("g-heterogeneity", "heRomod")`.

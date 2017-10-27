@@ -32,7 +32,7 @@ km_good = survival::survfit(survival::Surv(rectime, censrec) ~ group,
 
 test_that("Flexsurvreg",
           {
-            heemod_res = fs6 %>%
+            heRomod_res = fs6 %>%
               set_covariates(age = 50, sex = 1) %>%
               compute_surv(time = seq_len(10),
                            cycle_length = 200,
@@ -46,7 +46,7 @@ test_that("Flexsurvreg",
               newdata = data.frame(age = 50, sex = 1)
             )[[1]]$est
             
-            expect_equal(heemod_res, fs_res)
+            expect_equal(heRomod_res, fs_res)
           })
 
 
@@ -770,7 +770,7 @@ test_that("Defining Survival Distributions",
             expect_equal(eval_surv.surv_table(reg, time = c(0.5, 1.5, 2.5, 5.5, 11)),
                          c(1, 0.9, 0.9, 0.7, 0.4))
             reg2 <-
-              define_surv_table(system.file("tabular/surv/surv_table.csv", package = "heemod"))
+              define_surv_table(system.file("tabular/surv/surv_table.csv", package = "heRomod"))
             expect_identical(reg, reg2)
           })
 

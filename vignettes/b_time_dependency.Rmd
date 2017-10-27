@@ -11,7 +11,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 ```
 
 In more complex Markov models state values or transition probabilities can vary with time. These models are called *non-homogeneous* or *time-inhomogeneous* Markov models. A further distinction can be made depending on whether state values or transition probabilities:

@@ -1,3 +1,24 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Matt Weiner
+#* Modified work Copyright (C) 2017  Jordan Amdahl
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
+
 #' Evaluate Markov model parameters
 #' 
 #' Evaluate parameters specified through 
@@ -42,7 +63,7 @@ eval_parameters <- function(x, cycles = 1,
     silent = TRUE
   )
   
-  if ((use_fn <- options()$heemod.inf_parameter) != "ignore") {
+  if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
     
     if (any(these_are_inf <- sapply(res, is.infinite))) {
       inf_param_nums <- unique(which(these_are_inf, arr.ind = TRUE)[,2])
@@ -52,7 +73,7 @@ eval_parameters <- function(x, cycles = 1,
         "Infinite parameter values:",
         paste(inf_param_names, collapse = ", "),
         ";\n",
-        "See the option heemod.inf_parameter, which",
+        "See the option heRomod.inf_parameter, which",
         "can be 'ignore', 'warning', or 'stop' (the default)."
       )
       get(use_fn)(error_message)

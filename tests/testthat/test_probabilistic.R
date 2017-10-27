@@ -113,7 +113,7 @@ test_that(
     
     set.seed(1)
     
-    res2 <- heemod:::eval_resample(x, 2)
+    res2 <- heRomod:::eval_resample(x, 2)
     
     expect_equal(
       nrow(ndt2$psa), 2
@@ -162,7 +162,7 @@ test_that(
     )
     set.seed(1)
     
-    res3 <- heemod:::eval_resample(rsp3, 2)
+    res3 <- heRomod:::eval_resample(rsp3, 2)
     
     expect_output(
       print(res3),

@@ -2,7 +2,7 @@
 % Please edit documentation in R/tabular_input.R
 \name{create_model_from_tabular}
 \alias{create_model_from_tabular}
-\title{Create a \code{heemod} Model From Tabular Files Info}
+\title{Create a \code{heRomod} Model From Tabular Files Info}
 \usage{
 create_model_from_tabular(state_info, tm_info, df_env = globalenv(),
   state_trans_info = NULL)
@@ -17,7 +17,7 @@ path or parsed file).}
 \item{df_env}{An environment containing external data.}
 }
 \value{
-A \code{heemod} model as returned by
+A \code{heRomod} model as returned by
 \code{\link[=define_strategy]{define_strategy()}}.
 }
 \description{

@@ -3,9 +3,9 @@ context("Test tabular input")
 state_spec_file <- system.file(
   "tabular/test",
   "THR_test_states.csv",
-  package = "heemod"
+  package = "heRomod"
 ) %>% 
-  heemod:::read_file()
+  heRomod:::read_file()
 
 state_spec <- data.frame(
   .state = c("PrimaryTHR", "SuccessfulPrimary",
@@ -20,7 +20,7 @@ state_spec <- data.frame(
 test_that(
   "Normal state file input works.",
   {
-    states1 <- heemod:::create_states_from_tabular(state_spec)
+    states1 <- heRomod:::create_states_from_tabular(state_spec)
     
     expect_output(
       print(states1),
@@ -42,18 +42,18 @@ qaly",
     )
     
     expect_equal(
-      heemod:::get_state_names(states1), 
+      heRomod:::get_state_names(states1), 
       c("PrimaryTHR", "SuccessfulPrimary",
         "RevisionTHR", "SuccessfulRevision", "Death")
     )
     
     ## compound test of f_parse_multi_spec and f_define_states_from_tabular
-    parsed_spec <- heemod:::parse_multi_spec(
+    parsed_spec <- heRomod:::parse_multi_spec(
       state_spec_file,
       split_on = ".model",
       group_vars = ".state"
     )
-    states2 <- heemod:::create_states_from_tabular(parsed_spec[[1]])
+    states2 <- heRomod:::create_states_from_tabular(parsed_spec[[1]])
     
     expect_output(
       print(states2),
@@ -74,7 +74,7 @@ qaly",
       fixed = TRUE
     )
     expect_equal(
-      heemod:::get_state_names(states2), 
+      heRomod:::get_state_names(states2), 
       c("PrimaryTHR", "SuccessfulPrimary",
         "RevisionTHR", "SuccessfulRevision", "Death")
     )
@@ -86,7 +86,7 @@ test_that(
     discount_problem_spec <- state_spec
     discount_problem_spec$.discount.qaly[2] <- 0.05
     expect_error(
-      heemod:::create_states_from_tabular(discount_problem_spec),
+      heRomod:::create_states_from_tabular(discount_problem_spec),
       "Multiple discount values for '.discount.qaly'.",
       fixed = TRUE
     )
@@ -94,7 +94,7 @@ test_that(
     discount_problem_spec <- state_spec
     discount_problem_spec$.discount.qaly[1] <- NA
     expect_error(
-      heemod:::create_states_from_tabular(discount_problem_spec),
+      heRomod:::create_states_from_tabular(discount_problem_spec),
       "No discount values found for '.discount.qaly'.",
       fixed = TRUE
     )
@@ -110,7 +110,7 @@ test_that(
       create_parameters_from_tabular(read_file(system.file(
         "tabular/test",
         "example_multinom_params.csv",
-        package = "heemod"
+        package = "heRomod"
       )))
     
     expect_identical(
@@ -126,7 +126,7 @@ test_that(
       create_parameters_from_tabular(read_file(system.file(
         "tabular/test",
         "example_multinom_params_dup_name.csv",
-        package = "heemod"
+        package = "heRomod"
       ))),
       "Some variables appear as individual parameters and in a multinomial"
     )
@@ -145,28 +145,28 @@ test_that(
 test_that(
   "Bad spec file input is caught.", {
     expect_error(
-      heemod:::gather_model_info(
-        system.file("tabular/test", package = "heemod"),
+      heRomod:::gather_model_info(
+        system.file("tabular/test", package = "heRomod"),
         "bad_REFERENCE.csv"),
       "Duplicated values in reference file 'data' column: state."
     )
     expect_error(
-      heemod:::gather_model_info(
-        system.file("tabular/test/test_diff_mod_name", package = "heemod"),
+      heRomod:::gather_model_info(
+        system.file("tabular/test/test_diff_mod_name", package = "heRomod"),
         "REFERENCE.csv"),
       "newzzz"
     )
     expect_error(
       capture.output(
-        heemod:::gather_model_info(
-          system.file("tabular/test", package = "heemod"),
+        heRomod:::gather_model_info(
+          system.file("tabular/test", package = "heRomod"),
           "REFERENCE_1probmissing.csv")
       ),
       "Undefined probabilities"
     )
     expect_error(
-      heemod:::gather_model_info(
-        system.file("tabular/test", package = "heemod"),
+      heRomod:::gather_model_info(
+        system.file("tabular/test", package = "heRomod"),
         "REFERENCE_missingfunctions.csv"),
       "'source' directory missing: ",
       fixed = TRUE
@@ -177,17 +177,17 @@ test_that(
 test_that(
   "Bad state file input is caught.", {
     expect_error(
-      heemod:::create_states_from_tabular(NULL),
+      heRomod:::create_states_from_tabular(NULL),
       "'state_info' must be a data frame.",
       fixed = TRUE
     )
     expect_error(
-      heemod:::create_states_from_tabular(1:10),
+      heRomod:::create_states_from_tabular(1:10),
       "'state_info' must be a data frame.",
       fixed = TRUE
     )
     expect_error(
-      heemod:::create_states_from_tabular(
+      heRomod:::create_states_from_tabular(
         data.frame(x = 1:5, y = 1:5)
       ),
       "'.state' should be a column name of the state file.",
@@ -228,7 +228,7 @@ test_that(
       row.names = c(9L, 1L, 3L, 5L, 7L), class = "data.frame")
     
     expect_error(
-      heemod:::create_states_from_tabular(dup_state),
+      heRomod:::create_states_from_tabular(dup_state),
       "Duplicated state names: PrimaryTHR",
       fixed = TRUE
     )
@@ -248,7 +248,7 @@ test_that(
       row.names = c(9L, 1L, 3L, 5L, 7L), class = "data.frame")
     
     expect_error(
-      heemod:::create_states_from_tabular(pb_disc_state),
+      heRomod:::create_states_from_tabular(pb_disc_state),
       "Discounting rates defined for non-existing values: .discount.qalyz",
       fixed = TRUE
     )
@@ -268,7 +268,7 @@ test_that(
       row.names = c(9L, 1L, 3L, 5L, 7L), class = "data.frame")
     
     expect_error(
-      heemod:::create_states_from_tabular(mult_disc_state),
+      heRomod:::create_states_from_tabular(mult_disc_state),
       "Multiple discount values for '.discount.qaly'.",
       fixed = TRUE
     )
@@ -298,7 +298,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_matrix_from_tabular(
+      heRomod:::create_matrix_from_tabular(
         bad_tm, 
         c("Death", "PrimaryTHR", "RevisionTHR", "SuccessfulPrimary", 
           "SuccessfulRevisionzzz")
@@ -323,14 +323,14 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_parameters_from_tabular(pb_par),
+      heRomod:::create_parameters_from_tabular(pb_par),
       "'low' and 'high' must be both non missing in DSA tabular definition."
     )
     
     pb_par2 <- pb_par
     names(pb_par2)[1] <- "param"
     expect_error(
-      heemod:::create_parameters_from_tabular(pb_par2),
+      heRomod:::create_parameters_from_tabular(pb_par2),
       "parameter file must include the column 'parameter'"
     )
     
@@ -346,7 +346,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_parameters_from_tabular(pb_par),
+      heRomod:::create_parameters_from_tabular(pb_par),
       "Both 'low' and 'high' columns must be present"
     )
     
@@ -363,7 +363,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_parameters_from_tabular(pb_par),
+      heRomod:::create_parameters_from_tabular(pb_par),
       "No non-missing values in columns 'low' and 'high'"
     )
     
@@ -380,7 +380,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_parameters_from_tabular(pb_par),
+      heRomod:::create_parameters_from_tabular(pb_par),
       "No non-missing values in column 'psa'."
     )
   }
@@ -399,7 +399,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_options_from_tabular(opt_pb),
+      heRomod:::create_options_from_tabular(opt_pb),
       "Some option names are duplicated: method",
       fixed = TRUE
     )
@@ -414,7 +414,7 @@ test_that(
       class = "data.frame")
     
     expect_error(
-      heemod:::create_options_from_tabular(opt_pb),
+      heRomod:::create_options_from_tabular(opt_pb),
       "Unknown options: cycleszzz", 
       fixed = TRUE
     )
@@ -429,7 +429,7 @@ test_that(
       class = "data.frame")
     
     expect_warning(
-      heemod:::create_options_from_tabular(opt_pb),
+      heRomod:::create_options_from_tabular(opt_pb),
       "initial values enclosed in c(); removing",
       fixed = TRUE
     )
@@ -443,7 +443,7 @@ test_that(
       c = 4
     )
     expect_error(
-      heemod:::create_demographic_table(ndt, test_par)
+      heRomod:::create_demographic_table(ndt, test_par)
     )
     ndt <- data.frame(
       a = 2,
@@ -451,12 +451,12 @@ test_that(
       .weights = 3
     )
     expect_error(
-      heemod:::create_demographic_table(ndt, test_par)
+      heRomod:::create_demographic_table(ndt, test_par)
     )
     
     expect_error(
-      heemod:::read_file(
-        system.file("tabular/test/wrong_ext.tab", package = "heemod")
+      heRomod:::read_file(
+        system.file("tabular/test/wrong_ext.tab", package = "heRomod")
       ),
       "file names must be for csv, xls, or xlsx"
     )
@@ -472,13 +472,13 @@ test_that(
     
     expect_warning(
       run_model_tabular(
-        system.file("tabular/test/test_no_overwrite", package = "heemod"),
+        system.file("tabular/test/test_no_overwrite", package = "heRomod"),
         save = TRUE, overwrite = FALSE, run_psa = FALSE, run_demo = FALSE
       )
     )
     expect_warning(
       run_model_tabular(
-        system.file("tabular/test/test_no_output_dir", package = "heemod"),
+        system.file("tabular/test/test_no_output_dir", package = "heRomod"),
         save = TRUE, overwrite = TRUE, run_psa = FALSE, run_demo = FALSE
       )
     )
@@ -488,27 +488,27 @@ test_that(
 test_that(
   "absolute path works", {
     
-    ref_edit <- heemod:::read_file(
-      system.file("tabular/thr/REFERENCE.csv", package = "heemod")
+    ref_edit <- heRomod:::read_file(
+      system.file("tabular/thr/REFERENCE.csv", package = "heRomod")
     )
     ref_edit$absolute_path <- c(rep(1, nrow(ref_edit) - 1), NA)
     for (i in seq_len(nrow(ref_edit) - 1))
       ref_edit$file[i] <-
       system.file(sprintf(
         "tabular/thr/%s", ref_edit$file[i]),
-        package = "heemod")
+        package = "heRomod")
     
     write.csv(
       ref_edit,
-      paste(system.file("tabular/test", package = "heemod"),
+      paste(system.file("tabular/test", package = "heRomod"),
             "edited_ref.csv", sep = "/"),
       row.names = FALSE
     )
     
-    op <- options(heemod.verbose = TRUE)
+    op <- options(heRomod.verbose = TRUE)
     expect_message(
-      capture.output(heemod:::gather_model_info(
-        system.file("tabular/test", package = "heemod"),
+      capture.output(heRomod:::gather_model_info(
+        system.file("tabular/test", package = "heRomod"),
         "edited_ref.csv"
       )),
       "Using absolute path for state, tm, parameters, demographics, data, output"
@@ -538,7 +538,7 @@ state_names <- c("PrimaryTHR", "SuccessfulPrimary", "RevisionTHR",
 
 test_that(
   "Proper transition file input works.", {
-    tm <- heemod:::create_matrix_from_tabular(tm_spec, state_names)
+    tm <- heRomod:::create_matrix_from_tabular(tm_spec, state_names)
     
     expect_output(
       print(tm),
@@ -559,31 +559,31 @@ test_that(
     bad_tm_spec <- tm_spec
     names(bad_tm_spec)[1] <- "forr"
     expect_error(
-      heemod:::create_matrix_from_tabular(bad_tm_spec, state_names)
+      heRomod:::create_matrix_from_tabular(bad_tm_spec, state_names)
     )
     
     bad_tm_spec <- tm_spec
     bad_tm_spec <- bad_tm_spec[-11, ]
     expect_error(
-      heemod:::create_matrix_from_tabular(bad_tm_spec, state_names),
+      heRomod:::create_matrix_from_tabular(bad_tm_spec, state_names),
       "Some states do not have an exit probability: Death.",
       fixed = TRUE
     )
     expect_error(
-      heemod:::create_matrix_from_tabular(tm_spec, NULL),
+      heRomod:::create_matrix_from_tabular(tm_spec, NULL),
       "length(state_names) > 0 is not TRUE",
       fixed = TRUE
     )
     expect_error(
-      heemod:::create_matrix_from_tabular(NULL, state_names),
+      heRomod:::create_matrix_from_tabular(NULL, state_names),
       "'trans_probs' must be a data frame."
     )
   }
 )
 
-THRmulti_prob_file_1 <- system.file("tabular/test", "THR_test_transition_probs.csv", package = "heemod")
-THRmulti_prob_file_2 <- system.file("tabular/test", "THR_test_transition_probs_2.csv", package = "heemod")
-THRmulti_prob_file_bad <- system.file("tabular/test", "THR_test_transition_probs_bad.csv", package = "heemod")
+THRmulti_prob_file_1 <- system.file("tabular/test", "THR_test_transition_probs.csv", package = "heRomod")
+THRmulti_prob_file_2 <- system.file("tabular/test", "THR_test_transition_probs_2.csv", package = "heRomod")
+THRmulti_prob_file_bad <- system.file("tabular/test", "THR_test_transition_probs_bad.csv", package = "heRomod")
 
 
 THRmulti_prob <- structure(list(
@@ -659,30 +659,30 @@ bad_spec <- data.frame(
 test_that(
   "parse_multi_spec works.", {
     expect_equal(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         THRmulti_prob, ".model", c("from", "to")
       ),
       THRmulti_prob_result
     )
     
     expect_equal(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         THRmulti_prob_2, ".model", c("from", "to")
       ),
       THRmulti_prob_result
     )
     
     expect_equal(
-      heemod:::parse_multi_spec(
-        heemod:::read_file(THRmulti_prob_file_1),
+      heRomod:::parse_multi_spec(
+        heRomod:::read_file(THRmulti_prob_file_1),
         ".model", c("from", "to")
       ),
       THRmulti_prob_result
     )
     
     expect_equal(
-      heemod:::parse_multi_spec(
-        heemod:::read_file(THRmulti_prob_file_2),
+      heRomod:::parse_multi_spec(
+        heRomod:::read_file(THRmulti_prob_file_2),
         ".model", c("from", "to")
       ),
       THRmulti_prob_result
@@ -691,9 +691,9 @@ test_that(
     ## compound test - error comes from the input to multi_spec,
     ##    gets caught in f_transition_prob_matrix_from_tabular
     expect_error(
-      heemod:::create_matrix_from_tabular(
-        trans_probs = heemod:::parse_multi_spec(
-          heemod:::read_file(THRmulti_prob_file_bad), 
+      heRomod:::create_matrix_from_tabular(
+        trans_probs = heRomod:::parse_multi_spec(
+          heRomod:::read_file(THRmulti_prob_file_bad), 
           ".model", c("from", "to")
         )[[1]],
         state_names = state_names
@@ -702,7 +702,7 @@ test_that(
     )
     
     expect_error(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         THRmulti_prob, ".model", c("from", "too")
       ),
       "'split_on' and 'group_vars' must be column names of the input 'multi_spec'.",
@@ -710,7 +710,7 @@ test_that(
     )
     
     expect_error(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         THRmulti_prob, ".modell", c("from", "to")
       ),
       "'split_on' and 'group_vars' must be column names of the input 'multi_spec'.",
@@ -720,7 +720,7 @@ test_that(
     ## this will print a couple of explanatory lines to the output
     ##   as well as throwing the error
     expect_error(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         bad_spec, ".model", c("g1", "g2")
       ),
       "'group_var' combinations must be specified either once for all splits or once for each split.",
@@ -728,7 +728,7 @@ test_that(
     )
     
     expect_error(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         bad_spec, c(".model", "g1") , "g2"
       ),
       "'split_on' must have a length of exactly 1.",
@@ -736,7 +736,7 @@ test_that(
     )
     
     expect_error(
-      heemod:::parse_multi_spec(
+      heRomod:::parse_multi_spec(
         bad_spec, character(0), c("g1", "g2")
       ),
       "'split_on' must have a length of exactly 1.",
@@ -745,15 +745,15 @@ test_that(
   }
 )
 
-tCSV <- heemod:::read_file(system.file(
+tCSV <- heRomod:::read_file(system.file(
   "tabular/test", "testing_CSV_file_with_comment_col.csv",
-  package = "heemod"))
-tXLS <- heemod:::read_file(system.file(
+  package = "heRomod"))
+tXLS <- heRomod:::read_file(system.file(
   "tabular/test", "testing_XLS_file_with_comment_col.xls",
-  package = "heemod"))
-tXLSX <- heemod:::read_file(system.file(
+  package = "heRomod"))
+tXLSX <- heRomod:::read_file(system.file(
   "tabular/test", "testing_XLSX_file_with_comment_col.xlsx",
-  package = "heemod"))
+  package = "heRomod"))
 
 test_that(
   "Columns that start with '.comment' in their header are ignored.", {
@@ -773,7 +773,7 @@ test_that(
 test_that(
   "Running model from files works.", {
     result <- run_model_tabular(
-      location = system.file("tabular/thr", package = "heemod"),
+      location = system.file("tabular/thr", package = "heRomod"),
       run_psa = TRUE, run_demo = TRUE,
       save = TRUE, overwrite = TRUE
     )
@@ -813,7 +813,7 @@ test_that(
 test_that(
   "Running model from files works with state transitions.", {
     result <- run_model_tabular(
-      location = system.file("tabular/test/thr_trans", package = "heemod"),
+      location = system.file("tabular/test/thr_trans", package = "heRomod"),
       run_psa = TRUE, run_demo = TRUE,
       save = TRUE, overwrite = TRUE
     )
@@ -856,10 +856,10 @@ test_that(
   "safe conversion works", {
     
     expect_error(
-      heemod:::as_integer_safe(c(1, 1.5, 2))
+      heRomod:::as_integer_safe(c(1, 1.5, 2))
     )
     expect_error(
-      heemod:::as_numeric_safe(c(1, "a", 2))
+      heRomod:::as_numeric_safe(c(1, "a", 2))
     )
   }
 )

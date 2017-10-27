@@ -21,7 +21,7 @@ A state list.
 }
 \description{
 Transforms tabular input defining states into an
-\code{heemod} object.
+\code{heRomod} object.
 }
 \details{
 Columns of state_info besides .model and state include
@@ -42,6 +42,6 @@ will then need to be defined like any other).
 The input data frame is expected to contain state
 information for all the models you will use in an
 analysis. For more information see the vignette:
-\code{vignette("file-input", package = "heemod")}.
+\code{vignette("file-input", package = "heRomod")}.
 }
 \keyword{internal}

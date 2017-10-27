@@ -70,7 +70,7 @@ probabilities of event for each model cycle.
 }
 \details{
 The results of \code{compute_surv()} are memoised for
-\code{options("heemod.memotime")} (default: 1 hour) to
+\code{options("heRomod.memotime")} (default: 1 hour) to
 increase resampling performance.
 }
 \keyword{internal}

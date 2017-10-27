@@ -214,11 +214,11 @@ test_that(
     
     surv_def <- read_file(system.file("tabular/surv", 
                                       "use_fits.csv", 
-                                      package = "heemod"))
+                                      package = "heRomod"))
     surv_def$.subset <- "all"
     fake_fit_tib <- read_file(system.file("tabular/surv",
                                           "fake_fit_tib.csv", 
-                                          package = "heemod"))
+                                          package = "heRomod"))
     state_names <- c("ProgressionFree", "ProgressiveDisease", 
                      "Terminal", "Death")
     ## basically just make sure it runs, since we're using fake fits
@@ -227,7 +227,7 @@ test_that(
                                   ".subset", "fit", "set_def"))
     surv_def_join <- read_file(system.file("tabular/surv", 
                                            "use_fits_join.csv", 
-                                           package = "heemod"))
+                                           package = "heRomod"))
     bad_surv_def <- surv_def_join
     bad_surv_def[[1, "dist"]] <- "fit('bad')"
     expect_error(capture.output(join_fits_to_def(
@@ -259,7 +259,7 @@ test_that("we catch bad names in construct_part_surv_tib",
           {
             surv_def <- read_file(system.file("tabular/surv", 
                                               "use_fits.csv", 
-                                              package = "heemod"))
+                                              package = "heRomod"))
             surv_def$.subset <- "all"
             state_names <- c("ProgressionFree", "ProgressiveDisease", 
                              "Terminal", "Death")
@@ -283,10 +283,10 @@ test_that("we can run construct_part_surv_tib",
           {
             use_fits <- read_file(system.file("tabular/surv",
                                   "example_use_fits_explicit_dists.csv",
-                                  package = "heemod"))
+                                  package = "heRomod"))
             ref <- read_file(system.file("tabular/surv",
                                          "example_oncSpecs_explicit_dists.csv",
-                                         package = "heemod"))
+                                         package = "heRomod"))
             explicit_dist_part_surv <- 
               construct_part_surv_tib(use_fits, ref,             
                                     state_names <- c("ProgressionFree", 
@@ -302,11 +302,11 @@ test_that("we can run construct_part_surv_tib",
 
             use_fits <- read_file(system.file("tabular/surv",
                                               "use_fits_mixed.csv",
-                                              package = "heemod"))
+                                              package = "heRomod"))
             ref <- read_file(system.file("tabular/surv",
                                          "example_oncSpecs_mixed.csv",
-                                         package = "heemod"))
-            ref$full_file <- file.path(system.file("tabular/surv", package = "heemod"),
+                                         package = "heRomod"))
+            ref$full_file <- file.path(system.file("tabular/surv", package = "heRomod"),
                                                    ref$file)
             mixed_dist_part_surv <- 
               construct_part_surv_tib(use_fits, ref,             
@@ -328,7 +328,7 @@ test_that("join_fits_across_time works",
           {
     surv_def_join <- read_file(system.file("tabular/surv", 
                                            "use_fits_join.csv", 
-                                           package = "heemod"))
+                                           package = "heRomod"))
     surv_def_join$fit <- letters[1:nrow(surv_def_join)]
     zz <- join_fits_across_time(surv_def_join[1:2,])
     surv_def_join <- dplyr::filter(surv_def_join, .subset == "all")
@@ -344,13 +344,13 @@ test_that("join_fits_across_time works",
 
 test_that("making part_surv from survival fits works",
           {
-            location <- system.file("tabular/surv", package = "heemod")
+            location <- system.file("tabular/surv", package = "heRomod")
             ok_surv_info <-
-              heemod:::read_file(system.file("tabular/surv/survival_info.csv",
-                                             package = "heemod"))
+              heRomod:::read_file(system.file("tabular/surv/survival_info.csv",
+                                             package = "heRomod"))
             fake_fit_tib <- read_file(system.file("tabular/surv",
                                                   "fake_fit_tib.csv", 
-                                                  package = "heemod"))
+                                                  package = "heRomod"))
             
             these_part_survs <-
               part_survs_from_surv_inputs(fake_fit_tib,

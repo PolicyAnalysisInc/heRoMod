@@ -75,7 +75,7 @@ test_that(
       a = 2,
       b = a * markov_cycle
     )
-    e_par1 <- heemod:::eval_parameters(
+    e_par1 <- heRomod:::eval_parameters(
       par1, 10
     )
     expect_output(
@@ -92,25 +92,25 @@ test_that(
 test_that(
   "Reserved names", {
     expect_error(
-      heemod:::check_names(NULL)
+      heRomod:::check_names(NULL)
     )
     expect_error(
-      heemod:::check_names(NA)
+      heRomod:::check_names(NA)
     )
     expect_error(
-      heemod:::check_names(c("a", NA))
+      heRomod:::check_names(c("a", NA))
     )
     expect_error(
-      heemod:::check_names(c("a", ""))
+      heRomod:::check_names(c("a", ""))
     )
     expect_error(
-      heemod:::check_names(c("a", "markov_cycle"))
+      heRomod:::check_names(c("a", "markov_cycle"))
     )
     expect_error(
-      heemod:::check_names(c("a", "C"))
+      heRomod:::check_names(c("a", "C"))
     )
     expect_error(
-      heemod:::check_names(c("a", ".b"))
+      heRomod:::check_names(c("a", ".b"))
     )
   }
 )
@@ -121,23 +121,23 @@ test_that(
       a = 2,
       b = 1 / (markov_cycle - 3)
     )
-    options(heemod.inf_parameter = "ignore")
-    e_par1 <- heemod:::eval_parameters(
+    options(heRomod.inf_parameter = "ignore")
+    e_par1 <- heRomod:::eval_parameters(
       par1, 5
     )
     expect_equal(
       as.numeric(unlist(e_par1[,"b"])),
       rep(1/(-2:2),5)
     )
-    options(heemod.inf_parameter = "warning")
+    options(heRomod.inf_parameter = "warning")
     expect_warning(
-      e_par1 <- heemod:::eval_parameters(
+      e_par1 <- heRomod:::eval_parameters(
         par1, 5
       )
     )
-    options(heemod.inf_parameter = "stop")
+    options(heRomod.inf_parameter = "stop")
     expect_error(
-      e_par1 <- heemod:::eval_parameters(
+      e_par1 <- heRomod:::eval_parameters(
         par1, 5
       )
     )

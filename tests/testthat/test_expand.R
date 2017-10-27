@@ -8,7 +8,7 @@ test_that(
   "complete_stl works", {
     
     expect_identical(
-      heemod:::complete_stl(NULL, sn, mn, 10),
+      heRomod:::complete_stl(NULL, sn, mn, 10),
       structure(list(I = structure(
         c(11, 11, 11, 11, 11),
         .Names = c("A",  "B", "C", "D", "E")),
@@ -23,7 +23,7 @@ test_that(
     )
     
     expect_identical(
-      heemod:::complete_stl(5, sn, mn, 10),
+      heRomod:::complete_stl(5, sn, mn, 10),
       structure(list(I = structure(
         c(5, 5, 5, 5, 5), .Names = c("A", "B", "C", "D", "E")),
         II = structure(
@@ -36,7 +36,7 @@ test_that(
     )
     
     expect_identical(
-      heemod:::complete_stl(c(B = 5), sn, mn, 10),
+      heRomod:::complete_stl(c(B = 5), sn, mn, 10),
       structure(list(
         I = structure(
           c(10, 5, 10, 10, 10),
@@ -54,7 +54,7 @@ test_that(
     )
     
     expect_identical(
-      heemod:::complete_stl(c(A = 5, E = 8), sn, mn, 10),
+      heRomod:::complete_stl(c(A = 5, E = 8), sn, mn, 10),
       structure(list(I = structure(
         c(5, 10, 10, 10, 8), .Names = c("A", 
                                         "B", "C", "D", "E")),
@@ -68,7 +68,7 @@ test_that(
     )
     
     expect_identical(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, C = 4)
@@ -93,37 +93,37 @@ test_that(
   "complete_stl throws errors", {
     
     expect_error(
-      heemod:::complete_stl(-1, sn, mn, 10)
+      heRomod:::complete_stl(-1, sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(NA, sn, mn, 10)
+      heRomod:::complete_stl(NA, sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(12, sn, mn, 10)
+      heRomod:::complete_stl(12, sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(5.5, sn, mn, 10)
-    )
-    
-    expect_error(
-      heemod:::complete_stl(c(A = 1, B = -1), sn, mn, 10)
-    )
-    expect_error(
-      heemod:::complete_stl(c(A = 1, B = NA), sn, mn, 10)
-    )
-    expect_error(
-      heemod:::complete_stl(c(A = 1, B = 12), sn, mn, 10)
-    )
-    expect_error(
-      heemod:::complete_stl(c(A = 1, B = 5.5), sn, mn, 10)
+      heRomod:::complete_stl(5.5, sn, mn, 10)
     )
     
     expect_error(
-      heemod:::complete_stl(c(A = 1, G = 5), sn, mn, 10)
+      heRomod:::complete_stl(c(A = 1, B = -1), sn, mn, 10)
+    )
+    expect_error(
+      heRomod:::complete_stl(c(A = 1, B = NA), sn, mn, 10)
+    )
+    expect_error(
+      heRomod:::complete_stl(c(A = 1, B = 12), sn, mn, 10)
+    )
+    expect_error(
+      heRomod:::complete_stl(c(A = 1, B = 5.5), sn, mn, 10)
     )
     
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(c(A = 1, G = 5), sn, mn, 10)
+    )
+    
+    expect_error(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, C = -1)
@@ -131,7 +131,7 @@ test_that(
         sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, C = NA)
@@ -139,7 +139,7 @@ test_that(
         sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, C = 12)
@@ -147,7 +147,7 @@ test_that(
         sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, C = 5.5)
@@ -156,7 +156,7 @@ test_that(
     )
 
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           III = c(B = 2, G = 5)
@@ -164,7 +164,7 @@ test_that(
         sn, mn, 10)
     )
     expect_error(
-      heemod:::complete_stl(
+      heRomod:::complete_stl(
         list(
           I = c(A = 5, E = 8),
           VIII = c(B = 2, C = 5)

@@ -77,7 +77,7 @@ test_that(
     )
     plot(mat1)
     expect_equal(
-      heemod:::get_matrix_order(mat1),
+      heRomod:::get_matrix_order(mat1),
       2
     )
     expect_equal(
@@ -147,13 +147,13 @@ test_that(
       C, a,
       C, b
     )
-    e_par1 <- heemod:::eval_parameters(
+    e_par1 <- heRomod:::eval_parameters(
       par1, 10
     )
-    e_mat <- heemod:::eval_transition.uneval_matrix(
+    e_mat <- heRomod:::eval_transition.uneval_matrix(
       mat1, e_par1
     )
-    e_matC <- heemod:::eval_transition(
+    e_matC <- heRomod:::eval_transition(
       matC, e_par1
     )
     

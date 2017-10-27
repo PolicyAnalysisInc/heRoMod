@@ -1,3 +1,23 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Kevin Zarca
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
+
 #' Use WHO Mortality Rate
 #' 
 #' Returns age and sex-specific mortality probabilities for 
@@ -9,7 +29,7 @@
 #' countries, and only for the latest year.
 #' 
 #' The results of `get_who_mr` are memoised for 
-#' `options("heemod.memotime")` (default: 1 hour) to 
+#' `options("heRomod.memotime")` (default: 1 hour) to 
 #' increase resampling performance.
 #' 
 #' @name who_mortality
@@ -97,7 +117,7 @@ get_who_mr_memo <- function(age, sex = NULL, region = NULL, country = NULL,
 #' @export
 get_who_mr <- memoise::memoise(
   get_who_mr_memo,
-  ~ memoise::timeout(options()$heemod.memotime)
+  ~ memoise::timeout(options()$heRomod.memotime)
 )
 
 get_gho_mr <- function(sex, region, country, year) {
