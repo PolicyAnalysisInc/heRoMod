@@ -260,9 +260,9 @@ compute_surv_ <- function(x, time,
   
   ret <- eval_surv(x, cycle_length * time_, ...)
   if (type == "prob") {
-    next_cycle <- eval_surv(x, (cycle_length * time_) + cycle_length, ...)
+    prev_cycle <- eval_surv(x, (cycle_length * time_) - cycle_length, ...)
     # Calculate per-cycle failure prob
-    ret <- (ret - next_cycle) / ret
+    ret <- (prev_cycle - ret) / prev_cycle
   }
   ret
 }

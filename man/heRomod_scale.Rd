@@ -9,7 +9,7 @@
 \alias{scale.dsa}
 \title{Normalize Cost and Effect}
 \usage{
-\method{scale}{combined_model}(x, center = TRUE, scale = TRUE)
+\method{scale}{combined_model}(x, center = FALSE, scale = TRUE)
 
 \method{scale}{psa}(x, center = TRUE, scale = TRUE)
 
