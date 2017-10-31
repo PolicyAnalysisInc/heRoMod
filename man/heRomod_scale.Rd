@@ -13,7 +13,7 @@
 
 \method{scale}{psa}(x, center = TRUE, scale = TRUE)
 
-\method{scale}{run_model}(x, center = TRUE, scale = TRUE)
+\method{scale}{run_model}(x, center = FALSE, scale = TRUE)
 
 \method{scale}{dsa}(x, center = TRUE, scale = TRUE)
 }

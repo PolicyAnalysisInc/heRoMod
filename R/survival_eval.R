@@ -34,10 +34,10 @@
 check_cycle_inputs <- function(cycle, cycle_length) {
   
   stopifnot(
-    all(cycle == seq(from = min(cycle), to = max(cycle), by = 1)),
-    all(round(cycle, 0) == cycle),
+    #all(round(cycle, 0) == cycle),
     length(cycle) >= 1,
     !any(cycle < 0),
+    length(unique(cycle_length)) == 1,
     !any(is.infinite(cycle_length)),
     !any(is.na(cycle))
   )
@@ -253,18 +253,16 @@ compute_surv_ <- function(x, time,
                           type = c("prob", "survival"), ...){
   type <- match.arg(type)
   
-  if (type == "prob") {
-    time_ = c(time[1] - 1, time)
-  } else {
-    time_ = time
-  }
+  time_ <- time
   
   check_cycle_inputs(time_, cycle_length)
+  cycle_length <- cycle_length[1]
   
   ret <- eval_surv(x, cycle_length * time_, ...)
   if (type == "prob") {
+    next_cycle <- eval_surv(x, (cycle_length * time_) + cycle_length, ...)
     # Calculate per-cycle failure prob
-    ret <- calc_prob_from_surv(ret)
+    ret <- (ret - next_cycle) / ret
   }
   ret
 }

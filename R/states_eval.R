@@ -67,9 +67,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
     if(expanding) {
       # bottleneck!
       parameters %>%
-        dplyr::group_by_("state_time") %>%
         dplyr::mutate_(.dots = obj) %>%
-        dplyr::ungroup() %>%
         dplyr::mutate(.state = state_names[i]) %>%
         .[c("markov_cycle", "state_time", ".state", var_names)]
     } else {
@@ -147,9 +145,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
       # bottleneck!
       if(expanding) {
         eval_params <- parameters %>%
-          dplyr::group_by(state_time) %>%
           dplyr::mutate_(.trans_id = i, .dots = obj) %>%
-          dplyr::ungroup() %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       } else {
         eval_params <- parameters %>%
