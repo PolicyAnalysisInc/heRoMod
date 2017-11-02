@@ -190,6 +190,19 @@ test_that(
     plot(x)
     plot(x, bw = TRUE)
     
+    #### VBP of parameter not affecting selected strategy ####
+    ## VBP on cB parameter and strategy A
+    def_vbp <- define_vbp(
+      cB, 0, 20000
+    )
+    ## Run VBP
+    expect_error(
+      run_vbp(model = res2,
+              vbp = def_vbp,
+              strategy_vbp = "A",
+              wtp_thresholds = c(0, 50000))
+    )
+    
     #### Test non-linearity ####
     def_vbp <- define_vbp(
       pA, 1, 20000
