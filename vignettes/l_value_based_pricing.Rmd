@@ -10,225 +10,207 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-```{r, echo=FALSE, include=FALSE}
-library(heemod)
+```{r, echo=FALSE, include=FALSE, message=FALSE}
+# library(heemod)
+library(devtools)
+load_all()
 
-param <- define_parameters(
-  rr = .509,
-  
-  p_AB_base = .202,
-  p_AC_base = .067,
-  p_AD_base = .010,
-  
-  p_BC_base = .407,
-  p_BD_base = .012,
-  
-  p_CD_base = .250,
-  
-  
-  p_AB = p_AB_base,
-  p_AC = p_AC_base,
-  p_AD = p_AD_base,
-  
-  p_BC = p_BC_base,
-  p_BD = p_BD_base,
-  
-  p_CD = p_CD_base,
-  
-  
-  cost_zido = 2278,
-  cost_lami = 2086,
-  
-  cost_A = 2756,
-  cost_B = 3052,
-  cost_C = 9007,
-  
-  dr = .06
-)
+#### Three-strategy example ####
+#### Define parameters ####
+par_mod <- define_parameters(
+  age_base = 20, 
+  age_cycle = model_time + age_base)
 
-mat_trans_mono <- define_transition(
-  C,    p_AB, p_AC, p_AD,
-  .000, C,    p_BC, p_BD,
-  .000, .000, C,    p_CD,
-  .000, .000, .000, 1.00
-)
+par_mod <- modify(
+  par_mod, 
+  sex_indiv = "MLE", # MLE => male in the WHO database 
+  p_death_all = get_who_mr(
+    age = age_cycle, 
+    sex = sex_indiv, 
+    country = "GBR", 
+    local = TRUE))
 
-mat_trans_comb <- define_transition(
-  C,    p_AB * rr, p_AC * rr, p_AD * rr,
-  .000, C,    p_BC * rr, p_BD * rr,
-  .000, .000, C,    p_CD * rr,
-  .000, .000, .000, 1.00
-)
+par_mod <- modify(
+  par_mod, 
+  p_death_disease = compute_surv(
+    fit_death_disease,
+    time = state_time, 
+    km_limit = 5))
 
-A_mono <- define_state(
-  cost_health = cost_A,
-  cost_drugs = cost_zido,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-B_mono <- define_state(
-  cost_health = cost_B,
-  cost_drugs = cost_zido,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-C_mono <- define_state(
-  cost_health = cost_C,
-  cost_drugs = cost_zido,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-D_mono <- define_state(
-  cost_health = 0,
-  cost_drugs = 0,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 0
-)
+tab_surv <- structure(list(time = c(0.4, 8.7, 7, 5.1, 9.2, 1, 0.5, 3.3, 1.8, 3, 6.7, 3.7, 1.1, 5.9, 5.1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10), 
+                           status = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)), 
+                      .Names = c("time", "status"), 
+                      row.names = c(NA, -25L), class = "data.frame")
 
-A_comb <- define_state(
-  cost_health = cost_A,
-  cost_drugs = cost_zido + cost_lami,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-B_comb <- define_state(
-  cost_health = cost_B,
-  cost_drugs = cost_zido + cost_lami,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-C_comb <- define_state(
-  cost_health = cost_C,
-  cost_drugs = cost_zido + cost_lami,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 1
-)
-D_comb <- define_state(
-  cost_health = 0,
-  cost_drugs = 0,
-  cost_total = discount(cost_health + cost_drugs, dr),
-  life_year = 0
-)
+fit_death_disease <- flexsurv::flexsurvreg(
+  survival::Surv(time, status) ~ 1, 
+  dist = "weibull", 
+  data = tab_surv)
 
-mod_mono <- define_strategy(
-  transition = mat_trans_mono,
-  A_mono,
-  B_mono,
-  C_mono,
-  D_mono
-)
+par_mod <- modify(
+  par_mod, 
+  p_death_symp = combine_probs(
+    p_death_all, 
+    p_death_disease))
 
-mod_comb <- define_strategy(
-  transition = mat_trans_comb,
-  A_comb,
-  B_comb,
-  C_comb,
-  D_comb
-)
+par_mod <- modify(
+  par_mod, 
+  p_disease_base = 0.25, 
+  med_effect = 0.5, 
+  p_disease_med = p_disease_base * med_effect)
 
+par_mod <- modify(
+  par_mod, 
+  shape = 1.5, # We will see later why we need
+  scale = 5, # to define these 2 parameters here. 
+  p_disease_surg = define_survival(
+    distribution = "weibull",
+    shape = shape,
+    scale = scale) %>% compute_surv(time = state_time))
+
+par_mod <- modify(
+  par_mod, 
+  cost_surg = 20000, 
+  cost_surg_cycle = ifelse(state_time == 1, cost_surg, 0))
+
+par_mod <- modify(
+  par_mod, 
+  cost_hospit_start = 11000, 
+  cost_hospit_end = 9000, 
+  n_years = 9,
+  cost_hospit_cycle = ifelse(
+    state_time < n_years, 
+    cost_hospit_start, 
+    cost_hospit_end))
+
+par_mod <- modify(
+  par_mod, 
+  p_cured = 0.001,
+  cost_med = 5000, 
+  dr = 0.05,
+  qaly_disease = 0.5)
+
+#### Define transition probabilities ####
+### Base Strategy
+mat_base <- define_transition(
+  state_names = c("pre", "symp", "death"), 
+  
+  C,       p_disease_base, p_death_all,
+  p_cured, C,              p_death_symp, 
+  0,       0,              1)
+
+### Medicine strategy
+mat_med <- define_transition(
+  state_names = c("pre", "symp", "death"), 
+  
+  C,       p_disease_med, p_death_all,
+  p_cured, C,             p_death_symp,
+  0,       0,             1)
+
+### Surgery strategy
+mat_surg <- define_transition(
+  state_names = c("pre", "symp", "death"), 
+  
+  C,       p_disease_surg, p_death_all,
+  p_cured, C,              p_death_symp,
+  0,       0,              1)
+
+
+#### Define state rewards ####
+## State PreSymptomatic (Pre)
+state_pre <- define_state(
+  cost_treat = dispatch_strategy(
+    base = 0, # no treatment => no treatment cost 
+    med = cost_med, 
+    surg = cost_surg_cycle), 
+  cost_hospit = 0, # good health => no hospital expenses 
+  cost_total = discount(cost_treat + cost_hospit, r = dr), 
+  qaly = 1)
+
+## State Symptomatic (Symp)
+state_symp <- define_state(
+  cost_treat = 0, 
+  cost_hospit = cost_hospit_cycle, 
+  cost_total = discount(cost_treat + cost_hospit, r = dr), 
+  qaly = qaly_disease)
+
+## State Death (Death)
+state_death <- define_state(
+  cost_treat = 0, 
+  cost_hospit = 0, 
+  cost_total = 0, 
+  qaly = 0)
+
+#### Define strategies ####
+### Base
+strat_base <- define_strategy(
+  transition = mat_base, 
+  pre = state_pre, 
+  symp = state_symp, 
+  death = state_death)
+
+### Medicine
+strat_med <- define_strategy(
+  transition = mat_med, 
+  pre = state_pre, 
+  symp = state_symp, 
+  death = state_death)
+
+### Surgery
+strat_surg <- define_strategy(
+  transition = mat_surg, 
+  pre = state_pre, 
+  symp = state_symp, 
+  death = state_death)
+
+#### Run model ####
 res_mod <- run_model(
-  mono = mod_mono,
-  comb = mod_comb,
-  parameters = param,
-  cycles = 20,
-  cost = cost_total,
-  effect = life_year
-)
+  parameters = par_mod, 
+  base = strat_base, 
+  med = strat_med, 
+  surg = strat_surg, 
+  cycles = 10, 
+  cost = cost_total, 
+  effect = qaly, 
+  method = "life-table")
 ```
 
 ## Introduction
 
-The objective of deterministic sensitivity analysis is to assess how model results are sensitive to parameter values. Parameter values are changed through upper and lower bounds, and the results are reported.
-
-Sensitivity analysis is distinct from probabilistic uncertainty analysis: whereas in PSA the objective is to estimate the effect of global uncertainty on model results, in DSA the objective is to assess the sensitivity of results to variations of individual parameters. Both analyses are complementary.
+The objective of value-based pricing (VBP) is to determine the maximum price at which a health technology is cost-effective at a specific willingness-to-pay (WTP) threshold. A price parameter value is evaluated between upper and lower bounds, and the results are reported. VBP assumes a linear relationship between the price of the health technology and the cost of the strategy. 
 
 ## Define the analysis
 
-This example uses the HIV drug model defined in `vignette("e-probabilistic", "heemod")`. See this vignette for an explanation of the model. Note that as in PSA, parameters need to be defined in `define_parameters()` in order to be modified in a DSA.
+This example uses the three-strategy model defined in the article "Markov Models for Health Economic Evaluation: The R Package heemod". See this article for an explanation of the model. Note that as in DSA and PSA, parameters need to be defined in `define_parameters()` in order to be modified in a VBP.
 
-In this example we will study the sensitivity of cost to 4 parameters:
+In this example we will compute the VBP of 1 price parameter:
 
-  * `rr`, the relative risk associated with the new treatment.
-  * `cost_zido` and `cost_lami`, the drug costs.
-  * `dr`, the discount rate.
+  * `cost_med`, the price associated with the medicine.
 
-Upper and lower values for the paramters are given to `define_dsa()`.
+Upper and lower values for the price parameter are given to `define_vbp()`.
 
 ```{r}
-se <- define_dsa(
-  rr, .4, .6,
-  
-  cost_zido, 1500, 3000,
-  cost_lami, 1500, 3000,
-  
-  dr, .04, .08
+def_vbp <- define_vbp(
+  cost_med, 0, 1000
 )
 ```
 
-We then run the sensitivity analysis with `run_dsa()`, using `res_mod` the result from `run_model()` as input.
+We then run the value-based pricing analysis with `run_dsa()`, using `res_mod` the result from `run_model()` as input, defining the strategy affected by the health technology of interest and a range of WTP thresholds.
 
-```{r}
-res_dsa <- run_dsa(
-  model = res_mod,
-  dsa = se
-)
+```{r, message=F}
+res_vbp <- run_vbp(model = res_mod, 
+                   vbp = def_vbp,
+                   strategy_vbp = "med",
+                   wtp_thresholds = c(0, 10000))
 ```
 
 ## Interpretation
 
-All the results can be displayed in a table.
+The basic plot (`bw = "FALSE"`) displays the difference in costs between the selected strategy and the other comparison strategies as a linear function of the price defined in `def_vbp()`. The VBP is determined by the lowest price at each WTP. The black line displays the VBP (i.e., the price at which the health technology is cost-effective) by WTP threshold.
 
-```{r}
-res_dsa
-```
-
-Two distinct plot types are available. The basic plot (`type = "simple"`) displays cost variations for each model, around the base cost.
-
-As expected `mono` model costs are not senstive to `cost_lami`, since this drug was not given to this group. Similarly it is not sensitive to `rr`, because this parameters only modifies transition probabilities in the other model.
+For this example, `cost_med` has a positive linear effect on the difference of costs between `med` and `base` and `surg`. The VBP of `cost_med` changes slope at a WTP threshold of 4,800 approx., which is where the two differences of costs between `med` and `base` and `surg` intersect.
 
 ```{r, fig.width = 6, fig.align='center'}
-plot(res_dsa,
-     strategy = "mono",
-     result = "cost",
-     type = "simple")
+plot(res_vbp)
 ```
 
-On the other hand the `comb` model cost is sensitive to all 4 parameters.
-
-```{r, fig.width = 6, fig.align='center'}
-plot(res_dsa,
-     strategy = "comb",
-     result = "cost",
-     type = "simple")
-```
-
-And its effectiveness is sensitive to `rr`
-
-```{r, fig.width = 6, fig.align='center'}
-plot(res_dsa, 
-     strategy = "comb",
-     result = "effect",
-     type = "simple")
-```
-
-The difference plot (`type = "difference"`) displays the difference between the specified model `comb` and the reference model `mono`.
-
-```{r, fig.width = 6, fig.align='center'}
-plot(res_dsa,
-     strategy = "comb",
-     result = "cost",
-     type = "difference")
-plot(res_dsa,
-     strategy = "comb",
-     result = "icer",
-     type = "difference")
-```
-
-It is also possible to leave the high and low parameter values off the plot:
-```{r, fig.width = 6, fig.align='center'}
-plot(res_dsa,
-     strategy = "comb",
-     result = "icer",
-     type = "difference",
-     limits_by_bars = FALSE)
-```
