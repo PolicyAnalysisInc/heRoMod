@@ -104,6 +104,9 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   lin.params.P <- c_linear(res_vbp, strategy = strategy_vbp)
   beta0.P <- lin.params.P$beta0
   beta1.P <- lin.params.P$beta1
+  if(beta1.P == 0)
+    stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
+  
   lin_approx[[strategy_vbp]] <- lin.params.P$lin_approx
   
   ### Linearization of comparison strategies
