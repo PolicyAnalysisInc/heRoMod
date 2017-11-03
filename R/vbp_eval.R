@@ -64,7 +64,7 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
       e_newdata,
       list(unlist(lapply(
         tab$.mod,
-        function(x) x$complete_parameters[1, vbp$variable]))[pos_par]))
+        function(x) x$parameters[1, vbp$variable]))[pos_par]))
     
     names(e_newdata)[length(e_newdata)] <- n
   }
