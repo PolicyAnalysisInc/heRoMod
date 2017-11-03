@@ -219,7 +219,7 @@ test_that(
       s_mod$res_values$x, c(309300, 933900)
     )
     expect_equal(
-      s_mod$res_comp$.cost, c(0, 624.6)
+      s_mod$res_comp$.cost, c(309.3, 933.9)
     )
     expect_equal(
       round(s_mod$res_comp$.icer, 3)[2], 1.027

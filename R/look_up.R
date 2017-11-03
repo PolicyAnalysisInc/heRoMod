@@ -127,13 +127,14 @@ look_up <- function(data, ..., bin = FALSE, value = "value") {
       paste(which(pb), collapse = ", ")
     ))
   }
-  
   res <- suppressMessages(
     dplyr::left_join(
       df_vars,
-      data
+      data,
+      by = names(df_vars)
     )[[value]]
   )
+  
   
   if (length(res) != nrow(df_vars)) {
     stop("Ooops, something went unexpectedly wrong...")

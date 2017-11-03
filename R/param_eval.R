@@ -1,23 +1,3 @@
-#**************************************************************************
-#* 
-#* Original work Copyright (C) 2016  Antoine Pierucci
-#* Modified work Copyright (C) 2017  Matt Weiner
-#* Modified work Copyright (C) 2017  Jordan Amdahl
-#*
-#* This program is free software: you can redistribute it and/or modify
-#* it under the terms of the GNU General Public License as published by
-#* the Free Software Foundation, either version 3 of the License, or
-#* (at your option) any later version.
-#*
-#* This program is distributed in the hope that it will be useful,
-#* but WITHOUT ANY WARRANTY; without even the implied warranty of
-#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#* GNU General Public License for more details.
-#*
-#* You should have received a copy of the GNU General Public License
-#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#**************************************************************************
-
 
 #' Evaluate Markov model parameters
 #' 
@@ -50,18 +30,7 @@ eval_parameters <- function(x, cycles = 1,
   )
   
   # other datastructure?
-  res <- try({
-      if(expanding){
-        start_tibble %>%
-          dplyr::group_by_("state_time") %>%
-          dplyr::mutate_(.dots = x) %>%
-          dplyr::ungroup()
-      } else {
-        dplyr::mutate_(start_tibble, .dots = x)
-      }
-    },
-    silent = TRUE
-  )
+  res <- try(dplyr::mutate_(start_tibble, .dots = x), silent = TRUE)
   
   if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
     
@@ -88,8 +57,8 @@ eval_parameters <- function(x, cycles = 1,
       function(i) {
         try(dplyr::mutate_(
           start_tibble,
-          .dots = x[seq_len(i)]
-        ), silent = TRUE)
+          .dots = x[seq_len(i)])
+        , silent = F)
       }
     )
     which_errors <- sapply(
@@ -196,9 +165,7 @@ eval_inflow <- function(x, parameters, expand) {
   to_keep <- names(x)
   if(expanding) {
     inflow_df <- parameters %>%
-      dplyr::group_by(state_time) %>%
       dplyr::mutate_(.dots = x) %>%
-      dplyr::ungroup() %>%
       .[c("model_time", "state_time", to_keep)] %>%
       reshape2::melt(
         id.vars = c("model_time", "state_time"),

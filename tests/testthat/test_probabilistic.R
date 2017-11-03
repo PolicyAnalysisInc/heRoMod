@@ -124,7 +124,7 @@ test_that(
     )
     
     expect_equal(
-      round(summary(ndt2)$res_comp$.cost[2]), 27511
+      round(summary(ndt2)$res_comp$.cost[2]), 38163
     )
     
     expect_equal(
@@ -151,7 +151,7 @@ test_that(
     )
     
     expect_equal(
-      round(summary(ndt1)$res_comp$.cost[2]), 25085
+      round(summary(ndt1)$res_comp$.cost[2]), 36813
     )
     
     rsp3 <- define_psa(

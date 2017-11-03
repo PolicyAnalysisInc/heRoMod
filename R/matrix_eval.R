@@ -142,10 +142,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   if(expanding) {
     
     nrow_param = nrow(parameters)
-    eval_trans_probs <- parameters %>%
-      dplyr::group_by_("state_time") %>%
-      dplyr::mutate_(.dots = x) %>%
-      dplyr::ungroup()
+    eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
     
     trans_table <- tibble::tibble(
       model_time = rep(parameters$model_time, times = n_state^2),

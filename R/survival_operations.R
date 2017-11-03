@@ -190,10 +190,11 @@ pool_ <- function(...) {
 apply_hr <- function(dist, hr, log_hr = FALSE) {
   
   stopifnot(
-    length(hr) == 1,
+    length(unique(hr)) == 1,
     is.finite(hr),
     log_hr | hr > 0
   )
+  if(length(hr) > 1) hr <- hr[1]
   if(log_hr) hr <- exp(hr)
   if(hr == 1) return(dist)
   if(inherits(dist, "surv_ph")){

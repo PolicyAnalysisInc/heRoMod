@@ -132,7 +132,7 @@ get_effect <- function(x) {
 NULL
 
 #' @rdname heRomod_scale
-scale.run_model <- function(x, center = TRUE, scale = TRUE) {
+scale.run_model <- function(x, center = FALSE, scale = TRUE) {
   bm <- get_central_strategy(x)
   res <- tibble::tibble(
     .strategy_names = get_strategy_names(x),

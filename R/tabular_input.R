@@ -22,10 +22,12 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = TRUE, run_psa = TRUE,
-                          run_demo = TRUE) {
+                          run_demo = TRUE, state_time_limit = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
                                   source, data)
+  
+  inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
@@ -391,7 +393,8 @@ eval_models_from_tabular <- function(inputs,
       effect = inputs$model_options$effect,
       base_model = inputs$model_options$base_model,
       method = inputs$model_options$method,
-      cycles = inputs$model_options$cycles
+      cycles = inputs$model_options$cycles,
+      state_time_limit = inputs$state_time_limit
     )
   )
   

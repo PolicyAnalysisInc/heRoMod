@@ -762,11 +762,6 @@ test_that("Defining Survival Distributions",
                                         survival = c(1, 0.9, 0.7, 0.4))
             reg <- define_surv_table(surv_table_df)
             
-            expect_error(
-              compute_surv(reg, time = c(0.5, 1.5, 2.5, 5.5, 11)),
-              "all(cycle == seq(from = min(cycle), to = max(cycle), by = 1)) is not TRUE",
-              fixed = TRUE
-            )
             expect_equal(eval_surv.surv_table(reg, time = c(0.5, 1.5, 2.5, 5.5, 11)),
                          c(1, 0.9, 0.9, 0.7, 0.4))
             reg2 <-
