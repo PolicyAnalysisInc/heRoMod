@@ -1,5 +1,24 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Matt Wiener
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
 reach_cluster <- local({
-  heemod_cluster <- NULL
+  heRomod_cluster <- NULL
   
   function(operation = c("get", "set", "close"), value) {
     operation <- match.arg(operation)
@@ -7,14 +26,14 @@ reach_cluster <- local({
     switch(
       operation,
       "get" = {
-        heemod_cluster
+        heRomod_cluster
       },
       "set" = {
-        heemod_cluster <<- value
+        heRomod_cluster <<- value
       },
       "close" = {
-        parallel::stopCluster(heemod_cluster)
-        heemod_cluster <<- NULL
+        parallel::stopCluster(heRomod_cluster)
+        heRomod_cluster <<- NULL
       }
     )
   }
@@ -28,11 +47,11 @@ set_cluster <- function(x) {
   reach_cluster(operation = "set", value = x)
 }
 
-#' Run `heemod` on a Cluster
+#' Run `heRomod` on a Cluster
 #' 
 #' These functions create or delete a cluster for 
-#' `heemod`. When the cluster is created it is 
-#' automagically used by `heemod` functions.
+#' `heRomod`. When the cluster is created it is 
+#' automagically used by `heRomod` functions.
 #' 
 #' The usual wokflow is to create the cluster with 
 #' `use_cluster`, then run functions such as 
@@ -84,7 +103,7 @@ use_cluster <- function(num_cores, cluster = NULL, close = TRUE) {
       ifelse(on_windows, "PSOCK", "FORK")
     
     cl <- parallel::makeCluster(num_cores, type = cluster_type)
-    parallel::clusterEvalQ(cl, library(heemod))
+    parallel::clusterEvalQ(cl, library(heRomod))
     parallel::clusterEvalQ(cl, library(dplyr))
     
     set_cluster(cl)

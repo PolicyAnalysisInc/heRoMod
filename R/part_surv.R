@@ -1,3 +1,23 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Matt Wiener
+#* Modified work Copyright (C) 2017  Jordan Amdahl
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
 allowed_fit_distributions <- c("exp", "weibull", "lnorm", "llogis", 
                                "gamma", "gompertz", "gengamma")
 
@@ -162,7 +182,7 @@ get_state_names.part_surv <- function(x) {
   x$state_names
 }
 
-eval_transition.part_surv <- function(x, parameters) {
+eval_transition.part_surv <- function(x, parameters, expand) {
   
   time_ <- c(0, parameters$markov_cycle)
   
@@ -239,7 +259,22 @@ compute_counts.eval_part_surv <- function(x, init,
   names(res) <- x$state_names[names(res)]
   res <- res[x$state_names]
   
-  structure(res, class = c("cycle_counts", class(res)))
+  n_state <- length(x$state_names)
+  n_cycle <- nrow(res)
+  
+  trans_counts <- array(
+    rep(0, n_state * n_state * (n_cycle - 1)),
+    dim = c(n_state, n_state, (n_cycle - 1))
+  )
+  
+  trans_counts[1, 2, ] <- x$pfs_surv[-n_cycle] - x$pfs_surv[-1]
+  trans_counts[2, 3, ] <- x$os_surv[-n_cycle] - x$os_surv[-1]
+  
+  structure(
+    res,
+    class = c("cycle_counts", class(res)),
+    transitions = trans_counts
+  )
 }
 
 guess_part_surv_state_names <- function(state_names) {

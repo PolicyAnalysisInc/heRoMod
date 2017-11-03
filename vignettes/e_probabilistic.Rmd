@@ -11,10 +11,10 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 ```
 
-This vignette shows how to transform the deterministic Markov model presented in `vignette("c-homogeneous", "heemod")` in a probabilistic model.
+This vignette shows how to transform the deterministic Markov model presented in `vignette("c-homogeneous", "heRomod")` in a probabilistic model.
 
 ## Model definition
 

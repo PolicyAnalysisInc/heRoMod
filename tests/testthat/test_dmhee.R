@@ -116,9 +116,9 @@ test_that("exactly match HIV model",
               ly_comb = 8.9373889
             )
             briggs_hiv_icer <- 6275.95560
-            from_heemod <- 
+            from_heRomod <- 
               summary(hiv)$res_values[, c("cost_total", "life_year")]
-            expect_equal(as.numeric(unlist(from_heemod)),
+            expect_equal(as.numeric(unlist(from_heRomod)),
                          as.numeric(unlist(briggs_hiv))
             )
             expect_equal(summary(hiv)$res_comp[2, ".icer"],

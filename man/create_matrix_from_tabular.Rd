@@ -20,7 +20,7 @@ A transition matrix.
 }
 \description{
 Transforms tabular input defining a transition matrix
-into an \code{heemod} object.
+into an \code{heRomod} object.
 }
 \details{
 The data frame \code{trans_probs} should have columns

@@ -27,7 +27,7 @@ Duplicated positions are not allowed.
 }
 \examples{
 
-heemod:::insert(letters, c(0, 5, 26), c("xxx", "yyy"))
+heRomod:::insert(letters, c(0, 5, 26), c("xxx", "yyy"))
 
 }
 \keyword{internal}

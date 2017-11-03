@@ -1,3 +1,24 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Matt Weiner
+#* Modified work Copyright (C) 2017  Jordan Amdahl
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
+
 #' Evaluate Markov model parameters
 #' 
 #' Evaluate parameters specified through 
@@ -14,25 +35,35 @@
 #'   
 #' @keywords internal
 eval_parameters <- function(x, cycles = 1,
-                            strategy_name = NA) {
+                            strategy_name = NA, max_state_time = cycles) {
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
   
+  expanding <- max_state_time > 1
+  
+  # Long form tibble w/ state_time and model_time
   start_tibble <- tibble::tibble(
-    model_time = seq_len(cycles),
-    markov_cycle = seq_len(cycles),
+    model_time = rep(seq_len(cycles), max_state_time),
+    markov_cycle = rep(seq_len(cycles), max_state_time),
+    state_time = rep(seq_len(max_state_time), each=cycles),
     strategy = strategy_name
   )
   
   # other datastructure?
-  res <- try(
-    dplyr::mutate_(
-      start_tibble,
-      .dots = x
-    ), silent = TRUE
+  res <- try({
+      if(expanding){
+        start_tibble %>%
+          dplyr::group_by_("state_time") %>%
+          dplyr::mutate_(.dots = x) %>%
+          dplyr::ungroup()
+      } else {
+        dplyr::mutate_(start_tibble, .dots = x)
+      }
+    },
+    silent = TRUE
   )
   
-  if ((use_fn <- options()$heemod.inf_parameter) != "ignore") {
+  if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
     
     if (any(these_are_inf <- sapply(res, is.infinite))) {
       inf_param_nums <- unique(which(these_are_inf, arr.ind = TRUE)[,2])
@@ -42,7 +73,7 @@ eval_parameters <- function(x, cycles = 1,
         "Infinite parameter values:",
         paste(inf_param_names, collapse = ", "),
         ";\n",
-        "See the option heemod.inf_parameter, which",
+        "See the option heRomod.inf_parameter, which",
         "can be 'ignore', 'warning', or 'stop' (the default)."
       )
       get(use_fn)(error_message)
@@ -81,13 +112,133 @@ eval_parameters <- function(x, cycles = 1,
   )
 }
 
-eval_init <- function(x, parameters) {
+eval_init <- function(x, parameters, expand) {
+  
+  # Assinging NULLS to avoid CMD Check issues
+  .state <- .limit <- model_time <- state_time <- .value <- NULL
+  
   to_keep <- names(x)
-  if (length(to_keep)) {
-    dplyr::mutate_(.data = parameters, .dots = x)[to_keep]
+  
+  expanding <- any(expand$.expand)
+  
+  if(expanding) {
+    init_df <- parameters %>%
+      dplyr::filter(model_time == 1) %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(.state = as.character(.state)) %>%
+      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      dplyr::filter(state_time <= .limit) %>%
+      dplyr::mutate(
+        .value = ifelse(state_time > 1, 0, .value)
+      )
   } else {
-    tibble::tibble()
+    init_df <- parameters %>%
+      dplyr::filter(model_time == 1) %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(
+        .full_state = as.character(.state),
+        .state = as.character(.state)
+      )
   }
+  
+  stopifnot(
+    all(init_df$.value >= 0),
+    all(!is.na(init_df$.value))
+  )
+  
+  init_vector <- init_df$.value
+  names(init_vector) <- init_df$.full_state
+  
+  init_vector
+  
 }
 
-eval_starting_values <- eval_inflow <- eval_init
+eval_starting_values <- function(x, parameters) {
+  
+  # Assinging NULLS to avoid CMD Check issues
+  state_time <- NULL
+  
+  
+  to_keep <- names(x)
+  
+  start_df <- parameters %>%
+    dplyr::filter(state_time == 1) %>%
+    dplyr::mutate_(
+      .dots = x
+    ) %>%
+    .[to_keep]
+  
+  start_df[nrow(start_df), ] <- 0
+  
+  start_df
+  
+}
+
+eval_inflow <- function(x, parameters, expand) {
+  
+  # Assinging NULLS to avoid CMD Check issues
+  .state <- .limit <- state_time <- .value <- NULL
+  
+  expanding <- any(expand$.expand)
+  
+  to_keep <- names(x)
+  if(expanding) {
+    inflow_df <- parameters %>%
+      dplyr::group_by(state_time) %>%
+      dplyr::mutate_(.dots = x) %>%
+      dplyr::ungroup() %>%
+      .[c("model_time", "state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("model_time", "state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(.state = as.character(.state)) %>%
+      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      dplyr::filter(state_time <= .limit) %>%
+      dplyr::mutate(.value = ifelse(state_time > 1, 0, .value)) %>%
+      dplyr::ungroup()
+  } else {
+    inflow_df <- parameters %>%
+      dplyr::mutate_(.dots = x) %>%
+      .[c("model_time", "state_time", to_keep)] %>%
+      reshape2::melt(
+        id.vars = c("model_time", "state_time"),
+        variable.name = ".state",
+        value.name = ".value"
+      ) %>%
+      dplyr::mutate(
+        .full_state = as.character(.state),
+        .state = as.character(.state)
+      )
+  }
+  
+  
+  stopifnot(
+    all(inflow_df$.value >= 0),
+    all(!is.na(inflow_df$.value))
+  )
+  
+  all_state_names <- unique(inflow_df$.full_state)
+  inflow_mat <- inflow_df %>%
+    reshape2::acast(
+      model_time ~ factor(.full_state, levels = all_state_names),
+      value.var = ".value",
+      fill = 0
+    )
+  
+  tibble::as.tibble(inflow_mat)
+  
+}

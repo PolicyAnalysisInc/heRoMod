@@ -11,7 +11,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 library(dplyr)
 format_na <- function(x, char = " ") {
   x[is.na(x)] <- char
@@ -19,9 +19,9 @@ format_na <- function(x, char = " ") {
 }
 ```
 
-In most of the `heemod` vignettes models are defined through `R` code. But models with large numbers of states and transition probabilities might be unwieldy to input at the keyboard, and could be conveniently specified by file inputs.
+In most of the `heRomod` vignettes models are defined through `R` code. But models with large numbers of states and transition probabilities might be unwieldy to input at the keyboard, and could be conveniently specified by file inputs.
 
-This vignette demonstrates how to make and use files to input models to `heemod`. The files can then be used to run a suite of analyses (including deterministic and probabilistic sensitivity analyses, acceptability curve calculation, etc.) and optionally save results to a folder.
+This vignette demonstrates how to make and use files to input models to `heRomod`. The files can then be used to run a suite of analyses (including deterministic and probabilistic sensitivity analyses, acceptability curve calculation, etc.) and optionally save results to a folder.
 
 ## Introduction
 
@@ -49,7 +49,7 @@ Optionally, the following rows can be provided:
   8.  `source`: a *directory* in which `R` source files used in the analysis can be placed, and will be sourced when the model is run. The global environment is not modified.
 
 ```{r echo = FALSE}
-heemod:::read_file(system.file("tabular/thr/REFERENCE.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/REFERENCE.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 ```
@@ -65,7 +65,7 @@ Discounting rates can be specified in `.discount.*` columns, where `*` stands fo
 Values specified for only one strategy will be carried over to others. Only values that differ from one strategy to another must be specified separately for each strategy.
 
 ```{r echo = FALSE}
-heemod:::read_file(system.file("tabular/thr/THR_states.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_states.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 ```
@@ -82,7 +82,7 @@ A transition probabilities file contains 4 columns:
   * `prob`: transition probability from initial state to end state.
 
 ```{r echo = FALSE}
-heemod:::read_file(system.file("tabular/thr/THR_transition_probs.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_transition_probs.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 ```
@@ -98,7 +98,7 @@ A parameter file contains 2 mandatory columns: the parameter names `parameter` a
 Optional columns can be added to perform determinist or probabilist sensitivity analysis (DSA and PSA). `low` and `high` columns specify the lower and upper bounds of parameter values for DSA, while `psa` contains the parameter distribution for PSA.
 
 ```{r echo = FALSE}
-heemod:::read_file(system.file("tabular/thr/THR_parameters.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_parameters.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 ```
@@ -124,7 +124,7 @@ Models specified by tabular input will run with defaults options. The following 
   * `num_core`: number of cluster cores.
 
 ```{r echo = FALSE}
-heemod:::read_file(system.file("tabular/thr/THR_options.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_options.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable(row.names = FALSE)
 ```
@@ -135,7 +135,7 @@ The entire set of analysis specified in the tabular files can be run by the func
 
 ```{r}
 result <- run_model_tabular(
-  location = system.file("tabular/thr", package = "heemod")
+  location = system.file("tabular/thr", package = "heRomod")
 )
 ```
 

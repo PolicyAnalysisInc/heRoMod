@@ -1,3 +1,23 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2017  Matt Wiener
+#* Modified work Copyright (C) 2017  Jordan Amdahl
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
 #' Run Sensitivity Analysis
 #' 
 #' @param model An evaluated Markov model.
@@ -51,7 +71,7 @@ run_dsa <- function(model, dsa) {
       e_newdata,
       list(unlist(lapply(
         tab$.mod,
-        function(x) x$complete_parameters[1, dsa$variables]))[pos_par]))
+        function(x) x$parameters[1, dsa$variables]))[pos_par]))
     
     names(e_newdata)[length(e_newdata)] <- n
   }
@@ -59,7 +79,7 @@ run_dsa <- function(model, dsa) {
   for (i in seq_along(strategy_names)) {
     list_res[[i]]$.strategy_names <- strategy_names[i]
   }
-  
+
   res <- 
     dplyr::bind_rows(list_res) %>%
     reshape_long(
@@ -67,12 +87,16 @@ run_dsa <- function(model, dsa) {
       gather_cols = dsa$variables, na.rm = TRUE) %>% 
     dplyr::rowwise()
   
+  add_newdata <- function(df) {
+    df$.par_value_eval <- unlist(e_newdata)
+    return(df)
+  }
+  
   res <- res %>% 
     dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
     dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
     dplyr::ungroup() %>% 
-    dplyr::mutate(
-      .par_value_eval = unlist(e_newdata)) %>% 
+    dplyr::do(add_newdata(.)) %>% 
     dplyr::mutate_(
       .dots = get_ce(model))
   

@@ -1,17 +1,17 @@
 ---
-title: "Calibrating `heemod` models"
+title: "Calibrating `heRomod` models"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Calibrating heemod models}
+  %\VignetteIndexEntry{Calibrating heRomod models}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-library(heemod)
+library(heRomod)
 ```
  
 ```{r, define, include = FALSE}
@@ -150,12 +150,12 @@ For example the shape and scale parameters of a Weibull survival model can be un
 
 In order to perform calibration, the user must provide:
 
-  1. A heemod object from `run_model()` of `update()`^[Calibrating models from `update()` is *extremely* time-consuming.].
+  1. A heRomod object from `run_model()` of `update()`^[Calibrating models from `update()` is *extremely* time-consuming.].
   2. The names of the parameters of the model to calibrate (the parameters for which we seek appropriate values).
   3. A function that when applied to the model returns the result we want to match with reference values.
   4. The target values we would like the model results to match.
 
-For this example we will use the result from the assessment of a new total hip replacement previously described in `vignette("d-non-homogeneous", "heemod")`.
+For this example we will use the result from the assessment of a new total hip replacement previously described in `vignette("d-non-homogeneous", "heRomod")`.
 
 We will calibrate the parameters `gamma` (a Weibull survival parameter) and `rrNP1` (the relative risk associated with the new treatment), which originally have values of 1.45 and 0.26 respectively.
 

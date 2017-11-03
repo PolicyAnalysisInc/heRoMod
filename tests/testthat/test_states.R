@@ -75,11 +75,11 @@ test_that(
       x = 987,
       y = 1726
     )
-    sl1 <- heemod:::define_state_list(
+    sl1 <- heRomod:::define_state_list(
       X1 = s1,
       X2 = s2
     )
-    sl2 <- heemod:::define_state_list(
+    sl2 <- heRomod:::define_state_list(
       s1,
       s2
     )
@@ -141,31 +141,31 @@ y"
       fixed = TRUE
     )
     expect_error(
-      heemod:::define_state_list(
+      heRomod:::define_state_list(
         X1 = s1,
         X1 = s2
       )
     )
     expect_error(
-      heemod:::define_state_list(
+      heRomod:::define_state_list(
         X1 = define_state(x = 1, y = 2),
         X2 = define_state(x = 1)
       )
     )
     expect_error(
-      heemod:::define_state_list(
+      heRomod:::define_state_list(
         X1 = define_state(x = 1, y = 2),
         X2 = define_state(x = 1, z = 2)
       )
     )
     expect_warning(
-      heemod:::define_state_list(
+      heRomod:::define_state_list(
         X1 = s1,
         s2
       )
     )
     expect_error(
-      heemod:::define_state_list(
+      heRomod:::define_state_list(
         1:2,
         s1
       )

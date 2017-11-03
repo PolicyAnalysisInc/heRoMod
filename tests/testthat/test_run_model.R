@@ -419,13 +419,13 @@ test_that(
       cost = x, effect = y)
     
     expect_error(
-      heemod:::check_strategy_index(res, 1:2)
+      heRomod:::check_strategy_index(res, 1:2)
     )
     expect_error(
-      heemod:::check_strategy_index(res, as.factor("I"))
+      heRomod:::check_strategy_index(res, as.factor("I"))
     )
     expect_error(
-      heemod:::check_strategy_index(res, "a")
+      heRomod:::check_strategy_index(res, "a")
     )
   }
 )

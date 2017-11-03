@@ -1,3 +1,22 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
+
 #' Check Wholenumbers
 #' 
 #' @param x numeric.
@@ -15,9 +34,10 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5) {
 #' 
 #' @param x numeric. A quantity to discount.
 #' @param r discount rate.
-#' @param first logical. Should discouting start at the
+#' @param first logical. Should discouting start at the 
 #'   first value ?
-#' @param period Number of cycle per unit of discount rate.
+#' @param time numeric. Time values over which to discount,
+#'   defaults to counting sequence of same length as x.
 #'   
 #' @return A numeric vector of the same length as `x`.
 #' @export
@@ -28,16 +48,14 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5) {
 #' discount(rep(10, 5), .02, first = FALSE)
 #' 
 #' @keywords internal
-discount <- function(x, r, first = FALSE, period = 1) {
+discount <- function(x, r, first = FALSE, time = seq_along(x)) {
   if (length(r) > 1) r <- r[1]
   stopifnot(
     r >= 0,
-    r <= 1,
-    period > 0
+    r <= 1
   )
   
-  dr <- trunc((seq_along(x) - (1 - isTRUE(first))) / period)
-  x / (1 + r) ^ dr
+  x / (1 + r) ^ (time + isTRUE(first))
 }
 
 #' Check if All the Elements of a List Are the Same
@@ -325,7 +343,7 @@ interleave <- function(...) {
 #'   
 #' @examples
 #' 
-#' heemod:::insert(letters, c(0, 5, 26), c("xxx", "yyy"))
+#' heRomod:::insert(letters, c(0, 5, 26), c("xxx", "yyy"))
 #' 
 #' @keywords internal
 insert <- function(x, pos, what) {

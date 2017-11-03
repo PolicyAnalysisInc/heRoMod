@@ -1,3 +1,22 @@
+#**************************************************************************
+#* 
+#* Original work Copyright (C) 2016  Antoine Pierucci
+#* Modified work Copyright (C) 2016  Matt Wiener
+#*
+#* This program is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#*
+#* This program is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#* GNU General Public License for more details.
+#*
+#* You should have received a copy of the GNU General Public License
+#* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#**************************************************************************
+
 #' Combine Multiple Models
 #' 
 #' Given a set of models run with different parameters, 
@@ -164,7 +183,7 @@ summary.combined_model <- function(object, ...) {
   summary.run_model(object, ...)
 }
 
-#' @rdname heemod_scale
+#' @rdname heRomod_scale
 scale.combined_model <- function(x, center = TRUE, scale = TRUE) {
   scale.run_model(x, center = center, scale = scale)
 }

@@ -4,20 +4,24 @@
 \alias{create_states_from_tabular}
 \title{Create State Definitions From Tabular Input}
 \usage{
-create_states_from_tabular(state_info, df_env = globalenv())
+create_states_from_tabular(state_info, df_env = globalenv(),
+  state_trans_info = NULL)
 }
 \arguments{
 \item{state_info}{Result for one model of
 \code{\link[=parse_multi_spec]{parse_multi_spec()}}.}
 
 \item{df_env}{An environment containing external data.}
+
+\item{state_trans_info}{Optional result for one model of
+\code{\link[=parse_multi_spec]{parse_multi_spec()}} with state transitions.}
 }
 \value{
 A state list.
 }
 \description{
 Transforms tabular input defining states into an
-\code{heemod} object.
+\code{heRomod} object.
 }
 \details{
 Columns of state_info besides .model and state include
@@ -38,6 +42,6 @@ will then need to be defined like any other).
 The input data frame is expected to contain state
 information for all the models you will use in an
 analysis. For more information see the vignette:
-\code{vignette("file-input", package = "heemod")}.
+\code{vignette("file-input", package = "heRomod")}.
 }
 \keyword{internal}

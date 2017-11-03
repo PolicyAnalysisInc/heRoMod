@@ -33,8 +33,8 @@ test_that(
       print(mod1),
       "A Markov model strategy:
 
-    2 states,
-    2 state values",
+      2 states,
+      2 state values",
       fixed = TRUE
     )
     expect_output(
@@ -64,7 +64,7 @@ test_that(
       )
     )
   }
-)
+    )
 
 test_that(
   "Model evaluation, 1 model", {
@@ -115,7 +115,7 @@ test_that(
       round(e_mod$run_model$.effect), 1515
     )
     expect_equivalent(
-      heemod:::get_eval_init(heemod:::get_eval_strategy_list(e_mod)[[1]]),
+      heRomod:::get_eval_init(heRomod:::get_eval_strategy_list(e_mod)[[1]]),
       c(1, 0)
     )
     
@@ -216,7 +216,7 @@ test_that(
       round(e_mod2$run_model$.effect), c(1515, 615)
     )
     expect_equivalent(
-      heemod:::get_eval_init(heemod:::get_eval_strategy_list(e_mod2)[[1]]),
+      heRomod:::get_eval_init(heRomod:::get_eval_strategy_list(e_mod2)[[1]]),
       c(1, 0)
     )
     
@@ -241,6 +241,8 @@ test_that(
   "eval_matrix works", {
     par <- tibble::tibble(
       markov_cycle = 2:3,
+      model_time = 2:3,
+      state_time = 1,
       a = c(.1, .2)
     )
     mat <- define_transition(
@@ -248,14 +250,14 @@ test_that(
       a, 1-a
     )
     
-    res <- heemod:::eval_transition(mat, par)
+    res <- heRomod:::eval_transition(mat, par)
     
     expect_identical(
-      round(res[[1]], 2),
+      unname(round(res[[1]], 2)),
       structure(c(0.5, 0.1, 0.5, 0.9), .Dim = c(2L, 2L))
     )
     expect_identical(
-      round(res[[2]], 2),
+      unname(round(res[[2]], 2)),
       structure(c(0.67, 0.2, 0.33, 0.8), .Dim = c(2L, 2L))
     )
     
@@ -264,7 +266,7 @@ test_that(
       a, 1-a
     )
     expect_error(
-      heemod:::eval_matrix(mat2, par)
+      heRomod:::eval_matrix(mat2, par)
     )
   }
 )
@@ -280,15 +282,15 @@ test_that(
       state_names = c("A", "B"))
     
     expect_error(
-      heemod:::compute_counts(
+      heRomod:::compute_counts(
         lm, init = c(10, 0, 0), method = "end")
     )
     expect_error(
-      heemod:::compute_counts(
+      heRomod:::compute_counts(
         lm, init = c(10), method = "end")
     )
     expect_error(
-      heemod:::compute_counts(
+      heRomod:::compute_counts(
         lm, init = c(10, 0), method = "endzzz")
     )
   }
@@ -302,44 +304,45 @@ test_that(
       structure(c(0.67, 0.2, 0.33, 0.8),
                 .Dim = c(2L, 2L))),
       class = c("eval_matrix", "list"),
-      state_names = c("A", "B"))
+      state_names = c("A", "B"),
+      entry = c(T,T))
     infw <- data.frame(c(0, 0), c(0, 0))
     
     expect_identical(
-      dim(heemod:::compute_counts(
+      dim(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "end", inflow = infw) %>% 
-          heemod:::correct_counts(method = "end")),
+          heRomod:::correct_counts(method = "end")),
       c(2L, 2L)
     )
     expect_identical(
-      dim(heemod:::compute_counts(
+      dim(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "beginning", inflow = infw) %>% 
-          heemod:::correct_counts(method = "beginning")),
+          heRomod:::correct_counts(method = "beginning")),
       c(2L, 2L)
     )
     expect_identical(
-      dim(heemod:::compute_counts(
+      dim(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "life-table", inflow = infw) %>% 
-          heemod:::correct_counts(method = "life-table")),
+          heRomod:::correct_counts(method = "life-table")),
       c(2L, 2L)
     )
     
     expect_equivalent(
-      unlist(heemod:::compute_counts(
+      unlist(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "end", inflow = infw) %>% 
-          heemod:::correct_counts(method = "end")),
+          heRomod:::correct_counts(method = "end")),
       c(10, 5, 0, 5)
     )
     expect_equivalent(
-      unlist(heemod:::compute_counts(
+      unlist(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "beginning", inflow = infw) %>% 
-          heemod:::correct_counts(method = "beginning")),
+          heRomod:::correct_counts(method = "beginning")),
       c(5.00, 4.35, 5.00, 5.65)
     )
     expect_equivalent(
-      unlist(heemod:::compute_counts(
+      unlist(heRomod:::compute_counts(
         lm, init = c(10, 0), method = "life-table", inflow = infw) %>% 
-          heemod:::correct_counts(method = "life-table")),
+          heRomod:::correct_counts(method = "life-table")),
       c(7.500, 4.675, 2.500, 5.325)
     )
   }
