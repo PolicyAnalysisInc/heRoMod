@@ -27,13 +27,12 @@ distribution.
 
 define_spline_survival(
   scale = "hazard", 
-  gamma = c(-18.3122, 2.7511, 0.2292), 
-  knots=c(4.276666, 6.470800, 7.806289)
-)
-define_spline_survival(
-  scale = "odds", 
-  gamma = c(-18.5809, 2.7973, 0.2035), 
-  knots=c(4.276666, 6.470800, 7.806289)
-)
+  gamma1 = -18.3122,
+  gamma2 = 2.7511,
+  gamma3 = 0.2292,
+  knots1 = 4.276666,
+  knots2 = 6.470800,
+  knots3 = 7.806289
+ )
 
 }

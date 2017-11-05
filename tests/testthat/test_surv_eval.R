@@ -659,8 +659,14 @@ test_that("Defining Survival Distributions",
             
             surv3 = define_spline_survival(
               scale = "odds",
-              gamma = c(-23.5136, 3.4483, 0.4873,-0.3147),
-              knots = c(4.276666, 6.219263, 6.771924, 7.806289)
+              gamma1 = -23.5136,
+              gamma2 = 3.4483,
+              gamma3 = 0.4873,
+              gamma4 = -0.3147,
+              knots1 = 4.276666,
+              knots2 = 6.219263,
+              knots3 = 6.771924,
+              knots4 = 7.806289
             )
             
             surv5 = define_survival(
@@ -802,7 +808,7 @@ test_that("Combining Survival Distributions",
               compute_surv(time = seq_len(10), cycle_length = 200)
             exp_surv2 = fs4 %>%
               set_covariates(group = "Poor") %>%
-              join(fs4 %>% set_covariates(group = "Poor"), at = 543.343) %>%
+              join(543.343 , fs4 %>% set_covariates(group = "Poor")) %>%
               compute_surv(time = seq_len(10), cycle_length = 200)
             
             expect_equal(exp_surv, exp_surv2)
@@ -814,7 +820,7 @@ test_that("Combining Survival Distributions",
               compute_surv(time = seq_len(10), cycle_length = 200)
             exp_surv4 = fs4 %>%
               set_covariates(group = "Poor") %>%
-              mix(fs4 %>% set_covariates(group = "Poor"), weights = c(0.5, 0.5)) %>%
+              mix(0.5, fs4 %>% set_covariates(group = "Poor"), 0.5) %>%
               compute_surv(time = seq_len(10), cycle_length = 200)
             
             # Projecting + Pooling w/ self, applying null
@@ -824,9 +830,9 @@ test_that("Combining Survival Distributions",
               compute_surv(time = seq_len(10), cycle_length = 200)
             exp_surv6 = fs4 %>%
               set_covariates(group = "Poor") %>%
-              mix(fs4 %>% set_covariates(group = "Poor"), weights = c(0.5, 0.5)) %>%
+              mix(0.5, fs4 %>% set_covariates(group = "Poor"), 0.5) %>%
               apply_hr(1) %>%
-              join(fs4 %>% set_covariates(group = "Poor"), at = 89.1) %>%
+              join(89.1, fs4 %>% set_covariates(group = "Poor")) %>%
               apply_af(1) %>%
               apply_or(1) %>%
               compute_surv(time = seq_len(10), cycle_length = 200)
@@ -840,9 +846,9 @@ test_that("Combining Survival Distributions",
                            cycle_length = 100)
             exp_surv8 = fs4 %>%
               set_covariates(group = "Poor") %>%
-              mix(fs4 %>% set_covariates(group = "Poor"), weights = c(0.5, 0.5)) %>%
+              mix(0.5, fs4 %>% set_covariates(group = "Poor"), 0.5) %>%
               apply_hr(1) %>%
-              join(fs4 %>% set_covariates(group = "Poor"), at = 89.1) %>%
+              join(89.1, fs4 %>% set_covariates(group = "Poor")) %>%
               apply_af(1) %>%
               apply_or(1) %>%
               compute_surv(time = seq(from = 10, to = 20, by = 1),
@@ -856,9 +862,9 @@ test_that("Combining Survival Distributions",
               compute_surv(time = 25, cycle_length = 365.25 / 7)
             exp_surv10 = fs4 %>%
               set_covariates(group = "Poor") %>%
-              mix(fs4 %>% set_covariates(group = "Poor"), weights = c(0.5, 0.5)) %>%
+              mix(0.5, fs4 %>% set_covariates(group = "Poor"), 0.5) %>%
               apply_hr(1) %>%
-              join(fs4 %>% set_covariates(group = "Poor"), at = 89.1) %>%
+              join(89.1, fs4 %>% set_covariates(group = "Poor")) %>%
               apply_af(1) %>%
               apply_or(1) %>%
               compute_surv(time = 25, cycle_length = 365.25 / 7)
@@ -902,10 +908,9 @@ test_that("Combining Survival Distributions",
                            type = "surv")
             
             fs1_weighted2_surv = mix(
-              fs3 %>% set_covariates(group = "Good"),
-              fs3 %>% set_covariates(group = "Medium"),
-              fs3 %>% set_covariates(group = "Poor"),
-              weights = c(229, 229, 228)
+              fs3 %>% set_covariates(group = "Good"), 229,
+              fs3 %>% set_covariates(group = "Medium"), 229,
+              fs3 %>% set_covariates(group = "Poor"), 228
             ) %>%
               compute_surv(time = seq_len(10),
                            cycle_length = 200,
@@ -917,10 +922,9 @@ test_that("Combining Survival Distributions",
                            type = "prob")
             
             fs2_weighted2_prob = mix(
-              fs3 %>% set_covariates(group = "Good"),
-              fs3 %>% set_covariates(group = "Medium"),
-              fs3 %>% set_covariates(group = "Poor"),
-              weights = c(229, 229, 228)
+              fs3 %>% set_covariates(group = "Good"), 229,
+              fs3 %>% set_covariates(group = "Medium"), 229,
+              fs3 %>% set_covariates(group = "Poor"), 228
             ) %>%
               compute_surv(time = seq_len(10),
                            cycle_length = 200,

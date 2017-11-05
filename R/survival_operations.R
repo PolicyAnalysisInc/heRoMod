@@ -24,8 +24,7 @@
 #' Project survival from a survival distribution using one
 #' or more survival distributions using the specified cut points.
 #' 
-#' @param ... Survival distributions to be used in the
-#'   projection.
+#' @param ... Survival distributions and cut points in alternating order
 #' @param dots Used to work around non-standard evaluation.
 #' @param at A vector of times corresponding to the cut
 #'   point(s) to be used.
@@ -37,11 +36,16 @@
 #' 
 #' dist1 <- define_survival(distribution = "exp", rate = .5)
 #' dist2 <- define_survival(distribution = "gompertz", rate = .5, shape = 1)
-#' join_dist <- join(dist1, dist2, at=20)
-join <- function(..., at) {
+#' join_dist <- join(dist1, 20, dist2)
+join <- function(...) {
   dots <- list(...)
+  n_args <- length(dots)
+  dist_list <- list()
+  cut_list <- list()
+  if(n_args >= 1) dist_list <- dots[seq(from=1, to=n_args, by = 2)]
+  if(n_args >= 2) cut_list <- dots[seq(from=2, to=n_args, by = 2)]
   
-  join_(dots, at)
+  join_(dist_list, cut_list)
 }
 #' @export
 #' @rdname join
@@ -61,11 +65,17 @@ project_ <- function(...) {
 #' @rdname join
 join_ <- function(dots, at) {
   
+  at <- lapply(at, unique)
+  at_len <- as.numeric(lapply(at, length))
+  at <- unlist(at)
+  
   stopifnot(
+    length(dots) > 1,
+    length(at) == length(dots) - 1,
+    all(at_len == 1),
     all(at > 0),
     all(is.finite(at)),
-    !is.unsorted(at, strictly=T),
-    length(at) == length(dots) - 1
+    !is.unsorted(at, strictly=T)
   )
   
   # Restructure so that first distribution is "alone"
@@ -127,24 +137,35 @@ project_fn <- function(dist1, dist2_list) {
 #' 
 #' dist1 <- define_survival(distribution = "exp", rate = .5)
 #' dist2 <- define_survival(distribution = "gompertz", rate = .5, shape = 1)
-#' pooled_dist <- mix(dist1, dist2, weights = c(0.25, 0.75))
+#' pooled_dist <- mix(dist1, 0.25, dist2, 0.75)
 #' 
-mix <- function(..., weights = 1) {
-  
+mix <- function(...) {
   dots <- list(...)
+  n_args <- length(dots)
+  dist_list <- list()
+  weight_list <- list()
+  if(n_args >= 1) dist_list <- dots[seq(from=1, to=n_args, by = 2)]
+  if(n_args >= 2) weight_list <- dots[seq(from=2, to=n_args, by = 2)]
   
-  mix_(dots, weights)
+  mix_(dist_list, weight_list)
 }
 
 #' @export
 #' @rdname mix
 mix_ <- function(dots, weights = 1) {
   
+  weights <- lapply(weights, unique)
+  weights_len <- as.numeric(lapply(weights, length))
+  weights <- unlist(weights)
+  
   stopifnot(
-    all(weights > 0),
-    all(is.finite(weights)),
-    length(weights) == length(dots)
+    length(dots) > 1,
+    length(weights) == length(dots),
+    all(weights_len == 1),
+    all(weights >= 0),
+    all(is.finite(weights))
   )
+  
   
   structure(
     list(
@@ -232,10 +253,11 @@ apply_hr <- function(dist, hr, log_hr = FALSE) {
 apply_af <- function(dist, af, log_af = FALSE) {
   
   stopifnot(
-    length(af) == 1,
+    length(unique(af)) == 1,
     is.finite(af),
     log_af | af > 0
   )
+  if(length(af) > 1) af <- af[1]
   if(log_af) af <- exp(af)
   if(af == 1) return(dist)
   if(inherits(dist, "surv_aft")){
@@ -273,11 +295,12 @@ apply_af <- function(dist, af, log_af = FALSE) {
 apply_or = function(dist, or, log_or = FALSE) {
   
   stopifnot(
-    length(or) == 1,
+    length(unique(or)) == 1,
     is.finite(or),
     log_or | or > 0
   )
   
+  if(length(or) > 1) or <- or[1]
   if(log_or) or <- exp(or)
   if(or == 1) return(dist)
   if(inherits(dist, "surv_po")){
@@ -316,9 +339,10 @@ apply_or = function(dist, or, log_or = FALSE) {
 #' compute_surv(shift_dist, 1:10)
 apply_shift = function(dist, shift) {
   stopifnot(
-    length(shift) == 1,
+    length(unique(shift)) == 1,
     is.finite(shift)
   )
+  if(length(shift) > 1) shift <- shift[1]
   if(shift == 0) return(dist)
   if(inherits(dist, "surv_shift")){
       dist$shift <- dist$shift + shift

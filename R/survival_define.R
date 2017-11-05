@@ -101,14 +101,22 @@ define_survival <- function(distribution = c("exp", "weibull",
 #' 
 #' define_spline_survival(
 #'   scale = "hazard", 
-#'   gamma = c(-18.3122, 2.7511, 0.2292), 
-#'   knots=c(4.276666, 6.470800, 7.806289)
-#' )
-#' define_spline_survival(
-#'   scale = "odds", 
-#'   gamma = c(-18.5809, 2.7973, 0.2035), 
-#'   knots=c(4.276666, 6.470800, 7.806289)
-#' )
+#'   gamma1 = -18.3122,
+#'   gamma2 = 2.7511,
+#'   gamma3 = 0.2292,
+#'   knots1 = 4.276666,
+#'   knots2 = 6.470800,
+#'   knots3 = 7.806289
+#'  )
+# define_spline_survival(
+#   scale = "odds",
+#   gamma1 = -18.5809,
+#   gamma2 = 2.7973,
+#   gamma3 = 0.2035,
+#   knots1 = 4.276666,
+#   knots2 = 6.470800,
+#   knots3 = 7.806289
+# )
 #' 
 #' @export
 define_spline_survival <- function(scale = c("hazard", "odds", 
@@ -116,14 +124,25 @@ define_spline_survival <- function(scale = c("hazard", "odds",
                                    ...) {
   
   scale <- match.arg(scale)
+  list_arg <- lapply(list(...), unique)
+  n_param <- length(list_arg)
   
-  list_arg <- list(...)
+  stopifnot(
+    all(unlist(lapply(list_arg, length)) == 1),
+    n_param >= 4,
+    n_param %% 2 == 0
+  )
+  
   
   if (! requireNamespace("flexsurv")) {
     stop("'flexsurv' package required.")
   }
   
-  pf <- flexsurv::psurvspline
+  pf <- flexsurv::unroll.function(
+    flexsurv::psurvspline,
+    gamma = seq_len(n_param/2),
+    knots = seq_len(n_param/2)
+  )
   
   names_fun <- setdiff(names(list_arg), "scale")
   names_par <- setdiff(names(formals(pf)), "q")
@@ -143,7 +162,7 @@ define_spline_survival <- function(scale = c("hazard", "odds",
       scale = scale,
       ...
     ),
-    class = c("surv_object", "surv_dist")
+    class = c("surv_object", "surv_dist_spline")
   )
 }
 

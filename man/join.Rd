@@ -7,7 +7,7 @@
 \alias{join_}
 \title{Project Beyond a Survival Distribution with Another}
 \usage{
-join(..., at)
+join(...)
 
 project(...)
 
@@ -16,13 +16,12 @@ project_(...)
 join_(dots, at)
 }
 \arguments{
-\item{...}{Survival distributions to be used in the
-projection.}
+\item{...}{Survival distributions and cut points in alternating order}
+
+\item{dots}{Used to work around non-standard evaluation.}
 
 \item{at}{A vector of times corresponding to the cut
 point(s) to be used.}
-
-\item{dots}{Used to work around non-standard evaluation.}
 }
 \value{
 A \code{surv_projection} object.
@@ -35,5 +34,5 @@ or more survival distributions using the specified cut points.
 
 dist1 <- define_survival(distribution = "exp", rate = .5)
 dist2 <- define_survival(distribution = "gompertz", rate = .5, shape = 1)
-join_dist <- join(dist1, dist2, at=20)
+join_dist <- join(dist1, 20, dist2)
 }

@@ -606,6 +606,32 @@ eval_surv.surv_dist <- function(x, time, ...) {
 
 #' @rdname eval_surv
 #' @export
+eval_surv.surv_dist_spline <- function(x, time, ...) {
+  if (! requireNamespace("flexsurv")) {
+    stop("'flexsurv' package required.")
+  }
+  
+  pf <- get(paste0("p", x$distribution),
+            envir = asNamespace("flexsurv"))
+  
+  
+  n_param <- (length(x) - 2)
+  pf <- flexsurv::unroll.function(
+    pf,
+    gamma = seq_len(n_param/2),
+    knots = seq_len(n_param/2)
+  )
+  
+  args <- x[- match("distribution", names(x))]
+  args[["q"]] <- time
+  args[["lower.tail"]] <- FALSE
+  ret <- do.call(pf, args)
+  
+  ret
+}
+
+#' @rdname eval_surv
+#' @export
 eval_surv.surv_table <- function(x, time, ...){
   look_up(data = x, time = time, bin = "time", value = "survival")
 }

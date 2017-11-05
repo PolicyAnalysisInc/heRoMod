@@ -432,8 +432,7 @@ if(nrow(this_part) == 1) return(this_part$fit[[1]])
     this_part <-
       dplyr::arrange_(this_part, ~ until)
     
-    join_(dots = this_part$fit, 
-             at= this_part$until[!is.na(this_part$until)])
+    join_(this_part$fit, as.list(this_part$until[!is.na(this_part$until)]))
     
   }  
   else{

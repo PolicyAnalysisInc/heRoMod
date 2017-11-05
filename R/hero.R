@@ -172,7 +172,7 @@ hero_extract_ce <- function(res) {
     )
 }
 
-run_hero_model <- function(model) {
+run_hero_model <- function(model, referent, cost, effect) {
   params <- parse_hero_vars(model$variables, model$settings$cycle_length)
   trans <- parse_hero_trans(model$transitions, model$strategies$name)
   states <- parse_hero_states(
@@ -196,8 +196,8 @@ run_hero_model <- function(model) {
     param = params,
     options = tibble::tribble(
       ~option,  ~value,
-      "cost",   "cost_hc",
-      "effect", "qalys",
+      "cost",   cost,
+      "effect", effect,
       "method", "beginning",
       "cycles", model$settings$n_cycles,
       "n",      1,
@@ -207,7 +207,8 @@ run_hero_model <- function(model) {
     run_dsa = F,
     run_psa = F,
     run_demo = F,
-    state_time_limit = limits
+    state_time_limit = limits,
+    central_strategy = referent
   )
   
   health_res <- hero_extract_summ(heemod_res, model$hsumms)

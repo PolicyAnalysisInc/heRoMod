@@ -7,7 +7,7 @@
 \alias{pool_}
 \title{Mix Two or More Survival Distributions}
 \usage{
-mix(..., weights = 1)
+mix(...)
 
 mix_(dots, weights = 1)
 
@@ -19,9 +19,9 @@ pool_(...)
 \item{...}{Survival distributions to be used in the
 projection.}
 
-\item{weights}{A vector of weights used in pooling.}
-
 \item{dots}{Used to work around non-standard evaluation.}
+
+\item{weights}{A vector of weights used in pooling.}
 }
 \value{
 A \code{surv_pooled} object.
@@ -34,6 +34,6 @@ weights.
 
 dist1 <- define_survival(distribution = "exp", rate = .5)
 dist2 <- define_survival(distribution = "gompertz", rate = .5, shape = 1)
-pooled_dist <- mix(dist1, dist2, weights = c(0.25, 0.75))
+pooled_dist <- mix(dist1, 0.25, dist2, 0.75)
 
 }

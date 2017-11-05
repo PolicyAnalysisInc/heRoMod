@@ -58,7 +58,7 @@ eval_parameters <- function(x, cycles = 1,
         try(dplyr::mutate_(
           start_tibble,
           .dots = x[seq_len(i)])
-        , silent = F)
+        , silent = T)
       }
     )
     which_errors <- sapply(
