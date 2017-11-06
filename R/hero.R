@@ -218,76 +218,77 @@ hero_extract_trace <- function(res) {
 
 #' @export
 run_hero_model <- function(model, cost, effect, type = "base case") {
-  params <- parse_hero_vars(model$variables, model$settings$cycle_length)
-  trans <- parse_hero_trans(model$transitions, model$strategies$name)
-  states <- parse_hero_states(
-    model$hvalues,
-    model$evalues,
-    model$hsumms,
-    model$esumms,
-    model$settings$disc_eff,
-    model$settings$disc_cost,
-    model$strategies$name,
-    model$states$name,
-    model$settings$cycle_length
-  )
-  tables <- model$tables
-  limits <- model$states$limit
-  names(limits) <- model$states$name
-  limits <- limits[!is.na(limits)]
-  heemod_res <- run_model_api(
-    states = states,
-    tm = trans,
-    param = params,
-    options = tibble::tribble(
-      ~option,  ~value,
-      "cost",   paste0(".disc_", cost),
-      "effect", paste0(".disc_", effect),
-      "method", "beginning",
-      "cycles", model$settings$n_cycles,
-      "n",      1,
-      "init",   "1, 0, 0"
-    ),
-    data = tables,
-    run_dsa = F,
-    run_psa = F,
-    run_demo = F,
-    state_time_limit = limits
-  )
-  
-  health_res <- rbind(
-    hero_extract_summ(heemod_res, model$hsumms),
-    plyr::ldply(model$strategies$name, function(x) {
-      hero_extract_summ(
-        heemod_res,
-        model$hsumms,
-        delta = T,
-        referent = x
-      )
-    })
-  )
-  econ_res <- rbind(
-    hero_extract_summ(heemod_res, model$esumms),
-    plyr::ldply(model$strategies$name, function(x) {
-      hero_extract_summ(
-        heemod_res,
-        model$esumms,
-        delta = T,
-        referent = x
-      )
-    })
-  )
-  ce_res <- hero_extract_ce(heemod_res)
-  
-  trace_res <- hero_extract_trace(heemod_res)
-  
-  list(
-    trace = trace_res,
-    outcomes = health_res,
-    costs = econ_res,
-    ce = ce_res
-  )
-  
+  return(model)
+  # params <- parse_hero_vars(model$variables, model$settings$cycle_length)
+  # trans <- parse_hero_trans(model$transitions, model$strategies$name)
+  # states <- parse_hero_states(
+  #   model$hvalues,
+  #   model$evalues,
+  #   model$hsumms,
+  #   model$esumms,
+  #   model$settings$disc_eff,
+  #   model$settings$disc_cost,
+  #   model$strategies$name,
+  #   model$states$name,
+  #   model$settings$cycle_length
+  # )
+  # tables <- model$tables
+  # limits <- model$states$limit
+  # names(limits) <- model$states$name
+  # limits <- limits[!is.na(limits)]
+  # heemod_res <- run_model_api(
+  #   states = states,
+  #   tm = trans,
+  #   param = params,
+  #   options = tibble::tribble(
+  #     ~option,  ~value,
+  #     "cost",   paste0(".disc_", cost),
+  #     "effect", paste0(".disc_", effect),
+  #     "method", "beginning",
+  #     "cycles", model$settings$n_cycles,
+  #     "n",      1,
+  #     "init",   "1, 0, 0"
+  #   ),
+  #   data = tables,
+  #   run_dsa = F,
+  #   run_psa = F,
+  #   run_demo = F,
+  #   state_time_limit = limits
+  # )
+  # 
+  # health_res <- rbind(
+  #   hero_extract_summ(heemod_res, model$hsumms),
+  #   plyr::ldply(model$strategies$name, function(x) {
+  #     hero_extract_summ(
+  #       heemod_res,
+  #       model$hsumms,
+  #       delta = T,
+  #       referent = x
+  #     )
+  #   })
+  # )
+  # econ_res <- rbind(
+  #   hero_extract_summ(heemod_res, model$esumms),
+  #   plyr::ldply(model$strategies$name, function(x) {
+  #     hero_extract_summ(
+  #       heemod_res,
+  #       model$esumms,
+  #       delta = T,
+  #       referent = x
+  #     )
+  #   })
+  # )
+  # ce_res <- hero_extract_ce(heemod_res)
+  # 
+  # trace_res <- hero_extract_trace(heemod_res)
+  # 
+  # list(
+  #   trace = trace_res,
+  #   outcomes = health_res,
+  #   costs = econ_res,
+  #   ce = ce_res
+  # )
+  # 
 }
 
 
