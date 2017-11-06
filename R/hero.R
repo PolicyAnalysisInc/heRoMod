@@ -32,7 +32,7 @@ parse_hero_values <- function(data, disc, strategies, clength) {
   states_undisc <- data %>%
     dplyr::rowwise() %>%
     dplyr::do({
-      if(is.na(.$strategy)) {
+      if(.$strategy == "All") {
         data.frame(
           name = .$name,
           .model = strategies,
@@ -55,7 +55,7 @@ parse_hero_values <- function(data, disc, strategies, clength) {
   states_disc <- states_undisc %>%
     dplyr::mutate(
       value = disc_fun(name),
-      name = paste0("disc__", name)
+      name = paste0(".disc_", name)
     )
   
   rbind(states_undisc, states_disc)
@@ -76,7 +76,7 @@ parse_hero_summaries <- function(data, values, disc, strategies, states, clength
   sum_disc <- sum_undisc %>%
     dplyr::mutate(
       value = disc_fun(name),
-      name = paste0("disc__", name)
+      name = paste0(".disc_", name)
     )
   
   rbind(sum_undisc, sum_disc)
@@ -85,7 +85,7 @@ parse_hero_trans <- function(data, strategies) {
   data %>%
     dplyr::rowwise() %>%
     dplyr::do({
-      if(is.na(.$strategy)) {
+      if(.$strategy == "All") {
         data.frame(
           .model = strategies,
           from = .$from,
@@ -164,7 +164,7 @@ hero_extract_summ <- function(res, summ, delta = F, referent = NULL) {
   disc <- dplyr::inner_join(
     dplyr::mutate(
       summ_unique,
-      variable1 = paste0("disc__", value),
+      variable1 = paste0(".disc_", value),
       variable = value
     ) %>%
       dplyr::select(-value),
@@ -197,7 +197,7 @@ hero_extract_trace <- function(res) {
   time <- rbind(
     data.frame(model_day=0,model_week=0,model_month=0,model_year=0),
     dplyr::distinct(
-      testit$model$model_runs$eval_strategy_list[[1]]$parameters,
+      res$model_runs$eval_strategy_list[[1]]$parameters,
       model_day,
       model_week,
       model_month,
@@ -205,7 +205,7 @@ hero_extract_trace <- function(res) {
     )
   )
   trace <- ldply(
-    testit$model$model_runs$eval_strategy_list,
+    res$model_runs$eval_strategy_list,
     function(x) {
       x$counts_uncorrected
     }
@@ -217,7 +217,7 @@ hero_extract_trace <- function(res) {
 }
 
 #' @export
-run_hero_model <- function(model, cost, effect) {
+run_hero_model <- function(model, cost, effect, type = "base case") {
   params <- parse_hero_vars(model$variables, model$settings$cycle_length)
   trans <- parse_hero_trans(model$transitions, model$strategies$name)
   states <- parse_hero_states(
@@ -241,8 +241,8 @@ run_hero_model <- function(model, cost, effect) {
     param = params,
     options = tibble::tribble(
       ~option,  ~value,
-      "cost",   cost,
-      "effect", effect,
+      "cost",   paste0(".disc_", cost),
+      "effect", paste0(".disc_", effect),
       "method", "beginning",
       "cycles", model$settings$n_cycles,
       "n",      1,
@@ -282,16 +282,14 @@ run_hero_model <- function(model, cost, effect) {
   trace_res <- hero_extract_trace(heemod_res)
   
   list(
-    base_case = list(
-      trace = trace_res,
-      outcomes = health_res,
-      costs = econ_res,
-      ce = ce_res
-    ),
-    model = heemod_res
+    trace = trace_res,
+    outcomes = health_res,
+    costs = econ_res,
+    ce = ce_res
   )
   
 }
+
 
 #' @export
 run_markdown <- function(text) {
