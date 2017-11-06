@@ -22,14 +22,12 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = TRUE, run_psa = TRUE,
-                          run_demo = TRUE, state_time_limit = NULL,
-                          central_strategy = NULL) {
+                          run_demo = TRUE, state_time_limit = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
                                   source, data)
   
   inputs$state_time_limit <- state_time_limit
-  inputs$central_strategy <- central_strategy
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
@@ -224,7 +222,6 @@ run_model_tabular <- function(location, reference = "REFERENCE.csv",
                               save = FALSE, overwrite = FALSE) {
   
   inputs <- gather_model_info(location, reference)
-  inputs$central_strategy <- NULL
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
@@ -397,8 +394,7 @@ eval_models_from_tabular <- function(inputs,
       base_model = inputs$model_options$base_model,
       method = inputs$model_options$method,
       cycles = inputs$model_options$cycles,
-      state_time_limit = inputs$state_time_limit,
-      central_strategy = inputs$central_strategy
+      state_time_limit = inputs$state_time_limit
     )
   )
   

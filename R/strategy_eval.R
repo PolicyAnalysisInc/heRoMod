@@ -173,12 +173,13 @@ eval_strategy <- function(strategy, parameters, cycles,
   )
   
   # Compute counts
-  count_table <- compute_counts(
+  count_table_uncorrected <- compute_counts(
     x = e_transition,
     init = e_init,
     inflow = e_inflow
-  ) %>%
-    correct_counts(method = method)
+  )
+  
+  count_table <- correct_counts(count_table_uncorrected, method = method)
   
   # Compute values
   values <- compute_values(
@@ -200,12 +201,21 @@ eval_strategy <- function(strategy, parameters, cycles,
   ) %>%
     do.call(tibble::tibble, .)
   
+  # Aggregate over states
+  count_table_agg_uncorrected <- plyr::dlply(
+    expand_table %>% dplyr::mutate_(.state = ~factor(.state, unique(.state))),
+    ".state",
+    function(st) rowSums(count_table_uncorrected[st$.full_state])
+  ) %>%
+    do.call(tibble::tibble, .)
+  
   structure(
     list(
       parameters = e_parameters,
       transition = e_transition,
       states = e_states,
       counts = count_table_agg,
+      counts_uncorrected = count_table_agg_uncorrected,
       values = values,
       e_init = e_init,
       e_inflow = e_inflow,
