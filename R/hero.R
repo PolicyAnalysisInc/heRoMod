@@ -297,7 +297,7 @@ run_hero_model <- function(model, cost, effect) {
 run_markdown <- function(text) {
   eval_env <- new.env(parent = parent.frame())
   writeLines(text, con = 'output.r')
-  knitr::spin('output.r', knit = T, envir = eval_env, precious = F)
+  knitr::spin('output.r', knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
   ls(eval_env)
 }
 
