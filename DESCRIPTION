@@ -30,7 +30,9 @@ Imports:
     tidyr,
     tools,
     utils,
-    purrr
+    purrr,
+    knitr,
+    markdown
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

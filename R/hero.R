@@ -293,3 +293,9 @@ run_hero_model <- function(model, cost, effect) {
   
 }
 
+run_markdown <- function(text) {
+  writeLines(text, con="input.R");
+  spin('output.R', knit = F)
+  markdownToHTML('output.Rmd', output='output.html')
+}
+
