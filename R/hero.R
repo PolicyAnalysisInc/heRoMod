@@ -217,7 +217,7 @@ hero_extract_trace <- function(res) {
 }
 
 #' @export
-run_hero_model <- function(settings, strategies, states, transitions,
+run_hero_model <- function(decision, settings, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
                            tables, scripts, cost, effect, type = "base case") {
   params <- parse_hero_vars(variables, settings$cycle_length)
