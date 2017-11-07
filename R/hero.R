@@ -254,7 +254,8 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     run_dsa = F,
     run_psa = F,
     run_demo = F,
-    state_time_limit = limits
+    state_time_limit = limits,
+    source = scripts
   )
   
   health_res <- rbind(
