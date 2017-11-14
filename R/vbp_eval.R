@@ -220,3 +220,45 @@ p_comp <- function(e.P, e.comp, beta0.P, beta0.comp,beta1.P, beta1.comp, lambda)
   p <- lambda*(e.P - e.comp)/(beta1.P - beta1.comp) - (beta0.P - beta0.comp)/(beta1.P - beta1.comp)
   return(p)
 }
+
+param_in_strategy <- function(mod,  strategy, parameter){
+  # Obtain parameter list
+  param_list <- mod$parameters
+  # Obtian lazyeval of parameter of interest
+  param_list[[parameter]] <- lazyeval::lazy(.._my_param)
+  # Interpolate paramater list with lazyeval of parameter of interest
+  i_params <- heRomod:::interpolate(param_list) # heroMod:::interpolate(params)
+  
+  ## States
+  # Extract states
+  state_list <- res_mod$uneval_strategy_list[[strategy]]$states
+  i_state <- heRomod:::interpolate(state_list, more = heRomod:::as_expr_list(i_params)) 
+  i_state <- i_state %>%
+    unlist(recursive=F) %>%
+    dispatch_strategy_substitute(strategy = strategy) %>%
+    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    as.logical %>%
+    any
+  
+  ## Transitions
+  # Extract Transitions
+  trans_list <- res_mod$uneval_strategy_list[[strategy]]$transition
+  i_trans <- heRomod:::interpolate(trans_list, more = heRomod:::as_expr_list(i_params)) 
+  i_trans <- i_trans %>%
+    dispatch_strategy_substitute(strategy = strategy) %>%
+    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    as.logical %>%
+    any
+  
+  ## Starting values
+  start_list <- res_mod$uneval_strategy_list[[strategy]]$starting_values
+  i_start <- heRomod:::interpolate(start_list, more = heRomod:::as_expr_list(i_params)) 
+  i_start <- i_start %>%
+    dispatch_strategy_substitute(strategy = strategy) %>%
+    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    as.logical %>%
+    any
+  
+  # Return TRUE if parameter potentially influences strategy
+  return(any(c(i_state, i_trans, i_start)))
+}
