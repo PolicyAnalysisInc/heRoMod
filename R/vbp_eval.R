@@ -22,6 +22,9 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     stop("Strategy for VBP not defined")
   }
   
+  if(!param_in_strategy(model, strategy_vbp, vbp$variable))
+    stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
+  
   strategy_comp <- strategy_names[strategy_names!=strategy_vbp]
   
   lambda <- seq(wtp_thresholds[1], wtp_thresholds[2], length.out = 100)
@@ -41,32 +44,34 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     "Running VBP on strategy '%s'...", strategy_vbp
   ))
   
-  for (n in strategy_names) { # n <- strategy_names[1]
-    tab <- eval_strategy_newdata(
-      model,
-      strategy = n,
-      newdata = vbp$vbp
-    )
-    
-    res <- tab %>% 
-      dplyr::mutate_if(
-        names(tab) %in% vbp$variable,
-        dplyr::funs(to_text_dots),
-        name = FALSE
+  for (n in strategy_names) { # n <- strategy_names[2]
+    # if(param_in_strategy(model, n, vbp$variable)){
+      tab <- eval_strategy_newdata(
+        model,
+        strategy = n,
+        newdata = vbp$vbp
       )
-    
-    list_res <- c(
-      list_res,
-      list(res)
-    )
-    
-    e_newdata <- c(
-      e_newdata,
-      list(unlist(lapply(
-        tab$.mod,
-        function(x) x$parameters[1, vbp$variable]))[pos_par]))
-    
-    names(e_newdata)[length(e_newdata)] <- n
+      
+      res <- tab %>% 
+        dplyr::mutate_if(
+          names(tab) %in% vbp$variable,
+          dplyr::funs(to_text_dots),
+          name = FALSE
+        )
+      
+      list_res <- c(
+        list_res,
+        list(res)
+      )
+      
+      e_newdata <- c(
+        e_newdata,
+        list(unlist(lapply(
+          tab$.mod,
+          function(x) x$parameters[1, vbp$variable]))[pos_par]))
+      
+      names(e_newdata)[length(e_newdata)] <- n
+    # }
   }
   
   for (i in seq_along(strategy_names)) {
@@ -104,8 +109,8 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   lin.params.P <- c_linear(res_vbp, strategy = strategy_vbp)
   beta0.P <- lin.params.P$beta0
   beta1.P <- lin.params.P$beta1
-  if(beta1.P == 0)
-    stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
+  # if(beta1.P == 0)
+  #   stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
   
   lin_approx[[strategy_vbp]] <- lin.params.P$lin_approx
   
