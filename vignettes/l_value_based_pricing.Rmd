@@ -34,8 +34,7 @@ par_mod <- modify(
   par_mod, 
   p_death_disease = compute_surv(
     fit_death_disease,
-    time = state_time, 
-    km_limit = 5))
+    time = state_time))
 
 tab_surv <- structure(list(time = c(0.4, 8.7, 7, 5.1, 9.2, 1, 0.5, 3.3, 1.8, 3, 6.7, 3.7, 1.1, 5.9, 5.1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10), 
                            status = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)), 
