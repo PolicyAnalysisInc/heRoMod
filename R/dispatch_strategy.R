@@ -155,3 +155,43 @@ dispatch_strategy_check <- function(x, env) {
     FALSE
   }
 }
+
+# This is a modified version of heRomod:::dispatch_strategy_hack
+# It goes through each R expression, identifies calls to dispatch_strategy,
+# and substitutes only the expression used by the given strategy
+dispatch_strategy_substitute <- function(.dots, strategy) {
+  f <- function (x, env) {
+    if (is.atomic(x) || is.name(x)) {
+      x
+    } else if (is.call(x)) {
+      if (heRomod:::dispatch_strategy_check(x[[1]], env)) {
+        x <- pryr::standardise_call(x)
+        stratNames <- names(x)
+        x <- x[[which(names(x) == strategy)]]
+        f(x)
+      } else {
+        as.call(lapply(x, f, env = env))
+      }
+    } else if (is.pairlist(x)) {
+      as.pairlist(lapply(x, f, env = env))
+    } else {
+      stop(sprintf(
+        "Don't know how to handle type %s.",
+        typeof(x)))
+    }
+  }
+  
+  do.call(
+    structure,
+    c(list(
+      .Data = lapply(
+        .dots,
+        function(x) {
+          x$expr <- f(x$expr, env = x$env)
+          x
+        }
+      )),
+      attributes(.dots)
+    )
+  )
+}
