@@ -147,7 +147,8 @@ hero_extract_summ <- function(res, summ) {
   strategies <- unique(value_res$.strategy_names)
   n_strat <- length(strategies)
   
-  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat))
+  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
+    dplyr::filter(referent != comparator)
   value_names <- setdiff(colnames(value_res), ".strategy_names")
   
   ref_res <- value_res[indices$referent, ]

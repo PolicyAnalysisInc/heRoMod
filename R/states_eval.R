@@ -216,54 +216,6 @@ get_state_value_names.eval_state_list <- function(x){
   names(x[[1]])[-1]
 }
 
-#' Hack to Work Around a Discounting Issue
-#' 
-#' This function is a hack to avoid a problem with 
-#' discounting when the argument is a constant.
-#' 
-#' The hack consists in replacing calls to
-#' `discount(x)` by `discount(x * rep(1, n()))` to
-#' ensure `x` is recycled to the correct length.
-#' 
-#' @param .dots A state object.
-#'   
-#' @return A modified state object.
-#'   
-#' @keywords internal
-discount_hack <- function(.dots) {
-  f <- function (x, env) {
-    if (is.atomic(x) || is.name(x)) {
-      x
-    } else if (is.call(x)) {
-      if (discount_check(x[[1]], env)) {
-        x <- pryr::standardise_call(x)
-        x$time <- substitute(markov_cycle - 1)
-      }
-      as.call(lapply(x, f, env = env))
-    } else if (is.pairlist(x)) {
-      as.pairlist(lapply(x, f, env = env))
-    } else {
-      stop(sprintf(
-        "Don't know how to handle type %s.",
-        typeof(x)))
-    }
-  }
-  
-  do.call(
-    structure,
-    c(list(
-      .Data = lapply(
-        .dots,
-        function(x) {
-          x$expr <- f(x$expr, env = x$env)
-          x
-        }
-      )),
-      attributes(.dots)
-    )
-  )
-}
-
 # Ensure only heRomod version of discount gets used
 discount_check <- function(x, env) {
   if (identical(x, quote(discount)) ||
