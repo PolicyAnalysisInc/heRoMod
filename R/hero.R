@@ -286,7 +286,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
 
 #' @export
 run_markdown <- function(text, data = NULL) {
-  eval_env <- new.env(parent = parent.frame())
+  eval_env <- new.env(parent = globalenv())
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),

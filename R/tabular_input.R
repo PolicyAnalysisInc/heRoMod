@@ -38,7 +38,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL, options = NULL, demo = NULL, source = NULL, data = NULL) {
   
   # Create new environment
-  df_env <- new.env()
+  df_env <- new.env(parent = globalenv())
   
   # Setup models
   models <- create_model_list_from_api(
