@@ -290,7 +290,7 @@ run_markdown <- function(text, data = NULL) {
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
-      function(i) assign(names(data)[i], data[[i]], envir = df_env)
+      function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
   writeLines(text, con = 'output.r')
