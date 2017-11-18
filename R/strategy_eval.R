@@ -297,19 +297,11 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   
   # Do element-wise multiplication to get the numbers
   # undergoing each transition
-  i <- 0
-  calc_trans <- function(x, y) {
-    i <<- i + 1
-    (colSums(x) + diag(unlist(inflow[i, ]))) * y
+  uncond_trans <- array(0, c(n_state,n_state,n_cycle+1))
+  uncond_trans[,,1] <- init_mat
+  for(i in seq_len(n_cycle)) {
+    uncond_trans[,,i+1] <- (colSums(uncond_trans[,,i]) + diag(unlist(inflow[i, ]))) * x[[i]]
   }
-  uncond_trans <- Reduce(
-    calc_trans,
-    x,
-    init_mat,
-    accumulate = TRUE
-  ) %>%
-    unlist %>%
-    array(c(n_state,n_state,n_cycle+1))
   
   # Sum over columns to get trace
   counts_array <- colSums(uncond_trans, dims=1) %>% t

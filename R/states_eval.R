@@ -51,6 +51,8 @@ eval_state_list <- function(x, parameters, expand = NULL) {
       .limit = 1
     )
   }
+  
+  var_names <- names(x[[1]])
 
   expanding <- any(expand$.expand)
   
@@ -83,33 +85,13 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   }
   # Evaluate and Handle expansion
   vars_df <- plyr::ldply(seq_len(n_states), f)
-  if(expanding) {
-    vars_df <- vars_df %>%
-    reshape2::melt(
-      id.vars = c("markov_cycle", "state_time", ".state"),
-      variable.name = ".name",
-      value.name = ".value"
-    ) %>%
+  vars_df <- vars_df %>%
     dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
     dplyr::filter(state_time <= .limit) %>%
     dplyr::mutate(
-      .full_state = factor(.full_state, levels = unique(exp_state_names)),
-      .name = factor(.name, levels = unique(.name))
+      .full_state = factor(.full_state, levels = unique(exp_state_names))
     ) %>%
-    reshape2::dcast(markov_cycle + .full_state ~ .name, value.var = ".value", fill = 0)
-  } else {
-    vars_df <- vars_df %>%
-      reshape2::melt(
-        id.vars = c("markov_cycle", "state_time", ".state"),
-        variable.name = ".name",
-        value.name = ".value"
-      ) %>%
-      dplyr::mutate(
-        .full_state = factor(.state, levels = unique(exp_state_names)),
-        .name = factor(.name, levels = unique(.name))
-      ) %>%
-      reshape2::dcast(markov_cycle + .full_state ~ .name, value.var = ".value", fill = 0)
-  }
+    dplyr::select_(.dots = c("markov_cycle",".full_state", var_names))
   split_vec <- vars_df$.full_state
   cols_to_keep <- setdiff(colnames(vars_df), ".full_state")
   vars_df_list <- split(vars_df[ ,cols_to_keep], split_vec)

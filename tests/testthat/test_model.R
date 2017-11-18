@@ -250,7 +250,7 @@ test_that(
       a, 1-a
     )
     
-    res <- heRomod:::eval_transition(mat, par)
+    res <- heRomod:::eval_transition.uneval_matrix(mat, par)
     
     expect_identical(
       unname(round(res[[1]], 2)),

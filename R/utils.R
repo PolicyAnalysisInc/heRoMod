@@ -128,9 +128,9 @@ check_names <- function(x) {
   if (any("strategy" %in% x)) {
     stop("'strategy' is a reserved name.")
   }
-  #if (any(grepl("^\\.", x))) {
-  #  stop("Names starting with '.' are reserved.")
-  #}
+  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x)))) {
+    stop("Names starting with '.' are reserved.")
+  }
 }
 
 #' Make Syntactically Valid Names

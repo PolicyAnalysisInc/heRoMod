@@ -1,5 +1,7 @@
 
-parse_hero_vars <- function(data, clength) {
+parse_hero_vars <- function(data, clength, hdisc, edisc) {
+  hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
+  edisc_adj <- rescale_discount_rate(edisc, 365, clength)
   hero_pars <- tibble::tribble(
     ~parameter,            ~value,
     "cycle_length_days",   as.character(clength),
@@ -13,7 +15,9 @@ parse_hero_vars <- function(data, clength) {
     "state_day",           "state_time * cycle_length_days",
     "state_week",          "state_time * cycle_length_weeks",
     "state_month",         "state_time * cycle_length_months",
-    "state_year",          "state_time * cycle_length_years"
+    "state_year",          "state_time * cycle_length_years",
+    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"),
+    "disc_e",              paste0("discount(1, ", edisc_adj, ")")
   )
   user_pars <- dplyr::transmute(
     data,
@@ -25,9 +29,13 @@ parse_hero_vars <- function(data, clength) {
     user_pars
   )
 }
-parse_hero_values <- function(data, disc, strategies, clength) {
-  disc_adj <- rescale_discount_rate(disc, 365, clength)
-  disc_fun <- function(x) paste0("discount(", x, ",", disc_adj, ")")
+parse_hero_values <- function(data, health, strategies, clength) {
+  if(health) {
+    disc_var <- "disc_h"
+  } else {
+    disc_var <- "disc_e"
+  }
+  disc_fun <- function(x) paste0(x, " * ", disc_var)
   
   states_undisc <- data %>%
     dplyr::rowwise() %>%
@@ -60,10 +68,13 @@ parse_hero_values <- function(data, disc, strategies, clength) {
   
   rbind(states_undisc, states_disc)
 }
-parse_hero_summaries <- function(data, values, disc, strategies, states, clength) {
-  
-  disc_adj <- rescale_discount_rate(disc, 365, clength)
-  disc_fun <- function(x) paste0("discount(", x, ",", disc_adj, ")")
+parse_hero_summaries <- function(data, values, health, strategies, states, clength) {
+  if(health) {
+    disc_var <- "disc_h"
+  } else {
+    disc_var <- "disc_e"
+  }
+  disc_fun <- function(x) paste0(x, " * ", disc_var)
   
   sum_undisc <- plyr::ddply(data, "name", function(x) {
     data.frame(
@@ -105,14 +116,14 @@ parse_hero_trans <- function(data, strategies) {
     }) %>%
     dplyr::ungroup()
 }
-parse_hero_states <- function(hvalues, evalues, hsumms, esumms, hdisc, edisc, strategies, states, clength) {
+parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
   values <- rbind(
-    parse_hero_values(hvalues, hdisc, strategies, clength),
-    parse_hero_values(evalues, edisc, strategies, clength)
+    parse_hero_values(hvalues, TRUE, strategies, clength),
+    parse_hero_values(evalues, FALSE, strategies, clength)
   )
   summaries <- rbind(
-    parse_hero_summaries(hsumms, values, hdisc, strategies, states, clength),
-    parse_hero_summaries(esumms, values, edisc, strategies, states, clength)
+    parse_hero_summaries(hsumms, values, TRUE, strategies, states, clength),
+    parse_hero_summaries(esumms, values, FALSE, strategies, states, clength)
   )
   states_df <- rbind(
     values,
@@ -127,37 +138,39 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, hdisc, edisc, st
   
   states_df
 }
-hero_extract_summ <- function(res, summ, delta = F, referent = NULL) {
+hero_extract_summ <- function(res, summ) {
+  
+  
+  model_res <- res$model_runs$run_model
+  value_res <- as.data.frame(res$model_runs$run_model, stringsAsFactors=F)
+  
+  strategies <- unique(value_res$.strategy_names)
+  n_strat <- length(strategies)
+  
+  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat))
+  value_names <- setdiff(colnames(value_res), ".strategy_names")
+  
+  ref_res <- value_res[indices$referent, ]
+  comp_res <- value_res[indices$comparator, ]
+  delta_res <- ref_res
+  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
+  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
+  all_res <- rbind(value_res, delta_res) %>%
+    reshape2::melt(id.vars = ".strategy_names") %>%
+    dplyr::mutate(variable = as.character(variable))
   
   summ_unique <- dplyr::distinct(summ, name, value)
-  if(delta) {
-    model_res <- res$model_runs
-    class(model_res) <- "list"
-    model_res$central_strategy <- referent
-    class(model_res) <- c("run_model", "data.frame")
-    model_res <- scale.run_model(model_res, center = T)
-    value_res <- as.data.frame(res$model_runs$run_model, stringsAsFactors=F) %>%
-      reshape2::melt(id.vars = ".strategy_names") %>%
-      dplyr::mutate(variable = as.character(variable)) %>%
-      dplyr::filter(.strategy_names != referent)
-  } else {
-    model_res <- res$model_runs$run_model
-    value_res <- as.data.frame(res$model_runs$run_model, stringsAsFactors=F) %>%
-      reshape2::melt(id.vars = ".strategy_names") %>%
-      dplyr::mutate(variable = as.character(variable))
-  }
-  
+ 
   undisc <- dplyr::inner_join(
     dplyr::rename(summ_unique,variable = value),
-    value_res,
+    all_res,
     by = "variable"
   ) %>%
     dplyr::mutate(
       outcome = name,
-      series = if(delta) paste0(referent, " vs. ", .strategy_names) else .strategy_names,
+      series = .strategy_names,
       group = variable,
-      disc = F,
-      value = if(delta) -value else value
+      disc = F
     ) %>%
     dplyr::select(outcome, series, group, disc, value)
   
@@ -168,15 +181,14 @@ hero_extract_summ <- function(res, summ, delta = F, referent = NULL) {
       variable = value
     ) %>%
       dplyr::select(-value),
-    value_res,
+    all_res,
     by = c("variable1" = "variable")
   ) %>%
     dplyr::mutate(
       outcome = name,
-      series = if(delta) paste0(referent, " vs. ", .strategy_names) else .strategy_names,
+      series = .strategy_names,
       group = variable,
-      disc = T,
-      value = if(delta) -value else value
+      disc = T
     ) %>%
     dplyr::select(outcome, series, group, disc, value)
   rbind(disc, undisc)
@@ -220,15 +232,13 @@ hero_extract_trace <- function(res) {
 run_hero_model <- function(decision, settings, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
                            tables, scripts, cost, effect, type = "base case") {
-  params <- parse_hero_vars(variables, settings$cycle_length)
+  params <- parse_hero_vars(variables, settings$cycle_length, settings$disc_eff, settings$disc_cost)
   trans <- parse_hero_trans(transitions, strategies$name)
-  states <- parse_hero_states(
+  state_list <- parse_hero_states(
     hvalues,
     evalues,
     hsumms,
     esumms,
-    settings$disc_eff,
-    settings$disc_cost,
     strategies$name,
     states$name,
     settings$cycle_length
@@ -238,7 +248,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
   names(limits) <- states$name
   limits <- limits[!is.na(limits) & !(limits == 0)]
   heemod_res <- run_model_api(
-    states = states,
+    states = state_list,
     tm = trans,
     param = params,
     options = tibble::tribble(
@@ -248,7 +258,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
       "method", "beginning",
       "cycles", settings$n_cycles,
       "n",      1,
-      "init",   "1, 0, 0"
+      "init",   paste(states$prob,collapse=", ")
     ),
     data = tables,
     run_dsa = F,
@@ -258,28 +268,8 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     source = scripts
   )
   
-  health_res <- rbind(
-    hero_extract_summ(heemod_res, hsumms),
-    plyr::ldply(strategies$name, function(x) {
-      hero_extract_summ(
-        heemod_res,
-        hsumms,
-        delta = T,
-        referent = x
-      )
-    })
-  )
-  econ_res <- rbind(
-    hero_extract_summ(heemod_res, esumms),
-    plyr::ldply(strategies$name, function(x) {
-      hero_extract_summ(
-        heemod_res,
-        esumms,
-        delta = T,
-        referent = x
-      )
-    })
-  )
+  health_res <- hero_extract_summ(heemod_res, hsumms)
+  econ_res <- hero_extract_summ(heemod_res, esumms)
   ce_res <- hero_extract_ce(heemod_res)
   
   trace_res <- hero_extract_trace(heemod_res)
@@ -295,8 +285,14 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
 
 
 #' @export
-run_markdown <- function(text) {
+run_markdown <- function(text, data = NULL) {
   eval_env <- new.env(parent = parent.frame())
+  if(!is.null(data)) {
+    plyr::l_ply(
+      seq_len(length(data)),
+      function(i) assign(names(data)[i], data[[i]], envir = eval_env)
+    )
+  }
   writeLines(text, con = 'output.r')
   knitr::spin('output.r', knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
   ls(eval_env)

@@ -60,7 +60,7 @@ check_matrix <- function(x) {
     
   }
   
-  if (! all(x >= 0 & x <= 1)) {
+  if (! sum(abs(x-0.5) > 0.5)==0) {
     problem <- which(x < 0 | x > 1, arr.ind = TRUE)
     # Use tibble here to avoid potentially confusing warnings about
     # Duplicate rownames
@@ -139,17 +139,23 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   
   expanding <- any(expand$.expand)
   
+  
+  
+  n_cycles <- length(unique(parameters$markov_cycle))
+  n_full_state <- nrow(expand)
+  trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
+  
   if(expanding) {
     
     nrow_param = nrow(parameters)
     eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
     
     trans_table <- tibble::tibble(
-      model_time = rep(parameters$model_time, times = n_state^2),
-      state_time = rep(parameters$state_time, times = n_state^2),
+      model_time = rep.int(parameters$model_time, times = n_state^2),
+      state_time = rep.int(parameters$state_time, times = n_state^2),
       .from = rep(state_names, each = n_state * nrow_param),
       .to = rep(state_names, times = n_state, each = nrow_param),
-      .value = unlist(eval_trans_probs[names(x)])
+      .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
     ) %>%
       dplyr::left_join(
         dplyr::transmute(
@@ -173,6 +179,12 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
           .to_e = .full_state
         ),
         by = c(".to" = ".state", ".to_state_time" = "state_time")
+      ) %>%
+      dplyr::mutate(
+        .from_e = as.numeric(factor(.from_e, levels = expand$.full_state)),
+        .to_e = as.numeric(factor(.to_e, levels = expand$.full_state)),
+        .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
+        .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
       )
   } else {
     parameters <- dplyr::filter_(parameters, "state_time==1")
@@ -187,43 +199,49 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .value = unlist(eval_trans_probs[names(x)])
     ) %>%
       dplyr::mutate(
-        .from_e = .from,
-        .to_e = .to
+        .from_e = as.numeric(factor(.from, levels = expand$.full_state)),
+        .to_e = as.numeric(factor(.to, levels = expand$.full_state)),
+        .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
+        .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
       )
   }
-  
   # Reshape into 3d matrix and calculate complements
-  trans_matrix <- trans_table %>%
-    reshape2::acast(
-      model_time ~
-        factor(.from_e, levels = expand$.full_state) ~
-        factor(.to_e, levels = expand$.full_state),
-      value.var = ".value",
-      fill = 0
-    ) %>%
-    replace_C
-  
-  array_res <- structure(
-    trans_matrix,
-    state_names = expand$.full_state
+  # trans_matrix <- trans_table %>%
+  #   reshape2::acast(
+  #     model_time ~
+  #       factor(.from_e, levels = expand$.full_state) ~
+  #       factor(.to_e, levels = expand$.full_state),
+  #     value.var = ".value",
+  #     fill = 0
+  #   ) %>%
+  #   replace_C
+  trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
+  trans_matrix[trans_table$.index] <- trans_table$.value
+  trans_matrix <- replace_C(trans_matrix)
+  dimnames(trans_matrix) <- list(
+    seq_len(n_cycles),
+    expand$.full_state,
+    expand$.full_state
   )
   
-  check_matrix(array_res)
+  check_matrix(trans_matrix)
   
   structure(
-    split_along_dim(array_res, 1),
+    split_array(trans_matrix),
     class = c("eval_matrix", "list"),
     state_names = colnames(trans_matrix[1,,]),
     entry = expand$state_time == 1
   )
 }
 
-split_along_dim <- function(a, n) {
-  # could be maybe optimized?
-  setNames(lapply(
-    split(a, arrayInd(seq_along(a), dim(a))[, n]),
-    array, dim = dim(a)[-n], dimnames(a)[-n]),
-    dimnames(a)[[n]])
+split_array <- function(a) {
+  iter <- dim(a)[1]
+  the_list <- vector(iter, mode = "list")
+  for(i in seq_len(iter)) {
+    the_list[[i]] <-a[i,,]
+  }
+  names(the_list) <- dimnames(a)[[1]]
+  return(the_list)
 }
 
 replace_C <- function(x) {

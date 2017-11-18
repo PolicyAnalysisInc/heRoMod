@@ -153,7 +153,7 @@ test_that(
     e_mat <- heRomod:::eval_transition.uneval_matrix(
       mat1, e_par1
     )
-    e_matC <- heRomod:::eval_transition(
+    e_matC <- heRomod:::eval_transition.uneval_matrix(
       matC, e_par1
     )
     
