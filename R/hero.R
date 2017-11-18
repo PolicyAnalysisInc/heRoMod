@@ -285,16 +285,16 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
 
 
 #' @export
-run_markdown <- function(text, data = NULL) {
-  eval_env <- new.env(parent = globalenv())
+run_markdown <- function(text, tables = NULL) {
+  eval_env <- new.env(parent = parent.frame())
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
-      function(i) assign(names(data)[i], data[[i]])
+      function(i) assign(names(data)[i], data[[i]], envir = df_env)
     )
   }
   writeLines(text, con = 'output.r')
-  knitr::spin('output.r', knit = T, precious = F, doc = '^##\\s*')
+  knitr::spin('output.r', knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
   ls(eval_env)
 }
 
