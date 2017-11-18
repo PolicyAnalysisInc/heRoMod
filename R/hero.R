@@ -244,7 +244,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     settings$cycle_length
   )
   tables <- tables
-  limits <- states$limit
+  limits <- as.numeric(states$limit)
   names(limits) <- states$name
   limits <- limits[!is.na(limits) & !(limits == 0)]
   heemod_res <- run_model_api(
