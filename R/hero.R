@@ -194,17 +194,38 @@ hero_extract_summ <- function(res, summ) {
     dplyr::select(outcome, series, group, disc, value)
   rbind(disc, undisc)
 }
-hero_extract_ce <- function(res) {
-  summary(res$model_runs)$res_comp %>%
-    dplyr::transmute(
-      name = .strategy_names,
-      cost = .cost,
-      effect = .effect,
-      dcost = .dcost,
-      deffect = .deffect,
-      dref = .dref,
-      icer = .icer
-    )
+hero_extract_ce <- function(res, hsumms, esumms) {
+  
+  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
+  unique_esumms <- paste0(".disc_", unique(esumms$name))
+  
+  expand.grid(
+    hsumm = unique_hsumms,
+    esumm = unique_esumms,
+    stringsAsFactors = F
+  ) %>%
+    ddply(c("hsumm","esumm"), function(x){
+      temp_res <- res$model_runs
+      class(temp_res) <- "list"
+      ce <- list(
+        .effect = lazyeval::as.lazy(x$hsumm,  res$model_runs$ce$.effect$env),
+        .cost = lazyeval::as.lazy(x$esumm,  res$model_runs$ce$.cost$env)
+      )
+      temp_res$run_model <- dplyr::mutate_(temp_res$run_model, .dots = ce)
+      class(temp_res) <- c("run_model", "data.frame")
+      summary(temp_res)$res_comp %>%
+        dplyr::transmute(
+          health_outcome = x$hsumm,
+          econ_outcome = x$esumm,
+          series = .strategy_names,
+          cost = .cost,
+          eff = .effect,
+          dcost = .dcost,
+          deffect = .deffect,
+          dref = .dref,
+          icer = .icer
+        )
+    })
 }
 hero_extract_trace <- function(res) {
   time <- rbind(
@@ -271,7 +292,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
   
   health_res <- hero_extract_summ(heemod_res, hsumms)
   econ_res <- hero_extract_summ(heemod_res, esumms)
-  ce_res <- hero_extract_ce(heemod_res)
+  ce_res <- hero_extract_ce(heemod_res, hsumms, esumms)
   
   trace_res <- hero_extract_trace(heemod_res)
   
