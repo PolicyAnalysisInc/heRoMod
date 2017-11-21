@@ -41,6 +41,15 @@ check_cycle_inputs <- function(cycle, cycle_length) {
     !any(is.infinite(cycle_length)),
     !any(is.na(cycle))
   )
+} 
+check_time_inputs <- function(time) {
+  
+  stopifnot(
+    length(time) >= 1,
+    !any(time < 0),
+    !any(is.infinite(time)),
+    !any(is.na(time))
+  )
 }
 
 #' Extract Evaluated Parameters
@@ -266,6 +275,68 @@ compute_surv_ <- function(x, time,
   }
   ret
 }
+
+#' @inherit surv_prob
+#' @name eval_surv
+#' @keywords internal
+surv_prob_ <- function(x, time, ...){
+  check_time_inputs(time)
+  eval_surv(x, time, ...)
+}
+
+#' Evaluate Survival Probabilities
+#' 
+#' Generate survival probabilities from a survival
+#' distribution.
+#' 
+#' The results of `surv_prob()` are memoised for 
+#' `options("heRomod.memotime")` (default: 1 hour) to 
+#' increase resampling performance.
+#' 
+#' @param x A survival distribution object
+#' @param time The times for which to predict.
+#' @param ... arguments passed to methods.
+#'   
+#' @return Returns either the survival probalities or
+#'   conditional probabilities of event for each cycle.
+#' @export
+surv_prob <- memoise::memoise(
+  surv_prob_,
+  ~ memoise::timeout(options()$heRomod.memotime)
+)
+
+#' @inherit event_prob
+#' @name eval_surv
+#' @keywords internal
+event_prob_ <- function(x, start, end, ...){
+  check_time_inputs(start)
+  check_time_inputs(end)
+  surv_start <- eval_surv(x, start, ...)
+  surv_end <- eval_surv(x, end, ...)
+  (surv_start - surv_end) / surv_start
+}
+
+#' Evaluate Event Probabilities
+#' 
+#' Generate event probabilities from a survival
+#' distribution.
+#' 
+#' The results of `event_prob()` are memoised for 
+#' `options("heRomod.memotime")` (default: 1 hour) to 
+#' increase resampling performance.
+#' 
+#' @param x A survival distribution object
+#' @param start The start time of the interval.
+#' @param start The end time of the interval.
+#' @param ... arguments passed to methods.
+#'   
+#' @return Returns either the survival probalities or
+#'   conditional probabilities of event for each cycle.
+#' @export
+event_prob <- memoise::memoise(
+  event_prob_,
+  ~ memoise::timeout(options()$heRomod.memotime)
+)
 
 #' Evaluate Survival Distributions
 #' 

@@ -140,7 +140,6 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
 }
 hero_extract_summ <- function(res, summ) {
   
-  
   model_res <- res$model_runs$run_model
   value_res <- as.data.frame(res$model_runs$run_model, stringsAsFactors=F)
   
@@ -193,6 +192,23 @@ hero_extract_summ <- function(res, summ) {
     ) %>%
     dplyr::select(outcome, series, group, disc, value)
   rbind(disc, undisc)
+}
+hero_extract_nmb <- function(hsumm_res, esumm_res, hsumms) {
+  
+  unique_hsumms <- dplyr::distinct(hsumms, name, .keep_all = T) %>%
+    dplyr::select(name, wtp)
+  
+  nmb_hsumm_res <- dplyr::filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    dplyr::left_join(unique_hsumms, by = c("outcome" = "name")) %>%
+    dplyr::mutate(nmb = value * wtp, type = "health") %>%
+    dplyr::mutate(value = nmb) %>%
+    dplyr::select(outcome, series, group, disc, type, value)
+  
+  nmb_esumm_res <- dplyr::filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    dplyr::mutate(value = -value, type = "economic") %>%
+    dplyr::select(outcome, series, group, disc, type, value)
+  
+  rbind(nmb_hsumm_res, nmb_esumm_res)
 }
 hero_extract_ce <- function(res, hsumms, esumms) {
   
@@ -292,6 +308,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
   
   health_res <- hero_extract_summ(heemod_res, hsumms)
   econ_res <- hero_extract_summ(heemod_res, esumms)
+  nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
   ce_res <- hero_extract_ce(heemod_res, hsumms, esumms)
   
   trace_res <- hero_extract_trace(heemod_res)
@@ -300,7 +317,8 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     trace = trace_res,
     outcomes = health_res,
     costs = econ_res,
-    ce = ce_res
+    ce = ce_res,
+    nmb = nmb_res
   )
   
 }

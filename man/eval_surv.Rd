@@ -4,6 +4,10 @@
 \alias{eval_surv}
 \alias{eval_surv}
 \alias{compute_surv_}
+\alias{eval_surv}
+\alias{surv_prob_}
+\alias{eval_surv}
+\alias{event_prob_}
 \alias{eval_surv.survfit}
 \alias{eval_surv.flexsurvreg}
 \alias{eval_surv.surv_model}
@@ -22,6 +26,10 @@
 eval_surv(x, time, ...)
 
 compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"), ...)
+
+surv_prob_(x, time, ...)
+
+event_prob_(x, start, end, ...)
 
 \method{eval_surv}{survfit}(x, time, ...)
 
@@ -62,6 +70,8 @@ absolute time units.}
 
 \item{type}{Either \code{prob}, for transition probabilities,
 or \code{surv}, for survival.}
+
+\item{start}{The start time of the interval.}
 }
 \value{
 Returns either the survival probalities or
