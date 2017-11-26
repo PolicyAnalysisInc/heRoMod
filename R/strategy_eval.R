@@ -382,13 +382,18 @@ compute_values <- function(states, counts, init, inflow, starting) {
   # Handle transitional costs
   if(!is.null(attr(states, "transitions"))) {
     
-    # Arrange trans counts into array to match state transitions
-    st_count_mat <- array(
-      rep(attr(counts, "transitions"), n_state_vals),
-      dim = c(n_states, n_states, num_cycles, n_state_vals)
-    )
+    trans_values_df <- attr(states, "transitions") %>%
+      dplyr::mutate(
+        .dim1 = as.numeric(.from_name_expanded),
+        .dim2 = as.numeric(.to_name_expanded),
+        .dim3 = as.numeric(markov_cycle),
+        .index = .dim1 + ((.dim2 - 1) * n_states) + ((.dim3 - 1) * (n_states ^ 2)),
+        .product = value * as.numeric(attr(counts, "transitions"))[.index]
+      ) %>%
+      dplyr::group_by(markov_cycle, variable) %>%
+      dplyr::summarize(value = sum(.product))
     
-    trans_values <- colSums(st_count_mat * attr(states, "transitions"), dims=2)
+    trans_values <- reshape2::acast(trans_values_df, markov_cycle~variable, value.var = "value")
     
     wtd_sums <- wtd_sums + trans_values
     

@@ -30,6 +30,9 @@ parse_hero_vars <- function(data, clength, hdisc, edisc) {
   )
 }
 parse_hero_values <- function(data, health, strategies, clength) {
+  
+  trans_string <- "→"
+  
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -37,7 +40,10 @@ parse_hero_values <- function(data, health, strategies, clength) {
   }
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
-  states_undisc <- data %>%
+  state_vals <- data %>%
+    dplyr::filter(!grepl(trans_string, state, fixed = T))
+  
+  states_undisc <- state_vals %>%
     dplyr::rowwise() %>%
     dplyr::do({
       if(.$strategy == "All") {
@@ -60,11 +66,62 @@ parse_hero_values <- function(data, health, strategies, clength) {
     }) %>%
     dplyr::ungroup()
   
-  states_disc <- states_undisc %>%
-    dplyr::mutate(
-      value = disc_fun(name),
-      name = paste0(".disc_", name)
-    )
+  if(nrow(states_undisc) > 0) {
+    states_disc <- states_undisc %>%
+      dplyr::mutate(
+        value = disc_fun(name),
+        name = paste0(".disc_", name)
+      )
+  } else {
+    states_disc <- NULLs
+  }
+  rbind(states_undisc, states_disc)
+}
+parse_hero_values_st <- function(data, health, strategies, clength) {
+  
+  trans_string <- "→"
+  
+  if(health) {
+    disc_var <- "disc_h"
+  } else {
+    disc_var <- "disc_e"
+  }
+  disc_fun <- function(x) paste0(x, " * ", disc_var)
+  
+  state_trans <- data %>%
+    dplyr::filter(grepl(trans_string, state, fixed = T))
+  
+  states_undisc <- state_trans %>%
+    dplyr::rowwise() %>%
+    dplyr::do({
+      if(.$strategy == "All") {
+        data.frame(
+          name = .$name,
+          .model = strategies,
+          .transition = .$state,
+          value = .$value,
+          stringsAsFactors = F
+        )
+      } else {
+        data.frame(
+          name = .$name,
+          .model = .$strategy,
+          value = .$value,
+          stringsAsFactors = F
+        )
+      }
+    }) %>%
+    dplyr::ungroup()
+  
+  if (nrow(states_undisc) > 0) {
+    states_disc <- states_undisc %>%
+      dplyr::mutate(
+        value = disc_fun(name),
+        name = paste0(".disc_", name)
+      )
+  } else {
+    states_disc <- NULL
+  }
   
   rbind(states_undisc, states_disc)
 }
@@ -76,7 +133,9 @@ parse_hero_summaries <- function(data, values, health, strategies, states, cleng
   }
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
-  sum_undisc <- plyr::ddply(data, "name", function(x) {
+  state_summs <- dplyr::filter(data, value %in% values$name)
+  
+  sum_undisc <- plyr::ddply(state_summs, "name", function(x) {
     data.frame(
       .model = rep(strategies, length(states)),
       .state = rep(states, each = length(strategies)),
@@ -84,12 +143,51 @@ parse_hero_summaries <- function(data, values, health, strategies, states, cleng
       stringsAsFactors = F
     )
   })
-  sum_disc <- sum_undisc %>%
-    dplyr::mutate(
-      value = disc_fun(name),
-      name = paste0(".disc_", name)
-    )
   
+  if(nrow(sum_undisc) > 0) {
+    sum_disc <- sum_undisc %>%
+      dplyr::mutate(
+        value = disc_fun(name),
+        name = paste0(".disc_", name)
+      )
+  } else {
+    sum_disc <- NULL
+  }
+  
+  rbind(sum_undisc, sum_disc)
+}
+parse_hero_summaries_st <- function(data, values, health, strategies, states, clength) {
+  if(health) {
+    disc_var <- "disc_h"
+  } else {
+    disc_var <- "disc_e"
+  }
+  disc_fun <- function(x) paste0(x, " * ", disc_var)
+  
+  st_summs <- dplyr::filter(data, value %in% values$name)
+  
+  sum_undisc <- plyr::ddply(st_summs, "name", function(x) {
+    the_values <- dplyr::filter(
+      values,
+      name %in% x$name
+    )
+    data.frame(
+      .model = rep(strategies, nrow(the_values)),
+      .transition = rep(x$.transition, each = length(strategies)),
+      value = paste(x$value, collapse="+"),
+      stringsAsFactors = F
+    )
+  })
+  
+  if(nrow(sum_undisc) > 0) {
+    sum_disc <- sum_undisc %>%
+      dplyr::mutate(
+        value = disc_fun(name),
+        name = paste0(".disc_", name)
+      )
+  } else {
+    sum_disc <- NULL
+  }
   rbind(sum_undisc, sum_disc)
 }
 parse_hero_trans <- function(data, strategies) {
@@ -117,6 +215,16 @@ parse_hero_trans <- function(data, strategies) {
     dplyr::ungroup()
 }
 parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
+  all_value_names <- unique(c(
+    hvalues$name,
+    hsumms$name,
+    evalues$name,
+    esumms$name
+  ))
+  all_value_names <- c(
+    all_value_names,
+    paste0(".disc_", all_value_names)
+  )
   values <- rbind(
     parse_hero_values(hvalues, TRUE, strategies, clength),
     parse_hero_values(evalues, FALSE, strategies, clength)
@@ -132,11 +240,58 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
     dplyr::mutate(
       .model = factor(.model, levels = strategies),
       .state = factor(.state, levels = states),
-      name = factor(name, levels = unique(name))
+      name = factor(name, levels = all_value_names)
     ) %>%
-    reshape2::dcast(.model+.state~name, value.var = "value", fill = 0)
+    reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F)
   
   states_df
+}
+parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
+  all_value_names <- unique(c(
+    hvalues$name,
+    hsumms$name,
+    evalues$name,
+    esumms$name
+  ))
+  all_value_names <- c(
+    all_value_names,
+    paste0(".disc_", all_value_names)
+  )
+  trans_string <- "→"
+  values <- rbind(
+    parse_hero_values_st(hvalues, TRUE, strategies, clength),
+    parse_hero_values_st(evalues, FALSE, strategies, clength)
+  )
+  summaries <- rbind(
+    parse_hero_summaries_st(hsumms, values, TRUE, strategies, states, clength),
+    parse_hero_summaries_st(esumms, values, FALSE, strategies, states, clength)
+  )
+  all_values <- rbind(
+    values,
+    summaries
+  )
+  if(nrow(all_values) > 0) {
+    st_df <- rbind(
+      values,
+      summaries
+    ) %>%
+      dplyr::mutate(
+        .model = factor(.model, levels = strategies),
+        .transition = factor(.transition, levels = unique(values$.transition)),
+        name = factor(name, levels = all_value_names)
+      ) %>%
+      reshape2::dcast(.model+.transition~name, value.var = "value", fill = 0, drop=F)
+    split_trans <- strsplit(as.character(st_df$.transition), trans_string)
+    st_df <- dplyr::mutate(
+      st_df,
+      from = purrr::map_chr(split_trans, ~.[1]),
+      to = purrr::map_chr(split_trans, ~.[2])
+    )
+    
+  } else {
+    st_df <- NULL
+  }
+  st_df
 }
 hero_extract_summ <- function(res, summ) {
   
@@ -281,12 +436,22 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     states$name,
     settings$cycle_length
   )
+  st_list <- parse_hero_states_st(
+    hvalues,
+    evalues,
+    hsumms,
+    esumms,
+    strategies$name,
+    states$name,
+    settings$cycle_length
+  )
   tables <- tables
   limits <- as.numeric(states$limit)
   names(limits) <- states$name
   limits <- limits[!is.na(limits) & !(limits == 0)]
   heemod_res <- run_model_api(
     states = state_list,
+    st = st_list,
     tm = trans,
     param = params,
     options = tibble::tribble(
