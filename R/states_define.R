@@ -255,9 +255,7 @@ define_state_list_ <- function(.dots) {
     stop("Invalid state object provided.")
   }
   
-  #check_states(.dots)
-  
-  check_states(s_dots)
+  check_states(.dots)
   
   res <- structure(
     s_dots,
