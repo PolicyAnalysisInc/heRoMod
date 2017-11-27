@@ -6,7 +6,7 @@
 #' @param ... A parameter name and min/max values 
 #'   of the form \code{price, min(price), max(price)}.
 #' @param par_name String vector of price parameter name.
-#' @param low_dots,high_dots Used to work around
+#' @param low_dots,med_dots,high_dots Used to work around
 #'   non-standard evaluation.
 #'   
 #' @return A `vbp` object.

@@ -162,6 +162,7 @@ get_model.vbp <- function(x) {
   x$model
 }
 
+#' @rdname cost_linearization
 c_linear <- function(res_vbp, strategy){
   message(sprintf(
     "Running linearization of cost on strategy '%s'...", strategy
@@ -209,6 +210,7 @@ c_linear <- function(res_vbp, strategy){
   )
 }
 
+#' @rdname cost_effectiveness_strategies
 ce_strategy <- function(model, strategy){
   CE_vbp <- get_model_results(model) %>% 
     dplyr::filter(.strategy_names == strategy) %>%
@@ -222,11 +224,13 @@ ce_strategy <- function(model, strategy){
   )
 }
 
+#' @rdname price_comparator
 p_comp <- function(e.P, e.comp, beta0.P, beta0.comp,beta1.P, beta1.comp, lambda){
   p <- lambda*(e.P - e.comp)/(beta1.P - beta1.comp) - (beta0.P - beta0.comp)/(beta1.P - beta1.comp)
   return(p)
 }
 
+#' @rdname param_in_strategy
 param_in_strategy <- function(mod,  strategy, parameter){
   # Obtain parameter list
   param_list <- mod$parameters
