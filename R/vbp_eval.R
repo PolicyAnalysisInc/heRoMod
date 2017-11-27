@@ -177,17 +177,17 @@ c_linear <- function(res_vbp, strategy){
     "Running linearization of cost on strategy '%s'...", strategy
   ))
   C_linear <- res_vbp %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.par_value,
-                  .cost) %>%
-    dplyr::mutate(price = as.numeric(.par_value)) %>%
-    dplyr::summarise(beta1 = diff(.cost[1:2])/diff(price[1:2]), # New
-                     beta0 = .cost[1]-beta1*price[1])
+    dplyr::filter_(.strategy_names == strategy) %>%
+    dplyr::select_(.par_value,
+                   .cost) %>%
+    dplyr::mutate_(price = as.numeric(.par_value)) %>%
+    dplyr::summarise_(beta1 = diff(.cost[1:2])/diff(price[1:2]), # New
+                      beta0 = .cost[1]-beta1*price[1])
   ### Linearization test
   lin_test <- res_vbp %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.par_value,
-                  .cost)
+    dplyr::filter_(.strategy_names == strategy) %>%
+    dplyr::select_(.par_value,
+                   .cost)
   p_vals <- as.numeric(lin_test$.par_value)
   c_test <- lin_test$.cost
   
@@ -230,10 +230,10 @@ c_linear <- function(res_vbp, strategy){
 #' 
 ce_strategy <- function(model, strategy){
   CE_vbp <- get_model_results(model) %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.strategy_names,
-                  .cost,
-                  .effect)
+    dplyr::filter_(.strategy_names == strategy) %>%
+    dplyr::select_(.strategy_names,
+                   .cost,
+                   .effect)
   return(list(
     e.strategy = CE_vbp$.effect, 
     c.strategy = CE_vbp$.cost
@@ -274,7 +274,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   # Obtain parameter list
   param_list <- mod$parameters
   # Obtian lazyeval of parameter of interest
-  param_list[[parameter]] <- lazyeval::lazy(.._my_param)
+  param_list[[parameter]] <- lazyeval::lazy_(.._my_param)
   # Interpolate paramater list with lazyeval of parameter of interest
   i_params <- interpolate(param_list) # interpolate(params)
   
