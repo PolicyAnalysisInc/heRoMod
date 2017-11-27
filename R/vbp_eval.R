@@ -237,7 +237,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   
   ## States
   # Extract states
-  state_list <- res_mod$uneval_strategy_list[[strategy]]$states
+  state_list <- mod$uneval_strategy_list[[strategy]]$states
   i_state <- interpolate(state_list, more = as_expr_list(i_params)) 
   i_state <- i_state %>%
     unlist(recursive=F) %>%
@@ -248,7 +248,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   
   ## Transitions
   # Extract Transitions
-  trans_list <- res_mod$uneval_strategy_list[[strategy]]$transition
+  trans_list <- mod$uneval_strategy_list[[strategy]]$transition
   i_trans <- interpolate(trans_list, more = as_expr_list(i_params)) 
   i_trans <- i_trans %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
@@ -257,7 +257,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
     any
   
   ## Starting values
-  start_list <- res_mod$uneval_strategy_list[[strategy]]$starting_values
+  start_list <- mod$uneval_strategy_list[[strategy]]$starting_values
   i_start <- interpolate(start_list, more = as_expr_list(i_params)) 
   i_start <- i_start %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
