@@ -141,7 +141,8 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
                                    value.name = "Price",
                                    variable.name = "Comparison")
   vbp_star <- matrixStats::rowMaxs(cbind(0,
-                                         m.p_vs_wtp[cbind(1:length(lambda), index.str.vbp)]))
+                                         m.p_vs_wtp[cbind(1:length(lambda), 
+                                                          index.str.vbp)]))
   df_vbp <- data.frame(WTP = lambda,
                        Price = vbp_star)
   
@@ -232,12 +233,12 @@ param_in_strategy <- function(mod,  strategy, parameter){
   # Obtian lazyeval of parameter of interest
   param_list[[parameter]] <- lazyeval::lazy(.._my_param)
   # Interpolate paramater list with lazyeval of parameter of interest
-  i_params <- heRomod:::interpolate(param_list) # heroMod:::interpolate(params)
+  i_params <- interpolate(param_list) # interpolate(params)
   
   ## States
   # Extract states
   state_list <- res_mod$uneval_strategy_list[[strategy]]$states
-  i_state <- heRomod:::interpolate(state_list, more = heRomod:::as_expr_list(i_params)) 
+  i_state <- interpolate(state_list, more = as_expr_list(i_params)) 
   i_state <- i_state %>%
     unlist(recursive=F) %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
@@ -248,7 +249,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   ## Transitions
   # Extract Transitions
   trans_list <- res_mod$uneval_strategy_list[[strategy]]$transition
-  i_trans <- heRomod:::interpolate(trans_list, more = heRomod:::as_expr_list(i_params)) 
+  i_trans <- interpolate(trans_list, more = as_expr_list(i_params)) 
   i_trans <- i_trans %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
     lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
@@ -257,7 +258,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   
   ## Starting values
   start_list <- res_mod$uneval_strategy_list[[strategy]]$starting_values
-  i_start <- heRomod:::interpolate(start_list, more = heRomod:::as_expr_list(i_params)) 
+  i_start <- interpolate(start_list, more = as_expr_list(i_params)) 
   i_start <- i_start %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
     lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
