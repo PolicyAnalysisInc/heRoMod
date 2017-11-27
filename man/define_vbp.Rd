@@ -15,7 +15,7 @@ of the form \code{price, min(price), max(price)}.}
 
 \item{par_name}{String vector of price parameter name.}
 
-\item{low_dots, high_dots}{Used to work around
+\item{low_dots, med_dots, high_dots}{Used to work around
 non-standard evaluation.}
 }
 \value{

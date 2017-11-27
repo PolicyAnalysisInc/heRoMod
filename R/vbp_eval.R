@@ -162,7 +162,16 @@ get_model.vbp <- function(x) {
   x$model
 }
 
-#' @rdname cost_linearization
+#' Linearization of cost 
+#' 
+#' Calculates the linear equation of cost as a function of price per strategy
+#' 
+#' @param res_vbp The result of a VBP analysis
+#' @param strategy Strategy
+#' 
+#' @return Intercept and slope of linearization, and indicator whether 
+#' linearization was performed
+#' 
 c_linear <- function(res_vbp, strategy){
   message(sprintf(
     "Running linearization of cost on strategy '%s'...", strategy
@@ -210,7 +219,15 @@ c_linear <- function(res_vbp, strategy){
   )
 }
 
-#' @rdname cost_effectiveness_strategies
+#' Cost and effectiveness per strategy
+#' 
+#' Returns the cost and effectiveness for selected strategy
+#' 
+#' @param model A heemod model
+#' @param strategy Strategy
+#' 
+#' @return Cost and effectivness for selected strategy
+#' 
 ce_strategy <- function(model, strategy){
   CE_vbp <- get_model_results(model) %>% 
     dplyr::filter(.strategy_names == strategy) %>%
@@ -224,13 +241,35 @@ ce_strategy <- function(model, strategy){
   )
 }
 
-#' @rdname price_comparator
-p_comp <- function(e.P, e.comp, beta0.P, beta0.comp,beta1.P, beta1.comp, lambda){
+#' Price of comparator strategy
+#' 
+#' Returns the cost and effectiveness for selected strategy
+#' 
+#' @param e.P Effectiveness of strategy of interest
+#' @param e.comp Effectiveness of comparator strategy
+#' @param beta0.P Intercept of strategy of interest
+#' @param beta0.comp Intercept of comparator strategy
+#' @param beta1.P Slope of strategy of interest
+#' @param beta1.comp Slope of comparator strategy
+#' @param lambda Vector of willingness to pay thresholds
+#' 
+#' @return Vector of prices of comparator strategy
+#' 
+p_comp <- function(e.P, e.comp, beta0.P, beta0.comp, beta1.P, beta1.comp, lambda){
   p <- lambda*(e.P - e.comp)/(beta1.P - beta1.comp) - (beta0.P - beta0.comp)/(beta1.P - beta1.comp)
   return(p)
 }
 
-#' @rdname param_in_strategy
+#' Parameter influences strategy
+#' 
+#' Determines if parameter influences strategy 
+#' 
+#' @param mod An evaluated Markov model
+#' @param strategy Strategy of interest
+#' @param parameter Parameter of interest
+#' 
+#' @return TRUE if parameter potentially influences strategy, FALSE otherwise
+#' 
 param_in_strategy <- function(mod,  strategy, parameter){
   # Obtain parameter list
   param_list <- mod$parameters
