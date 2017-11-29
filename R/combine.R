@@ -57,6 +57,10 @@ combine_models <- function(newmodels, weights, oldmodel) {
       dplyr::ungroup() %>% 
       dplyr::summarise_all(apply_weights)
     
+    tab_counts_uncorrected <- (newmodels[[i]]) %>% 
+      dplyr::rowwise() %>% 
+      dplyr::do_(.counts_uncorrected = ~ .$.mod$counts_uncorrected)
+    
     tab_counts <- (newmodels[[i]]) %>% 
       dplyr::rowwise() %>% 
       dplyr::do_(.counts = ~ get_counts(.$.mod))
@@ -66,6 +70,14 @@ combine_models <- function(newmodels, weights, oldmodel) {
       dplyr::do_(.values = ~ get_values(.$.mod))
     
     collapsed_counts <- tab_counts$.counts %>% 
+      mapply(
+        weights,
+        FUN = function(x, y) x * y / total_weights,
+        SIMPLIFY = FALSE) %>% 
+      Reduce(f = "+")
+    
+    
+    collapsed_counts_uncorrected <- tab_counts_uncorrected$.counts_uncorrected %>% 
       mapply(
         weights,
         FUN = function(x, y) x * y / total_weights,
@@ -89,6 +101,7 @@ combine_models <- function(newmodels, weights, oldmodel) {
       list_eval_models,
       setNames(list(list(
         counts = collapsed_counts,
+        counts_uncorrected = collapsed_counts_uncorrected,
         values = collapsed_values)),
         strategy_names[i]))
   }

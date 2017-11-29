@@ -176,7 +176,7 @@ check_names <- function(x) {
   if (any("strategy" %in% x)) {
     stop("'strategy' is a reserved name.")
   }
-  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x)))) {
+  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x) & (x != ".group")))) {
     stop("Names starting with '.' are reserved.")
   }
 }
@@ -448,23 +448,24 @@ to_dots.default <- function(x) {
 }
 
 to_dots.list <- function(x) {
-  f <- function(x) {
-    if (inherits(x, "character") || inherits(x, "factor")) {
-      structure(
-        list(
-          expr = as.character(x),
-          env = globalenv()
-        ),
-        class = "lazy"
-      )
-    } else {
-      x
-    }
-  }
-  
-  lazyeval::as.lazy_dots(
-    lapply(x, f)
-  )
+  lazyeval::as.lazy_dots(x)
+  # f <- function(x) {
+  #   if (inherits(x, "character") || inherits(x, "factor")) {
+  #     structure(
+  #       list(
+  #         expr = as.character(x),
+  #         env = globalenv()
+  #       ),
+  #       class = "lazy"
+  #     )
+  #   } else {
+  #     x
+  #   }
+  # }
+  # 
+  # lazyeval::as.lazy_dots(
+  #   lapply(x, f)
+  # )
 }
 
 # transforms factors to characters in a df

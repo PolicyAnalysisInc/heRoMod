@@ -1,5 +1,5 @@
 
-parse_hero_vars <- function(data, clength, hdisc, edisc) {
+parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
   edisc_adj <- rescale_discount_rate(edisc, 365, clength)
   hero_pars <- tibble::tribble(
@@ -19,6 +19,16 @@ parse_hero_vars <- function(data, clength, hdisc, edisc) {
     "disc_h",              paste0("discount(1, ", hdisc_adj, ")"),
     "disc_e",              paste0("discount(1, ", edisc_adj, ")")
   )
+  if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
+    groups <- groups %>%
+      dplyr::rename_(.dots = c(".group" = "name"))
+    group_vars <- groups %>%
+      colnames() %>%
+      setdiff(".weights") %>%
+      plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1]))
+  } else {
+    group_vars <- NULL
+  }
   user_pars <- dplyr::transmute(
     data,
     parameter = name,
@@ -26,8 +36,17 @@ parse_hero_vars <- function(data, clength, hdisc, edisc) {
   )
   rbind(
     hero_pars,
+    group_vars,
     user_pars
   )
+}
+parse_hero_groups <- function(data) {
+  if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
+    dplyr::rename_(data, .dots = c(".group" = "name", ".weights" = "weight")) %>%
+    dplyr::mutate(.weights = as.numeric(.weights))
+  } else {
+    NULL
+  }
 }
 parse_hero_values <- function(data, health, strategies, clength) {
   
@@ -171,12 +190,16 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
       values,
       name %in% x$name
     )
-    data.frame(
-      .model = rep(strategies, nrow(the_values)),
-      .transition = rep(x$.transition, each = length(strategies)),
-      value = paste(x$value, collapse="+"),
-      stringsAsFactors = F
-    )
+    if(nrow(the_values) > 0) {
+      data.frame(
+        .model = rep(strategies, nrow(the_values)),
+        .transition = rep(the_values$.transition, each = length(strategies)),
+        value = paste(x$value, collapse="+"),
+        stringsAsFactors = F
+      )
+    } else {
+      NULL
+    }
   })
   
   if(nrow(sum_undisc) > 0) {
@@ -295,8 +318,8 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
 }
 hero_extract_summ <- function(res, summ) {
   
-  model_res <- res$model_runs$run_model
-  value_res <- as.data.frame(res$model_runs$run_model, stringsAsFactors=F)
+  model_res <- res$run_model
+  value_res <- as.data.frame(res$run_model, stringsAsFactors=F)
   
   strategies <- unique(value_res$.strategy_names)
   n_strat <- length(strategies)
@@ -376,11 +399,11 @@ hero_extract_ce <- function(res, hsumms, esumms) {
     stringsAsFactors = F
   ) %>%
     ddply(c("hsumm","esumm"), function(x){
-      temp_res <- res$model_runs
+      temp_res <- res
       class(temp_res) <- "list"
       ce <- list(
-        .effect = lazyeval::as.lazy(x$hsumm,  res$model_runs$ce$.effect$env),
-        .cost = lazyeval::as.lazy(x$esumm,  res$model_runs$ce$.cost$env)
+        .effect = lazyeval::as.lazy(x$hsumm,  res$ce$.effect$env),
+        .cost = lazyeval::as.lazy(x$esumm,  res$ce$.cost$env)
       )
       temp_res$run_model <- dplyr::mutate_(temp_res$run_model, .dots = ce)
       class(temp_res) <- c("run_model", "data.frame")
@@ -399,10 +422,16 @@ hero_extract_ce <- function(res, hsumms, esumms) {
     })
 }
 hero_extract_trace <- function(res) {
+  if(!is.null(res$oldmodel)) {
+    params <- res$oldmodel$eval_strategy_list[[1]]$parameters
+  } else {
+    params <- res$eval_strategy_list[[1]]$parameters
+  }
+  
   time <- rbind(
     data.frame(model_day=0,model_week=0,model_month=0,model_year=0),
     dplyr::distinct(
-      res$model_runs$eval_strategy_list[[1]]$parameters,
+      params,
       model_day,
       model_week,
       model_month,
@@ -410,7 +439,7 @@ hero_extract_trace <- function(res) {
     )
   )
   trace <- ldply(
-    res$model_runs$eval_strategy_list,
+    res$eval_strategy_list,
     function(x) {
       x$counts_uncorrected
     }
@@ -422,10 +451,17 @@ hero_extract_trace <- function(res) {
 }
 
 #' @export
-run_hero_model <- function(decision, settings, strategies, states, transitions,
+run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
                            tables, scripts, cost, effect, type = "base case") {
-  params <- parse_hero_vars(variables, settings$cycle_length, settings$disc_eff, settings$disc_cost)
+  params <- parse_hero_vars(
+    variables,
+    settings$cycle_length,
+    settings$disc_eff,
+    settings$disc_cost,
+    groups
+  )
+  groups_tbl <- parse_hero_groups(groups)
   trans <- parse_hero_trans(transitions, strategies$name)
   state_list <- parse_hero_states(
     hvalues,
@@ -454,6 +490,7 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     st = st_list,
     tm = trans,
     param = params,
+    demo = groups_tbl,
     options = tibble::tribble(
       ~option,  ~value,
       "cost",   paste0(".disc_", cost),
@@ -466,17 +503,23 @@ run_hero_model <- function(decision, settings, strategies, states, transitions,
     data = tables,
     run_dsa = F,
     run_psa = F,
-    run_demo = F,
+    run_demo = !is.null(groups_tbl),
     state_time_limit = limits,
     source = scripts
   )
   
-  health_res <- hero_extract_summ(heemod_res, hsumms)
-  econ_res <- hero_extract_summ(heemod_res, esumms)
-  nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
-  ce_res <- hero_extract_ce(heemod_res, hsumms, esumms)
+  if(is.null(groups_tbl)) {
+    main_res <- heemod_res$model_runs
+  } else {
+    main_res <- heemod_res$demographics$combined_model
+  }
   
-  trace_res <- hero_extract_trace(heemod_res)
+  health_res <- hero_extract_summ(main_res, hsumms)
+  econ_res <- hero_extract_summ(main_res, esumms)
+  nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
+  ce_res <- hero_extract_ce(main_res, hsumms, esumms)
+  
+  trace_res <- hero_extract_trace(main_res)
   
   list(
     trace = trace_res,
