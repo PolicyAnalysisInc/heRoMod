@@ -77,7 +77,7 @@ extract_params <- function(obj, data = NULL) {
     # Apply factor levels of original data
     for(i in colnames(data)) {
       if (is.character(data[[i]]) | is.factor(data[[i]])) {
-        data[[i]] <- factor(data[[i]], levels = levels(obj$data$m[[i]]))
+        data[[i]] <- factor(data[[i]], levels = unique(levels(as.factor(obj$data$m[[i]]))))
       }
     }
   }
@@ -119,8 +119,9 @@ extract_params <- function(obj, data = NULL) {
       par_coef_mat <- coef_mat[ , coef_selector]
       if (n_par_coefs > 1) {
         # Assemble model matrix
-        form <- obj$all.formulae[[par_names[i]]][-2] %>%
-          formula()
+        form <- obj$all.formulae[[par_names[i]]] %>%
+          rhs %>%
+          paste0("~", .) %>% formula
         mm <- stats::model.matrix(form, data = data)
         # Multiply cells of model matrix by cells of coefficient matrix and get row sums
         par_mat[ , i] <- (mm * par_coef_mat) %>%

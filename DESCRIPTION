@@ -32,7 +32,8 @@ Imports:
     utils,
     purrr,
     knitr,
-    markdown
+    markdown,
+    formula.tools
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
