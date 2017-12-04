@@ -48,7 +48,7 @@ parse_hero_groups <- function(data) {
     NULL
   }
 }
-parse_hero_values <- function(data, health, strategies, clength) {
+parse_hero_values <- function(data, health, strategies, states, clength) {
   
   trans_string <- "→"
   
@@ -66,21 +66,41 @@ parse_hero_values <- function(data, health, strategies, clength) {
     dplyr::rowwise() %>%
     dplyr::do({
       if(.$strategy == "All") {
-        data.frame(
-          name = .$name,
-          .model = strategies,
-          .state = .$state,
-          value = .$value,
-          stringsAsFactors = F
-        )
+        if(.$state == "All") {
+          data.frame(
+            name = .$name,
+            .model = rep(strategies, length(states)),
+            .state = rep(states, each = length(strategies)),
+            value = .$value,
+            stringsAsFactors = F
+          )
+        } else {
+          data.frame(
+            name = .$name,
+            .model = strategies,
+            .state = .$state,
+            value = .$value,
+            stringsAsFactors = F
+          )
+        }
       } else {
-        data.frame(
-          name = .$name,
-          .model = .$strategy,
-          .state = .$state,
-          value = .$value,
-          stringsAsFactors = F
-        )
+        if(.$state == "All") {
+          data.frame(
+            name = .$name,
+            .model = .$strategy,
+            .state = states,
+            value = .$value,
+            stringsAsFactors = F
+          )
+        } else {
+          data.frame(
+            name = .$name,
+            .model = .$strategy,
+            .state = .$state,
+            value = .$value,
+            stringsAsFactors = F
+          )
+        }
       }
     }) %>%
     dplyr::ungroup()
@@ -188,13 +208,14 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   sum_undisc <- plyr::ddply(st_summs, "name", function(x) {
     the_values <- dplyr::filter(
       values,
-      name %in% x$name
+      name %in% x$value
     )
+    the_transitions <- unique(the_values$.transition)
     if(nrow(the_values) > 0) {
       data.frame(
-        .model = rep(strategies, nrow(the_values)),
-        .transition = rep(the_values$.transition, each = length(strategies)),
-        value = paste(x$value, collapse="+"),
+        .model = rep(strategies, length(the_transitions)),
+        .transition = rep(the_transitions, each = length(strategies)),
+        value = rep(paste(x$value, collapse="+"), n = length(the_transitions), each = length(strategies)),
         stringsAsFactors = F
       )
     } else {
@@ -249,8 +270,8 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
     paste0(".disc_", all_value_names)
   )
   values <- rbind(
-    parse_hero_values(hvalues, TRUE, strategies, clength),
-    parse_hero_values(evalues, FALSE, strategies, clength)
+    parse_hero_values(hvalues, TRUE, strategies, states, clength),
+    parse_hero_values(evalues, FALSE, strategies, states, clength)
   )
   summaries <- rbind(
     parse_hero_summaries(hsumms, values, TRUE, strategies, states, clength),
@@ -378,7 +399,7 @@ hero_extract_nmb <- function(hsumm_res, esumm_res, hsumms) {
   
   nmb_hsumm_res <- dplyr::filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
     dplyr::left_join(unique_hsumms, by = c("outcome" = "name")) %>%
-    dplyr::mutate(nmb = value * wtp, type = "health") %>%
+    dplyr::mutate(nmb = value * as.numeric(wtp), type = "health") %>%
     dplyr::mutate(value = nmb) %>%
     dplyr::select(outcome, series, group, disc, type, value)
   
@@ -495,7 +516,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
       ~option,  ~value,
       "cost",   paste0(".disc_", cost),
       "effect", paste0(".disc_", effect),
-      "method", "beginning",
+      "method", "life-table",
       "cycles", settings$n_cycles,
       "n",      1,
       "init",   paste(states$prob,collapse=", ")
