@@ -11,7 +11,7 @@ define_survival_cure(distribution = c("exp", "weibull", "weibullPH", "lnorm",
 \arguments{
 \item{distribution}{A parametric survival distribution.}
 
-\item{theta}{The cure fraction for the model.}
+\item{theta}{The model cure fraction.}
 
 \item{...}{Additional distribution parameters (see
 respective distribution help pages).}
