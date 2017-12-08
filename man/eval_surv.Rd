@@ -19,6 +19,7 @@
 \alias{eval_surv.surv_po}
 \alias{eval_surv.surv_add_haz}
 \alias{eval_surv.surv_dist}
+\alias{eval_surv.surv_dist_cure}
 \alias{eval_surv.surv_dist_spline}
 \alias{eval_surv.surv_table}
 \title{Evaluate Survival Distributions}
@@ -52,6 +53,8 @@ event_prob_(x, start, end, ...)
 \method{eval_surv}{surv_add_haz}(x, time, ...)
 
 \method{eval_surv}{surv_dist}(x, time, ...)
+
+\method{eval_surv}{surv_dist_cure}(x, time, ...)
 
 \method{eval_surv}{surv_dist_spline}(x, time, ...)
 

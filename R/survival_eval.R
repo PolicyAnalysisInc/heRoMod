@@ -678,6 +678,33 @@ eval_surv.surv_dist <- function(x, time, ...) {
 
 #' @rdname eval_surv
 #' @export
+eval_surv.surv_dist_cure <- function(x, time, ...) {
+  if (! requireNamespace("flexsurv")) {
+    stop("'flexsurv' package required.")
+  }
+  if (! requireNamespace("flexsurvcure")) {
+    stop("'flexsurvcure' package required.")
+  }
+  
+  pf <- get(paste0("p", x$distribution),
+            envir = asNamespace("flexsurv"))
+  if (x$mixture) {
+    cure_f <- flexsurvcure::pmixsurv
+  } else {
+    cure_f <- flexsurvcure::pnmixsurv
+  }
+  
+  args <- x[- match(c("distribution", "mixture"), names(x))]
+  args[["pfun"]] <- pf
+  args[["q"]] <- time
+  args[["lower.tail"]] <- FALSE
+  ret <- do.call(cure_f, args)
+  
+  ret
+}
+
+#' @rdname eval_surv
+#' @export
 eval_surv.surv_dist_spline <- function(x, time, ...) {
   if (! requireNamespace("flexsurv")) {
     stop("'flexsurv' package required.")

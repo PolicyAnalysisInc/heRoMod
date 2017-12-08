@@ -82,6 +82,78 @@ define_survival <- function(distribution = c("exp", "weibull",
   )
 }
 
+
+
+
+#' Define a Parametric Mixture or Non-Mixture Cure Distribution
+#' 
+#' Define a parametric cure survival model.
+#' 
+#' @param distribution A parametric survival distribution.
+#' @param theta The model cure fraction.
+#' @param ... Additional distribution parameters (see 
+#'   respective distribution help pages).
+#' @param mixture a logical determining whether a mixture
+#'   or non-mixture is being defined.
+#'   
+#' @return A `surv_dist_cure` object.
+#' @export
+#' 
+#' @examples
+#' 
+#' define_survival_cure(distribution = "exp", theta = 0.34, rate = .5)
+#' define_survival_cure(distribution = "weibull", theta = 0.5, shape = 1.5, scale = 34.43)
+#' 
+define_survival_cure <- function(distribution = c("exp", "weibull",
+                                             "weibullPH",
+                                             "lnorm", "llogis",
+                                             "gamma", "gompertz",
+                                             "gengamma",
+                                             "gengamma.orig",
+                                             "genf", "genf.orig"),
+                            theta,
+                            ...,
+                            mixture = T) {
+  
+  distribution <- match.arg(distribution)
+  
+  list_arg <- list(...)
+  
+  if (distribution %in% c("exp", "weibull", "lnorm", "gamma")) {
+    env_f <- asNamespace("stats")
+  } else {
+    if (! requireNamespace("flexsurv")) {
+      stop("'flexsurv' package required.")
+    }
+    env_f <- asNamespace("flexsurv")
+  }
+  
+  pf <- get(paste0("p", distribution),
+            envir = env_f)
+  
+  names_fun <- setdiff(names(list_arg), "distribution")
+  names_par <- setdiff(names(formals(pf)), "q")
+  
+  correct_names <- names_fun %in% names_par
+  
+  if (! all(correct_names)) {
+    stop(sprintf(
+      "Incorrect argument%s: %s.",
+      plur(sum(! correct_names)),
+      paste(names_fun[! correct_names], collapse = ", ")))
+  }
+  
+  structure(
+    list(
+      distribution = distribution,
+      mixture = mixture,
+      theta = theta,
+      ...
+    ),
+    class = c("surv_object", "surv_dist_cure")
+  )
+}
+
 #' Define a Restricted Cubic Spline Survival Distribution
 #' 
 #' Define a restricted cubic spline parametric survival
