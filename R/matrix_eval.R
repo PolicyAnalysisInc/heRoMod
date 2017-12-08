@@ -43,9 +43,10 @@ check_matrix <- function(x) {
     range(rowSums(x, dims = 2)),
     c(1, 1)))) {
     problem_rows <- which(rowSums(x, dims = 2) != 1, arr.ind = TRUE)
+    state_names <- get_state_names(x)
     problem_rows <- data.frame(
       cycle = problem_rows[,1], 
-      state = get_state_names(x)[problem_rows[,2]])
+      state = state_names[problem_rows[,2]])
     problem_rows <- format.data.frame(problem_rows, justify = "left")
     
     stop(sprintf(
@@ -223,6 +224,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     expand$.full_state,
     expand$.full_state
   )
+  attr(trans_matrix, "state_names") <- expand$.full_state
   
   check_matrix(trans_matrix)
   

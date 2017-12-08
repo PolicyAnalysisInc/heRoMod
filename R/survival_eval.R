@@ -104,7 +104,7 @@ extract_params <- function(obj, data = NULL) {
     n_obs <- nrow(data)
     coef_mat <- coef_obj %>% 
       rep(n_obs) %>%
-      matrix(ncol <- n_coef, nrow = n_obs, byrow = TRUE)
+      matrix(ncol = n_coef, nrow = n_obs, byrow = TRUE)
     names(coef_mat) <- par_names
     # Preallocate a matrix to hold calculated parameters
     par_mat <- matrix(ncol = n_pars, nrow = n_obs)
@@ -120,10 +120,11 @@ extract_params <- function(obj, data = NULL) {
       if (n_par_coefs > 1) {
         # Assemble model matrix
         form <- obj$all.formulae[[par_names[i]]] %>%
-          rhs %>%
-          paste0("~", .) %>% formula
+          formula.tools::rhs() %>%
+          deparse %>%
+          paste0("~", .) %>%
+          as.formula
         mm <- stats::model.matrix(form, data = data)
-        # Multiply cells of model matrix by cells of coefficient matrix and get row sums
         par_mat[ , i] <- (mm * par_coef_mat) %>%
           rowSums() %>%
           inv_trans()

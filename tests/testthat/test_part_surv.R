@@ -126,7 +126,8 @@ test_that(
     
     expect_equal(
       get_counts(resPS)$count,
-      get_counts(resTM)$count
+      get_counts(resTM)$count,
+      tolerance=1e-8
     )
     
     suppressWarnings({

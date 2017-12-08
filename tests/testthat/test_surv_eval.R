@@ -46,7 +46,7 @@ test_that("Flexsurvreg",
               newdata = data.frame(age = 50, sex = 1)
             )[[1]]$est
             
-            expect_equal(heRomod_res, fs_res)
+            expect_equal(heRomod_res, fs_res, tolerance=1e-8)
           })
 
 
