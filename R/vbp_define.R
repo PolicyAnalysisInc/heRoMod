@@ -96,12 +96,12 @@ define_vbp_ <- function(par_name, low_dots, med_dots, high_dots) {
       med_dots  = med_dots,
       high_dots = high_dots
     ),
-    class = c("vbp", class(tab))
+    class = c("vbp_def", class(tab))
   )
 }
 
 #' @export
-print.vbp <- function(x, ...) {
+print.vbp_def <- function(x, ...) {
   tab <- cbind(to_text_dots(x$low_dots, name = FALSE),
                to_text_dots(x$high_dots, name = FALSE))
   

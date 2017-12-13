@@ -35,28 +35,16 @@ plot.vbp <- function(x,
 
 #' @export
 print.summary_vbp <- function(x, ...) {
-  v <- x$object$variables
-  cat(sprintf("A sensitivity analysis on %i parameters.\n\n",
-              length(v)))
-  cat(paste(c("Parameters:", v), collapse = "\n  -"))
-  cat("\n\nSensitivity analysis:\n\n")
+  cat(sprintf(
+    "VBP of parameter %s.\n\n",
+    x$res_strategy
+  ))
   
-  rn <- sprintf(
-    "%s, %s = %s",
-    x$res_comp$.strategy_names,
-    x$res_comp$.par_names,
-    x$res_comp$.par_value
-  )
-  
-  x <- dplyr::select_(x$res_comp, ~ - .par_names,
-                      ~ - .par_value,
-                      ~ - .strategy_names)
-  x <- pretty_names(x)
-  
-  res <- as.matrix(x)
-  
-  rownames(res) <- rn
-  print(res, na.print = "-", quote = FALSE)
+  print_results_vbp(x$res_values)
+}
+
+print_results_vbp <- function(res_values) {
+  print(res_values)
 }
 
 #' @export
@@ -68,3 +56,27 @@ get_central_strategy.vbp <- function(x, ...) {
   get_central_strategy(get_model(x))
 }
 
+#' Summarise Value-Based Pricing Results
+#' 
+#' @param x Output from [run_vbp()].
+#' @param ... additional arguments affecting the summary 
+#'   produced.
+#'   
+#' @return A `summary_vbp` object.
+#' @export
+summary.vbp <- function(x, ...) {
+  
+  res_values <- x$vbp %>% 
+    dplyr::filter(row_number()==1 | row_number()==n()) %>% 
+    dplyr::rename(VBP = Price) %>%
+    as.data.frame()
+  
+  
+  structure(
+    list(
+      res_values   = res_values,
+      res_strategy = x$variable
+    ),
+    class = "summary_vbp"
+  )
+}
