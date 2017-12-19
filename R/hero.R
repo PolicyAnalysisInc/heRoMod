@@ -45,7 +45,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   )
 }
 parse_hero_obj_vars <- function(data) {
-  if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
+  if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
     dplyr::transmute(
       data,
       parameter = name,
