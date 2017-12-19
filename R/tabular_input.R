@@ -22,10 +22,10 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = TRUE, run_psa = TRUE,
-                          run_demo = TRUE, state_time_limit = NULL) {
+                          run_demo = TRUE, state_time_limit = NULL, aux_params = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data)
+                                  source, data, aux_params = aux_params)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
@@ -35,7 +35,9 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
   outputs
 }
 
-gather_model_info_api <- function(states, tm, param = NULL, st = NULL, options = NULL, demo = NULL, source = NULL, data = NULL) {
+gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
+                                  options = NULL, demo = NULL, source = NULL,
+                                  data = NULL, aux_params = NULL) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -70,6 +72,12 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL, options =
     param_info <- create_parameters_from_tabular(param, df_env)
   }
   
+  # Setup aux parameters
+  aux_param_info <- NULL
+  if(!is.null(aux_params)) {
+    aux_param_info <- create_parameters_from_tabular(aux_params, df_env)
+  }
+  
   # Setup demographics
   demographic_file <- NULL
   if(!is.null(demo)) {
@@ -88,6 +96,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL, options =
   list(
     models = models,
     param_info = param_info,
+    aux_param_info = aux_param_info,
     demographic_file = demographic_file,
     model_options = model_options
   )
@@ -131,29 +140,29 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
     }
     one_way <- setdiff(names(state_info), names(tm_info))
     other_way <- setdiff(names(tm_info), names(state_info))
+    
+    if (length(c(one_way, other_way))){
+      err_string <- "Mismatching model names between transition (TM) file and state file.\n"
+      if(length(one_way))
+        err_string <-
+          paste(err_string,
+                "In state file but not TM file:", 
+                paste(one_way, collapse = ", "),
+                "\n")
+      if(length(other_way))
+        err_string <-
+          paste(err_string,
+                "In TM but not state file:", 
+                paste(other_way, collapse = ", "),
+                "\n")
+      stop(err_string)
+    }
+    
   }
-  
-  one_way <- setdiff(names(state_info), names(tm_info))
-  other_way <- setdiff(names(tm_info), names(state_info))
-  if (length(c(one_way, other_way))){
-    err_string <- "Mismatching model names between transition (TM) file and state file.\n"
-    if(length(one_way))
-      err_string <-
-        paste(err_string,
-              "In state file but not TM file:", 
-              paste(one_way, collapse = ", "),
-              "\n")
-    if(length(other_way))
-      err_string <-
-        paste(err_string,
-              "In TM but not state file:", 
-              paste(other_way, collapse = ", "),
-              "\n")
-    stop(err_string)
-  }
-  
   if (trans_type == "part_surv") {
-    tm_info <- dplyr::filter_(tm_info, ~.strategy %in% names(state_info))
+    tm_info <- parse_multi_spec(
+      tm_info,
+      group_vars = c("endpoint"))
   } else {
     tm_info <- tm_info[names(state_info)]
   }
@@ -394,7 +403,8 @@ eval_models_from_tabular <- function(inputs,
       base_model = inputs$model_options$base_model,
       method = inputs$model_options$method,
       cycles = inputs$model_options$cycles,
-      state_time_limit = inputs$state_time_limit
+      state_time_limit = inputs$state_time_limit,
+      aux_params = inputs$aux_param_info$params
     )
   )
   
@@ -619,7 +629,8 @@ create_states_from_tabular <- function(state_info,
       parse_state_trans_info(state_trans_info, df_env)
     )
   }
-  res <- define_state_list_(state_list)
+  res <- define_state_list_(state_list) %>%
+    resolve_dependencies()
   if (options()$heRomod.verbose) print(res)
   res
 }
@@ -994,7 +1005,9 @@ create_parameters_from_tabular <- function(param_defs,
       env = df_env
     )
   )
-  
+  if(!is.null(parameters)) {
+    parameters <- resolve_dependencies(parameters)
+  }
   
   list(
     params = parameters,
@@ -1003,6 +1016,17 @@ create_parameters_from_tabular <- function(param_defs,
   )
 }
 
+create_part_surv_from_tabular <- function(ps_info, state_names, df_env = globalenv()) {
+  names(state_names) <- c("progression_free", "progression", "death")
+  pfs_row <- which(ps_info$endpoint == "PFS")[1]
+  os_row <- which(ps_info$endpoint == "OS")[1]
+  define_part_surv_(
+    pfs = lazyeval::as.lazy(ps_info$value[pfs_row], env = df_env),
+    os = lazyeval::as.lazy(ps_info$value[os_row], env = df_env),
+    state_names = state_names,
+    cycle_length = c(ps_info$cycle_length[pfs_row], ps_info$cycle_length[os_row])
+  )
+}
 
 #' Create Model Options From a Tabular Input
 #'
@@ -1114,14 +1138,20 @@ create_model_from_tabular <- function(state_info,
                                        state_trans_info = state_trans_info)
   if (options()$heRomod.verbose) message("**** Defining TM...")
   
-  if (inherits(tm_info, "data.frame")) {
+  trans_type <- transition_type(tm_info)
+  if (trans_type == "matrix") {
     TM <- create_matrix_from_tabular(
       tm_info, get_state_names(states),
-      df_env = df_env)
+      df_env = df_env
+    )
   }
   
-  if (inherits(tm_info, "part_surv")) {
-    TM <- tm_info
+  if (trans_type == "part_surv") {
+    TM <- create_part_surv_from_tabular(
+      tm_info,
+      get_state_names(states),
+      df_env = df_env
+    )
   }
   
   define_strategy_(transition = TM, states = states,
@@ -1545,16 +1575,13 @@ save_graph <- function(plot, path, file_name) {
 
 transition_type <- function(tm_info){
   which_defines <- NULL
-  if(all(names(tm_info)[1:4] == c(".model", "from", "to", "prob"))){
+  if(all(c(".model", "from", "to", "prob") %in% names(tm_info))) {
     which_defines <- "matrix"
   }
   else{
-    if(all(sort(names(tm_info)[1:10]) == 
-           sort(c("type", "treatment",	"data_directory",
-                  "data_file",	"fit_directory",	"fit_name",
-                  "fit_file",	"time_col",	"treatment_col",
-                  "censor_col"))))
+    if(all(c(".model", "endpoint", "cycle_length", "value") %in% names(tm_info))) {
       which_defines <- "part_surv"
+    }
   }
   if(is.null(which_defines))
     stop("the data frame tm_info must define ",

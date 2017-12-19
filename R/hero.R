@@ -29,16 +29,31 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   } else {
     group_vars <- NULL
   }
-  user_pars <- dplyr::transmute(
-    data,
-    parameter = name,
-    value = value
-  )
+  if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
+    user_pars <- dplyr::transmute(
+      data,
+      parameter = name,
+      value = value
+    )
+  } else {
+    user_pars <- NULL
+  }
   rbind(
     hero_pars,
     group_vars,
     user_pars
   )
+}
+parse_hero_obj_vars <- function(data) {
+  if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
+    dplyr::transmute(
+      data,
+      parameter = name,
+      value = value
+    )
+  } else {
+    NULL
+  }
 }
 parse_hero_groups <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
@@ -235,28 +250,34 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   rbind(sum_undisc, sum_disc)
 }
 parse_hero_trans <- function(data, strategies) {
-  data %>%
-    dplyr::rowwise() %>%
-    dplyr::do({
-      if(.$strategy == "All") {
-        data.frame(
-          .model = strategies,
-          from = .$from,
-          to = .$to,
-          prob = .$value,
-          stringsAsFactors=F
-        )
-      } else {
-        data.frame(
-          .model = .$strategy,
-          from = .$from,
-          to = .$to,
-          prob = .$value,
-          stringsAsFactors=F
-        )
-      }
-    }) %>%
-    dplyr::ungroup()
+  if (!is.null(data$from)) {
+    # Markov
+    data %>%
+      dplyr::rowwise() %>%
+      dplyr::do({
+        if(.$strategy == "All") {
+          data.frame(
+            .model = strategies,
+            from = .$from,
+            to = .$to,
+            prob = .$value,
+            stringsAsFactors=F
+          )
+        } else {
+          data.frame(
+            .model = .$strategy,
+            from = .$from,
+            to = .$to,
+            prob = .$value,
+            stringsAsFactors=F
+          )
+        }
+      }) %>%
+      dplyr::ungroup()
+  } else {
+    # PSM
+    dplyr::rename(data, .model = strategy)
+  }
 }
 parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
   all_value_names <- unique(c(
@@ -474,7 +495,7 @@ hero_extract_trace <- function(res) {
 #' @export
 run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
-                           tables, scripts, cost, effect, type = "base case") {
+                           tables, scripts, cost, effect, surv_dists = NULL, type = "base case") {
   params <- parse_hero_vars(
     variables,
     settings$cycle_length,
@@ -482,6 +503,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     settings$disc_cost,
     groups
   )
+  surv <- parse_hero_obj_vars(surv_dists)
   groups_tbl <- parse_hero_groups(groups)
   trans <- parse_hero_trans(transitions, strategies$name)
   state_list <- parse_hero_states(
@@ -526,7 +548,8 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     run_psa = F,
     run_demo = !is.null(groups_tbl),
     state_time_limit = limits,
-    source = scripts
+    source = scripts,
+    aux_params = surv
   )
   
   if(is.null(groups_tbl)) {

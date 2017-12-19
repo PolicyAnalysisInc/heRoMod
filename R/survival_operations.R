@@ -73,7 +73,7 @@ join_ <- function(dots, at) {
     length(dots) > 1,
     length(at) == length(dots) - 1,
     all(at_len == 1),
-    all(at > 0),
+    all(at >= 0),
     all(is.finite(at)),
     !is.unsorted(at, strictly=T)
   )

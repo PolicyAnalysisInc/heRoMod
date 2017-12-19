@@ -52,7 +52,7 @@
 #' @keywords internal
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
-                          inflow, strategy_name) {
+                          inflow, strategy_name, aux_params = NULL) {
   
   .state <- .full_state <- .expand <- NULL
   
@@ -136,6 +136,15 @@ eval_strategy <- function(strategy, parameters, cycles,
     cycles = cycles,
     strategy_name = strategy_name,
     max_state_time = max(expand_table$.limit)
+  )
+  
+  # Evaluate object parameters.  Doesn't need to
+  # be returned since it modifies via reference
+  # environment other lazy expression already
+  # have
+  eval_obj_parameters(
+    aux_params,
+    e_parameters
   )
   
   # Evaluate Initial State Values

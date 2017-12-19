@@ -79,7 +79,8 @@ run_model <- function(...,
                       cost = NULL, effect = NULL,
                       state_time_limit = NULL,
                       central_strategy = NULL,
-                      inflow = rep(0L, get_state_number(get_states(list(...)[[1]])))) {
+                      inflow = rep(0L, get_state_number(get_states(list(...)[[1]]))),
+                      aux_params = NULL) {
   
   uneval_strategy_list <- list(...)
   
@@ -96,7 +97,8 @@ run_model <- function(...,
     effect = lazyeval::lazy_(substitute(effect), env = parent.frame()),
     state_time_limit = state_time_limit,
     central_strategy = central_strategy,
-    inflow = inflow
+    inflow = inflow,
+    aux_params = aux_params
   )
 }
 
@@ -110,7 +112,8 @@ run_model_ <- function(uneval_strategy_list,
                        cost, effect,
                        state_time_limit,
                        central_strategy,
-                       inflow) {
+                       inflow,
+                       aux_params = NULL) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -186,7 +189,8 @@ run_model_ <- function(uneval_strategy_list,
       method = method,
       expand_limit = state_time_limit[[n]],
       inflow = inflow,
-      strategy_name = n
+      strategy_name = n,
+      aux_params = aux_params
     )
   }
   

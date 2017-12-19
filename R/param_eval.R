@@ -82,6 +82,32 @@ eval_parameters <- function(x, cycles = 1,
   )
 }
 
+
+eval_obj_parameters <- function(x, params) {
+  
+  if(length(x) > 0) {
+    env <- x[[1]]$env
+    purrr::imap(
+      x,
+      function(obj, name) {
+        # Try to evaluate parameter
+        res <- try(lazyeval::lazy_eval(obj, data = params))
+        if(inherits(res, "try-error")) {
+          # If an error occurs, relay error message with description
+          # of which parameter caused it
+          stop(sprintf(
+            "Error in parameter: %s: %s", name, res),
+            call. = FALSE)
+        } else {
+          # Assign results to environment
+          assign(name, res, env)
+        }
+      }
+    )
+  }
+  
+}
+
 eval_init <- function(x, parameters, expand) {
   
   # Assinging NULLS to avoid CMD Check issues

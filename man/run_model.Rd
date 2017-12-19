@@ -9,10 +9,10 @@ run_model(..., parameters = define_parameters(), init = c(1000L, rep(0L,
   get_state_number(get_states(list(...)[[1]])) - 1)), cycles = 1,
   method = "life-table", cost = NULL, effect = NULL,
   state_time_limit = NULL, central_strategy = NULL, inflow = rep(0L,
-  get_state_number(get_states(list(...)[[1]]))))
+  get_state_number(get_states(list(...)[[1]]))), aux_params = NULL)
 
 run_model_(uneval_strategy_list, parameters, init, cycles, method, cost, effect,
-  state_time_limit, central_strategy, inflow)
+  state_time_limit, central_strategy, inflow, aux_params = NULL)
 }
 \arguments{
 \item{...}{One or more \code{uneval_model} object.}

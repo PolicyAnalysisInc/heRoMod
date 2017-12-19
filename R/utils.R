@@ -513,3 +513,72 @@ make_call <- function(x, collapse) {
     as.name(x)
   }
 }
+
+
+
+resolve_dependencies <- function(x) {
+  UseMethod("resolve_dependencies")
+}
+
+#' Reorder a list of expressions to resolve dependencies
+resolve_dependencies.default <- function(x) {
+  par_names <- names(x)
+  var_list <- purrr::map(x, function(y) {
+    vars <- all.vars(y$expr)
+    vars[vars %in% par_names]
+  })
+  ordered <- c()
+  unordered <- var_list
+  while(length(unordered) > 0) {
+    to_remove <- c()
+    for(i in seq_len(length(unordered))) {
+      if(all(unordered[[i]] %in% ordered)) {
+        ordered <- c(ordered, names(unordered)[i])
+        to_remove <- c(to_remove, i)
+      }
+    }
+    if(length(to_remove) == 0) {
+      stop('Error: Circular reference in parameters')
+    } else {
+      unordered <- unordered[-to_remove]
+    }
+  }
+  res <- x[ordered]
+  class(res) <- class(x)
+  res
+}
+
+resolve_dependencies.uneval_state_list <- function(x) {
+  par_names <- names(x[[1]])
+  names(par_names) <- par_names
+  var_list <- purrr::map(par_names, function(name) {
+    purrr::map(x, function(y){
+      vars <- all.vars(y[[name]]$expr)
+      vars[vars %in% par_names]
+    }) %>%
+      unlist()
+  })
+  ordered <- c()
+  unordered <- var_list
+  while(length(unordered) > 0) {
+    to_remove <- c()
+    for(i in seq_len(length(unordered))) {
+      if(all(unordered[[i]] %in% ordered)) {
+        ordered <- c(ordered, names(unordered)[i])
+        to_remove <- c(to_remove, i)
+      }
+    }
+    if(length(to_remove) == 0) {
+      stop('Error: Circular reference in parameters')
+    } else {
+      unordered <- unordered[-to_remove]
+    }
+  }
+  res <- purrr::map(x, function(y) {
+    new_state <- y[ordered]
+    class(new_state) <- class(y)
+    new_state
+  })
+  class(res) <- class(x)
+  res
+}

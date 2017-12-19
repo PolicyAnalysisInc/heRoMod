@@ -235,9 +235,11 @@ compute_counts.eval_part_surv <- function(x, init,
     all(init[-1] == 0)
   )
   
+  pfs_surv <- pmin(x$pfs_surv, x$os_surv)
+  
   res <- tibble::tibble(
-    progression_free = x$pfs_surv,
-    progression      = x$os_surv - x$pfs_surv, 
+    progression_free = pfs_surv,
+    progression      = x$os_surv - pfs_surv, 
     death            = 1 - x$os_surv
   )
   
@@ -267,7 +269,7 @@ compute_counts.eval_part_surv <- function(x, init,
     dim = c(n_state, n_state, (n_cycle - 1))
   )
   
-  trans_counts[1, 2, ] <- x$pfs_surv[-n_cycle] - x$pfs_surv[-1]
+  trans_counts[1, 2, ] <- pfs_surv[-n_cycle] - pfs_surv[-1]
   trans_counts[2, 3, ] <- x$os_surv[-n_cycle] - x$os_surv[-1]
   
   structure(
