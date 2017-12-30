@@ -1641,7 +1641,7 @@ modify_param_defs_for_multinomials <- function(param_defs, psa) {
       zz <- data.frame(
         parameter = names(x),
         value = x,
-        stringsAsFactors = F)
+        stringsAsFactors = FALSE)
       rownames(zz) <- NULL
       zz
     })

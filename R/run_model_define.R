@@ -351,7 +351,7 @@ get_values.run_model <- function(x, ...) {
     )
   )
   
-  tidyr::gather_(
+  reshape_long(
     data = res,
     key_col = "value_names",
     value_col = "value",
@@ -404,7 +404,7 @@ get_counts.run_model <- function(x, ...) {
     )
   )
   
-  tidyr::gather_(
+  reshape_long(
     data = res,
     key_col = "state_names",
     value_col = "count",

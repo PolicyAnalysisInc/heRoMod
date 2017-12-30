@@ -83,8 +83,6 @@
 #' @importFrom stats formula
 #' @importFrom stats stepfun
 #'   
-#' @importFrom graphics par
-#'   
 #' @importFrom mvnfast rmvn
 #'   
 #' @importFrom ggplot2 ggplot
@@ -97,8 +95,6 @@
 #' @importFrom ggplot2 aes
 #' @importFrom ggplot2 xlim
 #' @importFrom ggplot2 "%+replace%"
-#'   
-#' @importFrom tidyr gather_
 #'   
 #' @importFrom memoise memoise
 #' @importFrom memoise timeout
@@ -114,6 +110,7 @@
 #' @importFrom grDevices png
 #' 
 #' @importFrom graphics plot
+#' @importFrom graphics par
 #'   
 #' @importFrom tibble tibble
 #' @importFrom tibble tibble_
