@@ -52,12 +52,10 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
         newdata = vbp$vbp
       )
       
-      res <- tab %>% 
-        dplyr::mutate_if(
-          names(tab) %in% vbp$variable,
-          dplyr::funs(to_text_dots),
-          name = FALSE
-        )
+      vals <- purrr::map_dbl(tab[[vbp$variable]], ~lazyeval::lazy_eval(.))
+      
+      res <- tab
+      res[[vbp$variable]] <- vals
       
       list_res <- c(
         list_res,
@@ -114,7 +112,14 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
   lin_approx[[strategy_vbp]] <- lin.params.P$lin_approx
   
+  lin_eq <- tibble::tibble(
+    strat = strategy_comp,
+    a = rep(0, length(strategy_comp)),
+    b = rep(0, length(strategy_comp))
+  )
+  
   ### Linearization of comparison strategies
+  index <- 1
   for (n in strategy_comp) {
     ### Linearization
     e.comp     <- ce_strategy(model, strategy = n)$e.strategy
@@ -130,10 +135,13 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
                               beta1.P    = beta1.P, 
                               beta1.comp = beta1.comp, 
                               lambda     = lambda)
+    lin_eq$a[index] <- (e.P - e.comp)/(beta1.P - beta1.comp)
+    lin_eq$b[index] <- -(beta0.P - beta0.comp)/(beta1.P - beta1.comp)
+    index <- index + 1
   }
   
   df.p_vs_wtp <- as.data.frame(m.p_vs_wtp)
-  m.p_vs_wtp <- m.p_vs_wtp[, -1]
+  m.p_vs_wtp <- m.p_vs_wtp[, -1, drop = F]
   index.str.vbp <- max.col(-m.p_vs_wtp)
   
   df_p_vs_wtp.lg <- reshape2::melt(df.p_vs_wtp, 
@@ -152,6 +160,7 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
       p_vs_wtp   = df_p_vs_wtp.lg,
       variable   = vbp$variable,
       lin_approx = lin_approx,
+      lin_eq = lin_eq,
       model      = model
     ),
     class = c("vbp", "list")
@@ -292,7 +301,10 @@ param_in_strategy <- function(mod,  strategy, parameter){
   ## Transitions
   # Extract Transitions
   trans_list <- mod$uneval_strategy_list[[strategy]]$transition
-  i_trans <- interpolate(trans_list, more = as_expr_list(i_params)) 
+  i_trans <- interpolate(trans_list, more = as_expr_list(i_params))
+  if ("part_surv" %in% class(i_trans)) {
+    i_trans <- i_trans[1:2]
+  }
   i_trans <- i_trans %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
     lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%

@@ -17,11 +17,11 @@ plot.vbp <- function(x,
                      bw = FALSE, ...) {
   res <- ggplot2::ggplot(x$p_vs_wtp, 
                          aes(x = WTP, y = Price, color = Comparison)) +
-    ggplot2::geom_line(linetype = "dotted") +
     ggplot2::geom_line(data = x$vbp, 
                        aes(x = WTP, y = Price), 
       linetype = 1,
       color = "black") +
+    ggplot2::geom_line(linetype = "dotted") +
     ggplot2::xlab("WTP Threshold")
   
   if (bw) {

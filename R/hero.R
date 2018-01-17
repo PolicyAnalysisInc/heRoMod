@@ -495,7 +495,7 @@ hero_extract_trace <- function(res) {
 #' @export
 run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
-                           tables, scripts, cost, effect, surv_dists = NULL, type = "base case") {
+                           tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
   params <- parse_hero_vars(
     variables,
     settings$cycle_length,
@@ -558,22 +558,40 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     main_res <- heemod_res$demographics$combined_model
   }
   
-  health_res <- hero_extract_summ(main_res, hsumms)
-  econ_res <- hero_extract_summ(main_res, esumms)
-  nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
-  ce_res <- hero_extract_ce(main_res, hsumms, esumms)
+  if(type == "base case") {
+    health_res <- hero_extract_summ(main_res, hsumms)
+    econ_res <- hero_extract_summ(main_res, esumms)
+    nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
+    ce_res <- hero_extract_ce(main_res, hsumms, esumms)
+    trace_res <- hero_extract_trace(main_res)
+    ret <- list(
+      trace = trace_res,
+      outcomes = health_res,
+      costs = econ_res,
+      ce = ce_res,
+      nmb = nmb_res
+    )
+  } else if(type == "vbp") {
+    vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), vbp$par_name), environment())
+    vbp_med <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp/2), vbp$par_name), environment())
+    vbp_high <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp), vbp$par_name), environment())
+    vbp_settings <- define_vbp_(vbp$par_name, vbp_low, vbp_med, vbp_high)
+    vbp_res <- run_vbp(
+      model = main_res,
+      vbp = vbp_settings,
+      strategy_vbp = vbp$strat,
+      wtp_thresholds = c(0, 100000)
+    )
+    
+    ret <- list(
+      eq = vbp_res$lin_eq
+    )
+    
+  }
   
-  trace_res <- hero_extract_trace(main_res)
-  
-  list(
-    trace = trace_res,
-    outcomes = health_res,
-    costs = econ_res,
-    ce = ce_res,
-    nmb = nmb_res
-  )
-  
+  ret
 }
+
 
 
 #' @export
