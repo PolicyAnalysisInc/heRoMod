@@ -160,13 +160,14 @@ parse_hero_values_st <- function(data, health, strategies, clength) {
         data.frame(
           name = .$name,
           .model = .$strategy,
+          .transition = .$state,
           value = .$value,
           stringsAsFactors = F
         )
       }
     }) %>%
     dplyr::ungroup()
-  
+
   if (nrow(states_undisc) > 0) {
     states_disc <- states_undisc %>%
       dplyr::mutate(
