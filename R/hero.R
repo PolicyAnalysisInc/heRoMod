@@ -497,97 +497,133 @@ hero_extract_trace <- function(res) {
 run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
                            tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
-  params <- parse_hero_vars(
-    variables,
-    settings$cycle_length,
-    settings$disc_eff,
-    settings$disc_cost,
-    groups
-  )
-  surv <- parse_hero_obj_vars(surv_dists)
-  groups_tbl <- parse_hero_groups(groups)
-  trans <- parse_hero_trans(transitions, strategies$name)
-  state_list <- parse_hero_states(
-    hvalues,
-    evalues,
-    hsumms,
-    esumms,
-    strategies$name,
-    states$name,
-    settings$cycle_length
-  )
-  st_list <- parse_hero_states_st(
-    hvalues,
-    evalues,
-    hsumms,
-    esumms,
-    strategies$name,
-    states$name,
-    settings$cycle_length
-  )
-  tables <- tables
-  limits <- as.numeric(states$limit)
-  names(limits) <- states$name
-  limits <- limits[!is.na(limits) & !(limits == 0)]
-  heemod_res <- run_model_api(
-    states = state_list,
-    st = st_list,
-    tm = trans,
-    param = params,
-    demo = groups_tbl,
-    options = tibble::tribble(
-      ~option,  ~value,
-      "cost",   paste0(".disc_", cost),
-      "effect", paste0(".disc_", effect),
-      "method", "life-table",
-      "cycles", settings$n_cycles,
-      "n",      1,
-      "init",   paste(states$prob,collapse=", ")
-    ),
-    data = tables,
-    run_dsa = F,
-    run_psa = F,
-    run_demo = !is.null(groups_tbl),
-    state_time_limit = limits,
-    source = scripts,
-    aux_params = surv
-  )
   
-  if(is.null(groups_tbl)) {
-    main_res <- heemod_res$model_runs
+  if(type == "base case" || (type == "vbp" && nrow(as.data.frame(groups)) <= 1)) {
+    params <- parse_hero_vars(
+      variables,
+      settings$cycle_length,
+      settings$disc_eff,
+      settings$disc_cost,
+      groups
+    )
+    surv <- parse_hero_obj_vars(surv_dists)
+    groups_tbl <- parse_hero_groups(groups)
+    trans <- parse_hero_trans(transitions, strategies$name)
+    state_list <- parse_hero_states(
+      hvalues,
+      evalues,
+      hsumms,
+      esumms,
+      strategies$name,
+      states$name,
+      settings$cycle_length
+    )
+    st_list <- parse_hero_states_st(
+      hvalues,
+      evalues,
+      hsumms,
+      esumms,
+      strategies$name,
+      states$name,
+      settings$cycle_length
+    )
+    tables <- tables
+    limits <- as.numeric(states$limit)
+    names(limits) <- states$name
+    limits <- limits[!is.na(limits) & !(limits == 0)]
+    heemod_res <- run_model_api(
+      states = state_list,
+      st = st_list,
+      tm = trans,
+      param = params,
+      demo = groups_tbl,
+      options = tibble::tribble(
+        ~option,  ~value,
+        "cost",   paste0(".disc_", cost),
+        "effect", paste0(".disc_", effect),
+        "method", "life-table",
+        "cycles", settings$n_cycles,
+        "n",      1,
+        "init",   paste(states$prob,collapse=", ")
+      ),
+      data = tables,
+      run_dsa = F,
+      run_psa = F,
+      run_demo = !(is.null(groups_tbl)),
+      state_time_limit = limits,
+      source = scripts,
+      aux_params = surv
+    )
+    if(is.null(groups_tbl)) {
+      main_res <- heemod_res$model_runs
+    } else {
+      main_res <- heemod_res$demographics$combined_model
+    }
+    if(type == "vbp") {
+      vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), vbp$par_name), environment())
+      vbp_med <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp/2), vbp$par_name), environment())
+      vbp_high <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp), vbp$par_name), environment())
+      vbp_settings <- define_vbp_(vbp$par_name, vbp_low, vbp_med, vbp_high)
+      vbp_res <- run_vbp(
+        model = main_res,
+        vbp = vbp_settings,
+        strategy_vbp = vbp$strat,
+        wtp_thresholds = c(0, 100000)
+      )
+      ret <- list(
+        eq = vbp_res$lin_eq
+      )
+    } else {
+      health_res <- hero_extract_summ(main_res, hsumms)
+      econ_res <- hero_extract_summ(main_res, esumms)
+      nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
+      ce_res <- hero_extract_ce(main_res, hsumms, esumms)
+      trace_res <- hero_extract_trace(main_res)
+      ret <- list(
+        trace = trace_res,
+        outcomes = health_res,
+        costs = econ_res,
+        ce = ce_res,
+        nmb = nmb_res
+      )
+    }
   } else {
-    main_res <- heemod_res$demographics$combined_model
-  }
-  
-  if(type == "base case") {
-    health_res <- hero_extract_summ(main_res, hsumms)
-    econ_res <- hero_extract_summ(main_res, esumms)
-    nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
-    ce_res <- hero_extract_ce(main_res, hsumms, esumms)
-    trace_res <- hero_extract_trace(main_res)
-    ret <- list(
-      trace = trace_res,
-      outcomes = health_res,
-      costs = econ_res,
-      ce = ce_res,
-      nmb = nmb_res
-    )
-  } else if(type == "vbp") {
-    vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), vbp$par_name), environment())
-    vbp_med <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp/2), vbp$par_name), environment())
-    vbp_high <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp), vbp$par_name), environment())
-    vbp_settings <- define_vbp_(vbp$par_name, vbp_low, vbp_med, vbp_high)
-    vbp_res <- run_vbp(
-      model = main_res,
-      vbp = vbp_settings,
-      strategy_vbp = vbp$strat,
-      wtp_thresholds = c(0, 100000)
-    )
     
-    ret <- list(
-      eq = vbp_res$lin_eq
-    )
+    # Workaround:
+    # To run VBP with a heterogenous model, need to run
+    # vbp separately for each group then aggregate.
     
+    vbps <- plyr::alply(groups, 1, function(x) {
+      group_model <- run_hero_model(
+        decision = decision,
+        settings = settings,
+        groups = x,
+        strategies = strategies,
+        states = states,
+        transitions = transitions,
+        hvalues = hvalues,
+        evalues = evalues,
+        hsumms = hsumms,
+        esumms = esumms,
+        variables = variables,
+        tables = tables,
+        scripts = scripts,
+        cost = cost,
+        effect = effect,
+        surv_dists = surv_dists,
+        type = "vbp",
+        vbp = vbp
+      )
+      eq <- group_model$eq
+      eq$a <- eq$a * as.numeric(x$weight)
+      eq$b <- eq$b * as.numeric(x$weight)
+      eq
+    })
+    average_vbp <- vbps[[1]]
+    weights <- as.numeric(groups$weight)
+    average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
+    average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
+    ret <- list(eq = average_vbp)
   }
   
   ret
@@ -609,3 +645,55 @@ run_markdown <- function(text, data = NULL) {
   ls(eval_env)
 }
 
+package_hero_model <- function(name, decision, settings, groups, strategies, states, transitions,
+                               hvalues, evalues, hsumms, esumms, variables,
+                               tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
+  model_object <- list(
+    decision = decision,
+    settings = settings,
+    groups = groups,
+    strategies = strategies,
+    states = states,
+    transitions = transitions,
+    hvalues = hvalues,
+    evalues = evalues,
+    hsumms = hsumms,
+    esumms = esumms,
+    variables = variables,
+    tables = tables,
+    scripts = scripts,
+    cost = cost,
+    effect = effect,
+    surv_dists = surv_dists,
+    type = type,
+    vbp = vbp
+  )
+  rproj_string <- "Version: 1.0
+RestoreWorkspace: Default
+SaveWorkspace: Default
+AlwaysSaveHistory: Default
+EnableCodeIndexing: Yes
+UseSpacesForTab: Yes
+NumSpacesForTab: 4
+Encoding: UTF-8
+RnwWeave: knitr
+LaTeX: pdfLaTeX"
+  rcode_string <- "if(!require(heRomod)) {
+  if(!require(devtools)) {
+    install.packages('devtools')
+  }
+  library(devtools)
+  install_github('PolicyAnalysisInc/heRomod')
+  library(heRomod)
+}
+model <- readRDS('./model.rds')
+results <- do.call(run_hero_model, model)
+"
+  write(rproj_string, paste0(name, ".rproj"))
+  write(rcode_string, "run.R")
+  saveRDS(model_object, "model.rds")
+  utils::zip(
+    paste0(name, ".zip"),
+    c(paste0(name, ".rproj"), "run.R", "model.rds")
+  )
+}
