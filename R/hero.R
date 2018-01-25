@@ -493,6 +493,17 @@ hero_extract_trace <- function(res) {
   cbind(time, trace)
 }
 
+compile_parameters <- function(x) {
+  if (is.null(x$combined_model)) {
+    # Homogenous model
+    ret <- plyr::ldply(main_res$eval_strategy_list, function(x) x$parameters) %>%
+      dplyr::select(-.id)
+  } else {
+    # Heterogeneous model
+    
+  }
+}
+
 #' @export
 run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
                            hvalues, evalues, hsumms, esumms, variables,
@@ -542,7 +553,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
         "cost",   paste0(".disc_", cost),
         "effect", paste0(".disc_", effect),
         "method", "life-table",
-        "cycles", settings$n_cycles,
+        "cycles", max(1, round(settings$n_cycles,0)),
         "n",      1,
         "init",   paste(states$prob,collapse=", ")
       ),
@@ -573,7 +584,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
       ret <- list(
         eq = vbp_res$lin_eq
       )
-    } else {
+    } else if(type == "base case") {
       health_res <- hero_extract_summ(main_res, hsumms)
       econ_res <- hero_extract_summ(main_res, esumms)
       nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
@@ -586,8 +597,22 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
         ce = ce_res,
         nmb = nmb_res
       )
+    } else if(type == "export") {
+      health_res <- hero_extract_summ(main_res, hsumms)
+      econ_res <- hero_extract_summ(main_res, esumms)
+      nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
+      ce_res <- hero_extract_ce(main_res, hsumms, esumms)
+      trace_res <- hero_extract_trace(main_res)
+      wb_list <- list(
+        trace = trace_res,
+        outcomes = health_res,
+        costs = econ_res,
+        ce = ce_res,
+        nmb = nmb_res
+      )
+      
     }
-  } else {
+  } else if(type == "vbp") {
     
     # Workaround:
     # To run VBP with a heterogenous model, need to run
@@ -624,6 +649,8 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
     average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
     ret <- list(eq = average_vbp)
+  } else if(type == "export") {
+    
   }
   
   ret
