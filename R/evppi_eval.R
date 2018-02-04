@@ -50,6 +50,14 @@ compute_evppi <- function(x, evppi,
     } 
   }
   
+  if(!is.numeric(n)){
+    stop("n must be numeric")
+  }
+  
+  if(n<1){
+    stop("n must be greater or equal than one")
+  }
+  
   res <- export_psa(x)
   
   params   <- as.matrix(res$par[, evppi$variable])
