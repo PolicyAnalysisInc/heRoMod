@@ -90,6 +90,8 @@ ndt1 <- run_psa(res2, psa = rsp, N = 1000)
 # Plot EVPI
 plot(ndt1, type = "evpi", max_wtp = 50000, log_scale = FALSE)
 
+### EVPPI of one parameter
+## For one WTP
 # Define evppi
 def_evppi <- define_evppi(
   p_trans
@@ -108,7 +110,39 @@ plot(evppi1)
 # Plot evppi bw
 plot(evppi1, bw = TRUE)
 
-# Compute evppi on 100 WTP threshold values
+## For 100 WTP threshold values
+evppi2 <- compute_evppi(x = ndt1, evppi = def_evppi, 
+                        max_wtp = 50000, n = 100)
+evppi2
+
+# Plot evppi
+plot(evppi2)
+
+# Plot evppi bw
+plot(evppi2, bw = TRUE)
+
+### EVPPI of three parameters
+## For one WTP
+# Define evppi
+def_evppi <- define_evppi(
+  p_trans,
+  cost_init,
+  age_init
+)
+def_evppi
+
+# Compute evppi on one WTP threshold value
+evppi1 <- compute_evppi(x = ndt1, 
+                        evppi = def_evppi, 
+                        max_wtp = 20000, n = 1)
+
+evppi1
+
+plot(evppi1)
+
+plot(evppi1, bw = TRUE)
+
+## For 100 WTP threshold values
 evppi2 <- compute_evppi(x = ndt1, evppi = def_evppi, 
                         max_wtp = 50000, n = 100)
 evppi2
@@ -122,6 +156,6 @@ plot(evppi2, bw = TRUE)
 \references{
 \enumerate{
 \item Jalal H, Alarid-Escudero F. A Gaussian Approximation Approach for Value of Information Analysis.
-Med Decis Making 2017;OnlineFirst.
+Med Decis Making 2018; 38: 174–188.
 }
 }

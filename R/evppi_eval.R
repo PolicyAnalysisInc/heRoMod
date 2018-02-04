@@ -40,18 +40,21 @@
 compute_evppi <- function(x, evppi, 
                           max_wtp = 1e5,
                           n = 10) {
-  if(!evppi$variable %in% colnames(x$psa)){
-    stop(sprintf(
-      "Parameter %s is not defined in the PSA", 
-      evppi$variable)
-    )
+  
+  for(i in 1:length(evppi$variable)){
+    if(!evppi$variable[i] %in% colnames(x$psa)){
+      stop(sprintf(
+        "Parameter %s is not defined in the PSA", 
+        evppi$variable[i])
+      )
+    } 
   }
   
   res <- export_psa(x)
   
-  param   <- as.matrix(res$par[, evppi$variable])
-  costs   <- res$c
-  effects <- res$e   
+  params   <- as.matrix(res$par[, evppi$variable])
+  costs    <- res$c
+  effects  <- res$e   
   n_strategy <- ncol(costs)
   n_sim <- nrow(costs)
   
@@ -71,8 +74,9 @@ compute_evppi <- function(x, evppi,
   
   
   
-  for(j in 1:length(evppi$variable)){ # j <- 1
+  for(j in 1:length(evppi$variable)){ # j = 1
     p <- evppi$variable[j]
+    cat("\n")
     message(sprintf(
       "Computing EVPPI on parameter '%s'...", p
     ))
@@ -91,7 +95,7 @@ compute_evppi <- function(x, evppi,
       lmm <- vector("list", n_strategy)
       loss.hat <- matrix(NA, nrow = n_sim, ncol = n_strategy)
       for(strat in 1:n_strategy){
-        lmm[[strat]] <- mgcv::gam(loss[, strat] ~ s(param[, j]))
+        lmm[[strat]] <- mgcv::gam(loss[, strat] ~ s(params[, j]))
         loss.hat[, strat] <- lmm[[strat]]$fitted
       }
       

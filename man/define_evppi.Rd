@@ -7,10 +7,10 @@
 \usage{
 define_evppi(...)
 
-define_evppi_(par_name)
+define_evppi_(par_names)
 }
 \arguments{
-\item{par_name}{String of parameter name}
+\item{par_names}{String of parameter name or names}
 }
 \value{
 An \code{evppi} object.
@@ -25,6 +25,6 @@ The parameter name should be a string
 \references{
 \enumerate{
 \item Jalal H, Alarid-Escudero F. A Gaussian Approximation Approach for Value of Information Analysis.
-Med Decis Making 2017;OnlineFirst.
+Med Decis Making 2018; 38: 174–188.
 }
 }

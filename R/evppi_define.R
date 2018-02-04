@@ -24,7 +24,7 @@
 #' 
 #' The parameter name should be a string 
 #' 
-#' @param par_name String of parameter name
+#' @param par_names String of parameter name or names
 #' 
 #' @return An `evppi` object.
 #' @export
@@ -37,26 +37,34 @@
 #' @example inst/examples/example_define_evppi.R
 #'   
 define_evppi <- function(...) {
-
+  
   .dots <- lazyeval::lazy_dots(...)
   
-  if (! length(.dots) %% 1 == 0) {
-    stop("At least one parameter should be considered")
+  if (length(.dots) == 0) {
+    stop("At least one parameter should be defined")
   }
   
-  par_name <- deparse(.dots[[1]]$expr)
+  par_names <- character()
   
-  define_evppi_(par_name = par_name)
+  for (i in seq_along(.dots)) {
+    par_names <- c(par_names, deparse(.dots[[i]]$expr))
+  }
+  
+  define_evppi_(par_names = par_names)
 }
 
 #' @rdname define_evppi
-define_evppi_ <- function(par_name) {
+define_evppi_ <- function(par_names) {
   
-  check_names(par_name)
+  check_names(par_names)
+  
+  if (any(duplicated(par_names))) {
+    stop("Some names are duplicated.")
+  }
   
   structure(
     list(
-      variable = par_name
+      variable = par_names
     ),
     class = "evppi_definition"
   )
@@ -64,8 +72,7 @@ define_evppi_ <- function(par_name) {
 
 #' @export
 print.evppi_definition <- function(x, ...) {
-  cat(sprintf(
-    "An EVPPI definition for parameter %s",
-    x$variable
+  print(paste0("An EVPPI definition for parameters: ",
+               paste(x$variable, collapse = ", ")
   ))
 }

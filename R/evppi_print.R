@@ -36,7 +36,7 @@ plot.evppi_res <- function(x,
                           variable.name = "Parameter",
                           value.name = "EVPPI")
   
-  if(length(unique(x.lng$WTP))==1){
+  if(length(unique(x.lng$WTP)) == 1){
     res <- ggplot2::ggplot(x.lng,
                            ggplot2::aes(
                              x = Parameter,
@@ -53,12 +53,12 @@ plot.evppi_res <- function(x,
                            ggplot2::aes(
                              x = WTP,
                              y = EVPPI,
-                             linetype = Parameter,
+                             # linetype = Parameter,
                              color = Parameter
                            )) +
       ggplot2::geom_line() +
       ggplot2::ylim(0, NA) +
-      ggplot2::scale_colour_hue(name = "Strategy") +
+      ggplot2::scale_colour_hue(name = "Parameter") +
       ggplot2::xlab("Willingness to pay") +
       ggplot2::ylab("EVPPI")
   }
