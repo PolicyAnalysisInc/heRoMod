@@ -4,7 +4,7 @@
 \alias{compute_evppi}
 \title{Compute Expected Value of partial Perfect Information (EVPPI)}
 \usage{
-compute_evppi(x, evppi, max_wtp = 1e+05, n = 10)
+compute_evppi(x, evppi, max_wtp = 1e+05, n = 10, verbose = TRUE)
 }
 \arguments{
 \item{x}{Result from \code{\link[=run_psa]{run_psa()}}.}
@@ -16,6 +16,9 @@ compute_evppi(x, evppi, max_wtp = 1e+05, n = 10)
 
 \item{n}{Number of WTP thresholds to estimate EVPPI (values above
 10 may take significant time).}
+
+\item{verbose}{Logical variable indicating whether to display the progress
+of EVPPI calculations}
 }
 \value{
 A \code{data.frame} with one row per WTP threshold
@@ -91,12 +94,12 @@ ndt1 <- run_psa(res2, psa = rsp, N = 1000)
 plot(ndt1, type = "evpi", max_wtp = 50000, log_scale = FALSE)
 
 ### EVPPI of one parameter
-## For one WTP
 # Define evppi
 def_evppi <- define_evppi(
   p_trans
 )
 
+## For one WTP
 # Compute evppi on one WTP threshold value
 evppi1 <- compute_evppi(x = ndt1, 
                         evppi = def_evppi, 
