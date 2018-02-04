@@ -35,7 +35,7 @@
 #' @references 
 #' \enumerate{
 #' \item Jalal H, Alarid-Escudero F. A Gaussian Approximation Approach for Value of Information Analysis. 
-#' Med Decis Making 2018; 38: 174–188. 
+#' Med Decis Making 2018; 38(2): 174–188. 
 #' }
 #' 
 #' @example inst/examples/example_run_evppi.R
