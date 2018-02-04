@@ -26,6 +26,8 @@
 #' @param max_wtp Maximal willingness to pay.
 #' @param n Number of WTP thresholds to estimate EVPPI (values above 
 #'   10 may take significant time).
+#' @param verbose Logical variable indicating whether to display the progress
+#'   of EVPPI calculations
 #' 
 #' @return A `data.frame` with one row per WTP threshold
 #' @export
@@ -39,7 +41,8 @@
 #' @example inst/examples/example_run_evppi.R
 compute_evppi <- function(x, evppi, 
                           max_wtp = 1e5,
-                          n = 10) {
+                          n = 10,
+                          verbose = TRUE) {
   
   for(i in 1:length(evppi$variable)){
     if(!evppi$variable[i] %in% colnames(x$psa)){
@@ -110,8 +113,10 @@ compute_evppi <- function(x, evppi,
       # Compute EVPPI
       res_evppi[i, p] <- mean(matrixStats::rowMaxs(loss.hat))
       
-      if(i/10 == round(i/10, 1)){
-        cat('\r', paste0(i/length(wtp_thresholds)*100, "% done"))
+      if(verbose){
+        if(i/10 == round(i/10, 1)){
+          cat('\r', paste0(i/length(wtp_thresholds)*100, "% done"))
+        }
       }
     }
   }
