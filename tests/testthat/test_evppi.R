@@ -145,7 +145,8 @@ test_that(
     
     x <- compute_evppi(x = ndt1, 
                             evppi = def_evppi, 
-                            max_wtp = 20000, n = 1)
+                            max_wtp = 20000, n = 1,
+                       verbose = FALSE)
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2)])),
@@ -160,7 +161,8 @@ test_that(
     
     x <- compute_evppi(x = ndt1, 
                        evppi = def_evppi, 
-                       max_wtp = 20000, n = 1)
+                       max_wtp = 20000, n = 1,
+                       verbose = FALSE)
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2, 3)])),
@@ -175,7 +177,8 @@ test_that(
     ### EVPPI on cost_init and p_trans multiple WTP
     x2 <- compute_evppi(x = ndt1, 
                        evppi = def_evppi, 
-                       max_wtp = 50000, n = 50)
+                       max_wtp = 50000, n = 50,
+                       verbose = FALSE)
     
     plot(x2)
     
