@@ -22,6 +22,12 @@ linear regression metmodeling approach
 \details{
 The parameter name should be a string
 }
+\examples{
+evppi.p1 <- define_evppi(
+  prob1
+)
+evppi.p1
+}
 \references{
 \enumerate{
 \item Jalal H, Alarid-Escudero F. A Gaussian Approximation Approach for Value of Information Analysis.
