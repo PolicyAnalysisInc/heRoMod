@@ -83,7 +83,7 @@ test_that(
     
     ### Run PSA
     # Could take a while to produce 1000 samples per strategy
-    ndt1 <- run_psa(res2, psa = rsp, N = 1000)
+    ndt1 <- run_psa(res2, psa = rsp, N = 200)
     
     #### Expected value of partial perfect information (EVPPI) ####
     ### EVPPI on p_trns parameter (non-existing parameter) one WTP
@@ -144,13 +144,13 @@ test_that(
     )
     
     x <- compute_evppi(x = ndt1, 
-                            evppi = def_evppi, 
-                            max_wtp = 20000, n = 1,
+                       evppi = def_evppi, 
+                       max_wtp = 20000, n = 1,
                        verbose = FALSE)
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2)])),
-      c(20000, 2821)
+      c(20000, 2802)
       )
     
     ### EVPPI on cost_init and p_trans one WTP
@@ -166,7 +166,7 @@ test_that(
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2, 3)])),
-      c(20000, 284, 2821)
+      c(20000, 8, 2802)
     )
     
     plot(x)
