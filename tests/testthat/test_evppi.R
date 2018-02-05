@@ -82,6 +82,7 @@ test_that(
     )
     
     ### Run PSA
+    set.seed(7783)
     # Could take a while to produce 1000 samples per strategy
     ndt1 <- run_psa(res2, psa = rsp, N = 200)
     
@@ -150,7 +151,7 @@ test_that(
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2)])),
-      c(20000, 2802)
+      c(20000, 3089)
       )
     
     ### EVPPI on cost_init and p_trans one WTP
@@ -166,7 +167,7 @@ test_that(
     
     expect_equal(
       round(as.numeric(x$evppi_res[c(1, 2, 3)])),
-      c(20000, 8, 2802)
+      c(20000, 82, 3089)
     )
     
     plot(x)
