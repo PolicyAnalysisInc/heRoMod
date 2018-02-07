@@ -132,6 +132,7 @@ update.run_model <- function(object, newdata, ...) {
   structure(
     list(
       updated_model = res_total,
+      model_list = list_res,
       newdata = newdata,
       model = object,
       combined_model = comb_mods,

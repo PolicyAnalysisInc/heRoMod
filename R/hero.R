@@ -494,14 +494,201 @@ hero_extract_trace <- function(res) {
 }
 
 compile_parameters <- function(x) {
-  if (is.null(x$combined_model)) {
+  if (is.null(x$demographics)) {
     # Homogenous model
-    ret <- plyr::ldply(main_res$eval_strategy_list, function(x) x$parameters) %>%
-      dplyr::select(-.id)
+    lapply(x$model_runs$eval_strategy_list, function(x) x$parameters) %>%
+      do.call(rbind, .) %>%
+      as.tbl()
+  } else {
+    # Heterogeneous model
+    lapply(x$demographics$model_list, function(x) {
+      lapply(x$.mod, function(x) x$parameters)
+    }) %>%
+      unlist(recursive=F) %>%
+      do.call(rbind, .) %>%
+      as.tbl()
+  }
+}
+
+compile_values <- function(x) {
+  if (is.null(x$demographics)) {
+    
+    models <- x$model_runs$eval_strategy_list
+    
+    strategy_names <- names(models)
+    n_strategy <- length(strategy_names)
+    
+    state_names <- names(models[[1]]$states)
+    n_state <- length(state_names)
+    
+    value_names <- colnames(models[[1]]$states[[1]])[-1]
+    
+    states_list <- vector(mode = "list", length = n_strategy * n_state)
+    trans_list <- vector(mode = "list", length = n_strategy)
+    state_count <- 1
+    trans_count <- 1
+    
+    lapply(seq_len(n_strategy), function(i) {
+      trans_df <- attr(models[[i]]$states, "transitions")
+      if(!is.null(trans_df)) {
+        trans_df$strategy <- strategy_names[[i]]
+        trans_list[[trans_count]] <<- trans_df
+        trans_count <<- trans_count + 1
+      }
+      
+      lapply(seq_len(n_state), function(k) {
+        state_df <- models[[i]]$states[[k]]
+        state_df$strategy <- strategy_names[[i]]
+        state_df$state <- state_names[[k]]
+        states_list[[state_count]] <<- state_df
+        state_count <<- state_count + 1
+      })
+    })
+    
+    trans_df <- data.table::rbindlist(trans_list)
+    if(nrow(trans_df) > 0) {
+      trans_df <- trans_df %>%
+        dplyr::mutate(state = paste0(.from_name_expanded, "→", .to_name_expanded)) %>%
+        data.table::data.table() %>%
+        data.table::dcast(strategy+state+markov_cycle~variable, value.var = "value")
+    } else {
+      trans_df <- NULL
+    }
+    out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
+      dplyr::arrange(strategy, state, markov_cycle) %>%
+      dplyr::rename(cycle = markov_cycle)
+    
+    out_df[ ,c("strategy", "state", "cycle", value_names), drop = F]
   } else {
     # Heterogeneous model
     
+    models <- x$demographics$model_list
+    
+    strategy_names <- names(models)
+    n_strategy <- length(strategy_names)
+    
+    group_names <- as.character(lapply(models[[1]]$.mod, function(x) x$parameters$.group[1]))
+    n_group <- length(group_names)
+    
+    state_names <- names(models[[1]]$.mod[[1]]$states)
+    n_state <- length(state_names)
+    
+    value_names <- colnames(models[[1]]$.mod[[1]]$states[[1]])[-1]
+    
+    states_list <- vector(mode = "list", length = n_strategy * n_group * n_state)
+    trans_list <- vector(mode = "list", length = n_strategy * n_group)
+    state_count <- 1
+    trans_count <- 1
+    
+    states_df <- lapply(seq_len(n_strategy), function(i) {
+      lapply(seq_len(n_group), function(j) {
+        trans_df <- attr(models[[i]]$.mod[[j]]$states, "transitions")
+        if(!is.null(trans_df)) {
+          trans_df$strategy <- strategy_names[[i]]
+          trans_df$group <- group_names[[j]]
+          trans_list[[trans_count]] <<- trans_df
+          trans_count <<- trans_count + 1
+        }
+        
+        lapply(seq_len(n_state), function(k) {
+          state_df <- models[[i]]$.mod[[j]]$states[[k]]
+          state_df$strategy <- strategy_names[[i]]
+          state_df$group <- group_names[[j]]
+          state_df$state <- state_names[[k]]
+          states_list[[state_count]] <<- state_df
+          state_count <<- state_count + 1
+        })
+      })
+    })
+    trans_df <- data.table::rbindlist(trans_list)
+    if(nrow(trans_df) > 0) {
+      trans_df <- trans_df %>%
+        dplyr::mutate(state = paste0(.from_name_expanded, "→", .to_name_expanded)) %>%
+        data.table::data.table() %>%
+        data.table::dcast(strategy+group+state+markov_cycle~variable, value.var = "value")
+    } else {
+      trans_df <- NULL
+    }
+    out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
+      dplyr::arrange(strategy, group, state, markov_cycle) %>%
+      dplyr::rename(cycle = markov_cycle)
+    
+      out_df[ ,c("strategy", "group", "state", "cycle", value_names), drop = F]
   }
+}
+
+compile_transitions <- function(x) {
+  if (is.null(x$demographics)) {
+    # Homogenous model
+    
+    if("eval_part_surv" %in% class(x$model_runs$eval_strategy_list[[1]]$transition)) {
+      plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
+        data.frame(
+          cycle = seq_len(length(y$transition$pfs_surv)) - 1,
+          pfs = y$transition$pfs_surv,
+          os = y$transition$os_surv
+        )
+      }, .id = "strategy") %>%
+        dplyr::select_(.dots = c("strategy", "cycle", "pfs", "os")) %>%
+        as.tbl()
+    } else {
+      state_names <- rownames(x$model_runs$eval_strategy_list[[1]]$transition[[1]])
+      n_states <- length(state_names)
+      n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
+      plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
+        do.call(rbind, y$transition) %>%
+          as.data.frame(stringsAsFactors=F) %>%
+          dplyr::mutate(
+            from = rep(state_names, n_cycles),
+            cycle = rep(seq_len(n_cycles), each = n_states)
+          )
+        }, .id = "strategy") %>%
+        dplyr::select_(.dots = c("strategy", "cycle", "from", state_names)) %>%
+        as.tbl()
+    }
+  } else {
+    # Heterogeneous model
+    if("eval_part_surv" %in% class(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])) {
+      state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
+      n_states <- length(state_names)
+      n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
+      plyr::ldply(x$demographics$model_list, function(x) {
+        group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
+        group_list <- x$.mod
+        names(group_list) <- group_names
+        plyr::ldply(group_list, function(y) {
+          data.frame(
+            cycle = seq_len(length(y$transition$pfs_surv)) - 1,
+            pfs = y$transition$pfs_surv,
+            os = y$transition$os_surv
+          )
+        }, .id = "group")
+      }, .id = "strategy") %>%
+        dplyr::select_(.dots = c("strategy", "group", "cycle", "pfs", "os")) %>%
+        as.tbl()
+      
+    } else {
+      state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
+      n_states <- length(state_names)
+      n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
+      plyr::ldply(x$demographics$model_list, function(x) {
+        group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
+        group_list <- x$.mod
+        names(group_list) <- group_names
+        plyr::ldply(group_list, function(y) {
+          do.call(rbind, y$transition) %>%
+            as.data.frame(stringsAsFactors=F) %>%
+            dplyr::mutate(
+              from = rep(state_names, n_cycles),
+              cycle = rep(seq_len(n_cycles), each = n_states)
+            )
+        }, .id = "group")
+      }, .id = "strategy") %>%
+        dplyr::select_(.dots = c("strategy", "group", "cycle", "from", state_names)) %>%
+        as.tbl()
+    }
+  }
+  
 }
 
 #' @export
@@ -509,7 +696,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
                            hvalues, evalues, hsumms, esumms, variables,
                            tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
   
-  if(type == "base case" || (type == "vbp" && nrow(as.data.frame(groups)) <= 1)) {
+  if(type %in% c("base case", "export") || (type == "vbp" && nrow(as.data.frame(groups)) <= 1)) {
     params <- parse_hero_vars(
       variables,
       settings$cycle_length,
@@ -570,6 +757,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     } else {
       main_res <- heemod_res$demographics$combined_model
     }
+
     if(type == "vbp") {
       vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), vbp$par_name), environment())
       vbp_med <-  lazyeval::as.lazy_dots(setNames(list(vbp$wtp/2), vbp$par_name), environment())
@@ -600,17 +788,93 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     } else if(type == "export") {
       health_res <- hero_extract_summ(main_res, hsumms)
       econ_res <- hero_extract_summ(main_res, esumms)
-      nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms)
-      ce_res <- hero_extract_ce(main_res, hsumms, esumms)
-      trace_res <- hero_extract_trace(main_res)
+      nmb_res <- hero_extract_nmb(health_res, econ_res, hsumms) %>%
+        dplyr::rename(
+          "Outcome" = outcome,
+          "Strategy" = series,
+          "Component" = group,
+          "Type" = type,
+          "Value" = value
+        ) %>%
+        dplyr::select(-disc)
+      health_res <- health_res %>%
+        dplyr::rename(
+          "Outcome" = outcome,
+          "Strategy" = series,
+          "Component" = group,
+          "Discounted" = disc,
+          "Value" = value
+        )
+      econ_res <- econ_res %>%
+        dplyr::rename(
+          "Outcome" = outcome,
+          "Strategy" = series,
+          "Component" = group,
+          "Discounted" = disc,
+          "Value" = value
+        )
+      ce_res <- hero_extract_ce(main_res, hsumms, esumms) %>%
+        dplyr::mutate(
+          health_outcome = substring(health_outcome, 7),
+          econ_outcome = substring(econ_outcome, 7)
+        ) %>%
+        dplyr::rename(
+          "Health Outcome" = health_outcome,
+          "Economic Outcome" = econ_outcome,
+          "Strategy" = series,
+          "Cost" = cost,
+          "Effect" = eff,
+          "Δ Cost" = dcost,
+          "Δ Effect" = deffect,
+          "Reference" = dref,
+          "ICER" = icer
+        ) %>%
+        dplyr::select(-hsumm, esumm)
+      trace_res <- hero_extract_trace(main_res) %>%
+        dplyr::rename(
+          "Day" = model_day,
+          "Week" = model_week,
+          "Month" = model_month,
+          "Year" = model_year,
+          "Strategy" = series
+        )
+      param_res <- compile_parameters(heemod_res)
+      trans_res <- compile_transitions(heemod_res)
+      values_res <- compile_values(heemod_res)
+      if(length(tables) > 0) {
+        tables_list <- tables
+        names(tables_list) <- paste0("Tbl - ", names(tables))
+      } else {
+        tables_list <- list()
+      }
       wb_list <- list(
-        trace = trace_res,
-        outcomes = health_res,
-        costs = econ_res,
-        ce = ce_res,
-        nmb = nmb_res
-      )
-      
+        "Inputs - Decision" = data.frame("Decision" = decision),
+        "Input - Settings" = settings,
+        "Input - Groups" = groups,
+        "Input - Strategies" = strategies,
+        "Inputs - States" = states,
+        "Inputs - Transitions" = transitions,
+        "Inputs - Health Values" = hvalues,
+        "Inputs - Econ Values" = evalues,
+        "Inputs - Health Summ" = hsumms,
+        "Inputs - Econ Summ" = esumms,
+        "Inputs - Parameters" = variables,
+        "Inputs - Surv Dists" = surv_dists
+      ) %>%
+        append(tables_list) %>%
+        append(list(
+          "Calc - Params"= param_res,
+          "Calc - Trans"= trans_res,
+          "Calc - Values"= values_res,
+          "Results - Trace" = trace_res,
+          "Results - Outcomes" = health_res,
+          "Results - Costs" = econ_res,
+          "Results - CE" = ce_res,
+          "Results - NMB" = nmb_res
+        )) %>%
+        purrr::keep(~(ncol(.) > 0) && (nrow(.) > 0))
+      writeWorkbook(lapply(wb_list, as.data.frame), "model.xlsx")
+      ret <- wb_list
     }
   } else if(type == "vbp") {
     
@@ -649,8 +913,6 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
     average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
     ret <- list(eq = average_vbp)
-  } else if(type == "export") {
-    
   }
   
   ret
@@ -723,4 +985,16 @@ results <- do.call(run_hero_model, model)
     paste0(name, ".zip"),
     c(paste0(name, ".rproj"), "run.R", "model.rds")
   )
+}
+
+writeWorkbook <- function(dflist, path, ...){
+  sheet_names <- strtrim(names(dflist), 31)
+  wb <- openxlsx::createWorkbook()
+  for(i in 1:length(dflist)){
+    openxlsx::addWorksheet(wb, sheet_names[i])
+    openxlsx::writeDataTable(wb, sheet_names[i], dflist[[i]],...)
+    openxlsx::setColWidths(wb, sheet_names[i], cols = seq_len(ncol(dflist[[i]])), widths = 24)
+    openxlsx::freezePane(wb, sheet_names[i], firstActiveRow = 2, firstActiveCol = 1)
+  }
+  openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
 }

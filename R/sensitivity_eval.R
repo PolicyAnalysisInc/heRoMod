@@ -28,7 +28,10 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_dsa.R
-run_dsa <- function(model, dsa) {
+run_dsa <- function(model, dsa) UseMethod("run_dsa")
+
+#' @export
+run_dsa.run_model <- function(model, dsa) {
   
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
     stop("No cost and/or effect defined, sensitivity analysis unavailable.")
@@ -80,6 +83,93 @@ run_dsa <- function(model, dsa) {
     list_res[[i]]$.strategy_names <- strategy_names[i]
   }
 
+  res <- 
+    dplyr::bind_rows(list_res) %>%
+    reshape_long(
+      key_col = ".par_names", value_col = ".par_value",
+      gather_cols = dsa$variables, na.rm = TRUE) %>% 
+    dplyr::rowwise()
+  
+  add_newdata <- function(df) {
+    df$.par_value_eval <- unlist(e_newdata)
+    return(df)
+  }
+  
+  res <- res %>% 
+    dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
+    dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
+    dplyr::ungroup() %>% 
+    dplyr::do(add_newdata(.)) %>% 
+    dplyr::mutate_(
+      .dots = get_ce(model))
+  
+  structure(
+    list(
+      dsa = res,
+      variables = dsa$variables,
+      model = model
+    ),
+    class = c("dsa", "list")
+  )
+}
+
+#' @export
+run_dsa.updated_model <- function(model, dsa) {
+  # n_groups <- length(model$model_list[[1]]$.mod)
+  # group_models <- lapply(model$model_list, function(x) {
+  # 
+  # })
+  
+  if (! all(c(".cost", ".effect") %in% names(get_model_results(model$model)))) {
+    stop("No cost and/or effect defined, sensitivity analysis unavailable.")
+  }
+  
+  init <- get_uneval_init(model$model)
+  cycles <- get_cycles(mode$modell)
+  method <- get_method(model$model)
+  strategy_names <- get_strategy_names(model$model)
+  
+  n_par <- length(dsa$variables)
+  pos_par <- cumsum(c(1, rep(c(n_par, n_par+1), n_par)))
+  pos_par <- pos_par[-length(pos_par)]
+  
+  list_res <- list()
+  e_newdata <- list()
+  for (n in strategy_names) {
+    message(sprintf(
+      "Running DSA on strategy '%s'...", n
+    ))
+    tab <- eval_strategy_newdata(
+      model,
+      strategy = n,
+      newdata = dsa$dsa
+    )
+    
+    res <- tab %>% 
+      dplyr::mutate_if(
+        names(tab) %in% dsa$variables,
+        dplyr::funs(to_text_dots),
+        name = FALSE
+      )
+    
+    list_res <- c(
+      list_res,
+      list(res)
+    )
+    
+    e_newdata <- c(
+      e_newdata,
+      list(unlist(lapply(
+        tab$.mod,
+        function(x) x$parameters[1, dsa$variables]))[pos_par]))
+    
+    names(e_newdata)[length(e_newdata)] <- n
+  }
+  
+  for (i in seq_along(strategy_names)) {
+    list_res[[i]]$.strategy_names <- strategy_names[i]
+  }
+  
   res <- 
     dplyr::bind_rows(list_res) %>%
     reshape_long(

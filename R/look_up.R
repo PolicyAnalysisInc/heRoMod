@@ -46,6 +46,9 @@
 #' @example inst/examples/example_look_up.R
 look_up <- function(data, ..., bin = FALSE, value = "value") {
   
+  # Handle case where this may be a vector by using first el
+  value <- value[1]
+  
   if(!inherits(data, "data.frame"))
     stop("'data' must be a data.frame")  
   

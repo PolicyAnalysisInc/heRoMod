@@ -35,7 +35,9 @@ Imports:
     purrr,
     knitr,
     markdown,
-    formula.tools
+    formula.tools,
+    data.table,
+    openxlsx
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
