@@ -3,21 +3,21 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
   edisc_adj <- rescale_discount_rate(edisc, 365, clength)
   hero_pars <- tibble::tribble(
-    ~parameter,            ~value,
-    "cycle_length_days",   as.character(clength),
-    "cycle_length_weeks",  "cycle_length_days / 7",
-    "cycle_length_months", "cycle_length_days * 12 / 365",
-    "cycle_length_years",  "cycle_length_days / 365",
-    "model_day",           "markov_cycle * cycle_length_days",
-    "model_week",          "markov_cycle * cycle_length_weeks",
-    "model_month",         "markov_cycle * cycle_length_months",
-    "model_year",          "markov_cycle * cycle_length_years",
-    "state_day",           "state_time * cycle_length_days",
-    "state_week",          "state_time * cycle_length_weeks",
-    "state_month",         "state_time * cycle_length_months",
-    "state_year",          "state_time * cycle_length_years",
-    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"),
-    "disc_e",              paste0("discount(1, ", edisc_adj, ")")
+    ~parameter,            ~value,                                 ~low, ~high,
+    "cycle_length_days",   as.character(clength),                  NA,   NA,
+    "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA,
+    "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA,
+    "cycle_length_years",  "cycle_length_days / 365",              NA,   NA,
+    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA,
+    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA,
+    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA,
+    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA,
+    "state_day",           "state_time * cycle_length_days",       NA,   NA,
+    "state_week",          "state_time * cycle_length_weeks",      NA,   NA,
+    "state_month",         "state_time * cycle_length_months",     NA,   NA,
+    "state_year",          "state_time * cycle_length_years",      NA,   NA,
+    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA,
+    "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA
   )
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
@@ -25,7 +25,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     group_vars <- groups %>%
       colnames() %>%
       setdiff(".weights") %>%
-      plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1]))
+      plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1], low =  NA, high = NA))
   } else {
     group_vars <- NULL
   }
@@ -33,7 +33,9 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     user_pars <- dplyr::transmute(
       data,
       parameter = name,
-      value = value
+      value = value,
+      low = ifelse(low == "", NA, low),
+      high = ifelse(high == "", NA, high)
     )
   } else {
     user_pars <- NULL
@@ -493,6 +495,173 @@ hero_extract_trace <- function(res) {
   cbind(time, trace)
 }
 
+hero_extract_dsa_summ <- function(res, bc_res, summ) {
+  
+  bc_res_summs <- bc_res %>%
+    dplyr::group_by(outcome,series, disc) %>%
+    dplyr::summarise(value = sum(value)) %>%
+    dplyr::ungroup()
+    
+  bc_res_all <- plyr::rbind.fill(
+    bc_res %>% dplyr::mutate(outcome=group),
+    bc_res_summs
+  ) %>%
+  dplyr::transmute(
+    outcome,
+    series,
+    disc,
+    base = value
+  )
+
+  value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
+  value_res$.type <- rep(c("high", "low"), nrow(value_res)/2)
+  
+  strategies <- unique(value_res$.strategy_names)
+  n_strat <- length(strategies)
+  
+  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
+    dplyr::filter(referent != comparator)
+  value_names <- setdiff(colnames(value_res), c(".strategy_names", ".par_names", ".par_value", ".par_value_eval", ".type"))
+  
+  delta_res <- plyr::ddply(indices, c("referent", "comparator"), function(x) {
+    comp_res <- dplyr::filter(value_res, .strategy_names == strategies[x$comparator])
+    ref_res <- dplyr::filter(value_res, .strategy_names == strategies[x$referent])
+    delta <- ref_res
+    delta[value_names] <- ref_res[value_names] - comp_res[value_names]
+    delta$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
+    delta
+  }) %>%
+    dplyr::select(-referent, -comparator)
+  all_res <- rbind(value_res, delta_res) %>%
+    reshape2::melt(id.vars = c(".strategy_names", ".par_names", ".type", ".par_value", ".par_value_eval")) %>%
+    dplyr::mutate(variable = as.character(variable))
+  
+  summ_unique <- tibble::tibble(outcome = unique(c(summ$value, summ$name)))
+  
+  undisc <- dplyr::inner_join(
+    dplyr::rename(summ_unique,variable = outcome),
+    all_res,
+    by = "variable"
+  ) %>%
+    dplyr::mutate(
+      param = .par_names,
+      type = .type,
+      param_value = .par_value,
+      outcome = variable,
+      series = .strategy_names,
+      disc = F
+    ) %>%
+    dplyr::select(param, type, param_value, outcome, series, disc, value)
+  
+  disc <- dplyr::inner_join(
+    dplyr::mutate(
+      summ_unique,
+      variable1 = paste0(".disc_", outcome),
+      variable = outcome
+    ) %>%
+      dplyr::select(-outcome),
+    all_res,
+    by = c("variable1" = "variable")
+  ) %>%
+    dplyr::mutate(
+      param = .par_names,
+      type = .type,
+      param_value = .par_value,
+      outcome = variable,
+      series = .strategy_names,
+      group = variable,
+      disc = T
+    ) %>%
+    dplyr::select(param, type, param_value, outcome, series, disc, value)
+  rbind(disc, undisc) %>%
+    reshape2::dcast(param+outcome+series+disc~type, value.var = "value") %>%
+    dplyr::left_join(bc_res_all, by = c("outcome", "series", "disc"))
+}
+hero_extract_dsa_ce <- function(res, hsumms, esumms) {
+  
+  value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
+  value_res$.type <- rep(c("high", "low"), nrow(value_res)/2)
+  
+  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
+  unique_esumms <- paste0(".disc_", unique(esumms$name))
+  
+  expand.grid(
+    hsumm = unique_hsumms,
+    esumm = unique_esumms,
+    stringsAsFactors = F
+  ) %>%
+    plyr::ddply(c("hsumm","esumm"), function(x){
+      temp_res <- value_res
+      temp_res$.cost <- value_res[[x$esumm]]
+      temp_res$.effect <- value_res[[x$hsumm]]
+      thresh <- hsumms %>% dplyr::filter(name == substring(x$hsumm, 7)) %>% .$wtp %>% .[1]
+      plyr::ddply(temp_res, c(".par_names", ".type"), function(x) {
+        compute_icer(x, threshold = thresh)
+      })
+    }) %>%
+    dplyr::transmute(
+      param = .par_names,
+      type = .type,
+      param_value = .par_value,
+      health_outcome = hsumm,
+      econ_outcome = esumm,
+      series = .strategy_names,
+      cost = .cost,
+      eff = .effect,
+      dcost = .dcost,
+      deffect = .deffect,
+      dref = .dref,
+      icer = .icer,
+      nmb = .nmb
+    )
+  
+}
+hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
+  
+  distinct_hsumms <- dplyr::distinct(hsumms, name, wtp)
+  distinct_esumms <- dplyr::distinct(esumms, name)
+  
+  # Get NMBs for each DSA scenario
+  h_nmb <- hsumm_res %>%
+    dplyr::filter(disc) %>%
+    dplyr::inner_join(distinct_hsumms, by = c("outcome" = "name")) %>%
+    dplyr::transmute(
+      param,
+      outcome,
+      series,
+      low = low * wtp,
+      high = high * wtp,
+      base = base * wtp
+    )
+  
+  e_nmb <- esumm_res %>%
+    dplyr::filter(disc) %>%
+    dplyr::inner_join(distinct_esumms, by = c("outcome" = "name")) %>%
+    dplyr::transmute(
+      param,
+      outcome,
+      series,
+      low = -low,
+      high = -high,
+      base = -base
+    )
+  
+  expand.grid(
+    health_outcome = unique(hsumms$name),
+    econ_outcome = unique(esumms$name),
+    stringsAsFactors = F
+  ) %>%
+    plyr::ddply(c("health_outcome", "econ_outcome"), function(x) {
+      rbind(
+        h_nmb %>% dplyr::filter(outcome == x$health_outcome),
+        e_nmb %>% dplyr::filter(outcome == x$econ_outcome)
+      )
+    }) %>%
+    dplyr::group_by(param, series, health_outcome, econ_outcome) %>%
+    dplyr::summarise(low = sum(low), high = sum(high), base = sum(base))
+  
+}
+
 compile_parameters <- function(x) {
   if (is.null(x$demographics)) {
     # Homogenous model
@@ -729,6 +898,10 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
     limits <- as.numeric(states$limit)
     names(limits) <- states$name
     limits <- limits[!is.na(limits) & !(limits == 0)]
+    method <- "life-table"
+    if (!is.null(dots$method)) {
+      method <- dots$method
+    }
     heemod_res <- run_model_api(
       states = state_list,
       st = st_list,
@@ -739,7 +912,7 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
         ~option,  ~value,
         "cost",   paste0(".disc_", cost),
         "effect", paste0(".disc_", effect),
-        "method", "life-table",
+        "method", method,
         "cycles", max(1, round(settings$n_cycles,0)),
         "n",      1,
         "init",   paste(states$prob,collapse=", ")
@@ -918,7 +1091,411 @@ run_hero_model <- function(decision, settings, groups, strategies, states, trans
   ret
 }
 
+build_hero_model <- function(...) {
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  # Format parameters Table
+  params <- parse_hero_vars(
+    dots$variables,
+    dots$settings$cycle_length,
+    dots$settings$disc_eff,
+    dots$settings$disc_cost,
+    dots$groups
+  )
+  
+  # Format survival distributions table
+  surv <- parse_hero_obj_vars(dots$surv_dists)
+  
+  # Format groups table
+  groups_tbl <- parse_hero_groups(dots$groups)
+  
+  # Format transitions table
+  trans <- parse_hero_trans(dots$transitions, dots$strategies$name)
+  
+  # Format state list
+  state_list <- parse_hero_states(
+    dots$hvalues,
+    dots$evalues,
+    dots$hsumms,
+    dots$esumms,
+    dots$strategies$name,
+    dots$states$name,
+    dots$settings$cycle_length
+  )
+  
+  # Format state transitions list
+  st_list <- parse_hero_states_st(
+    dots$hvalues,
+    dots$evalues,
+    dots$hsumms,
+    dots$esumms,
+    dots$strategies$name,
+    dots$states$name,
+    dots$settings$cycle_length
+  )
+  
+  # Format state time limits
+  limits <- as.numeric(dots$states$limit)
+  names(limits) <- dots$states$name
+  limits <- limits[!is.na(limits) & !(limits == 0)]
+  
+  # Determine half-cycle method
+  method <- "life-table"
+  if(!is.null(dots$settings$method)) {
+    method <- dots$settings$method
+  }
+  
+  # Return model object
+  list(
+    states = state_list,
+    st = st_list,
+    tm = trans,
+    param = params,
+    demo = groups_tbl,
+    options = tibble::tribble(
+      ~option,  ~value,
+      "cost",   paste0(".disc_", dots$cost),
+      "effect", paste0(".disc_", dots$effect),
+      "method", method,
+      "cycles", max(1, round(dots$settings$n_cycles,0)),
+      "n",      1,
+      "init",   paste(dots$states$prob,collapse=", ")
+    ),
+    data = dots$tables,
+    state_time_limit = limits,
+    source = dots$scripts,
+    aux_params = surv
+  )
+}
 
+#' @export
+run_hero_bc <- function(...) {
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  # Compile model object
+  args <- do.call(build_hero_model, dots)
+  args$run_demo = !(is.null(args$demo))
+  
+  # Run model
+  heemod_res <- do.call(run_model_api, args)
+  
+  # Extract Main Results
+  if(is.null(heemod_res$demographics)) {
+    main_res <- heemod_res$model_runs
+  } else {
+    main_res <- heemod_res$demographics$combined_model
+  }
+  
+  # Format Results Types
+  health_res <- hero_extract_summ(main_res, dots$hsumms)
+  econ_res <- hero_extract_summ(main_res, dots$esumms)
+  nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms)
+  ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms)
+  trace_res <- hero_extract_trace(main_res)
+  
+  # Return
+  list(
+    trace = trace_res,
+    outcomes = health_res,
+    costs = econ_res,
+    ce = ce_res,
+    nmb = nmb_res
+  )
+}
+
+#' @export
+run_hero_vbp <- function(...) {
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  if(nrow(as.data.frame(dots$groups)) <= 1) {
+    # Homogenous model
+    # Compile model object
+    args <- do.call(build_hero_model, dots)
+    
+    # Run base case
+    heemod_res <- do.call(run_model_api, args)
+    
+    # Extract Main Results
+    main_res <- heemod_res$model_runs
+    
+    # Run VBP
+    vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), dots$vbp$par_name), environment())
+    vbp_med <-  lazyeval::as.lazy_dots(setNames(list(dots$vbp$wtp/2), dots$vbp$par_name), environment())
+    vbp_high <-  lazyeval::as.lazy_dots(setNames(list(dots$vbp$wtp), dots$vbp$par_name), environment())
+    vbp_settings <- define_vbp_(dots$vbp$par_name, vbp_low, vbp_med, vbp_high)
+    vbp_res <- run_vbp(
+      model = main_res,
+      vbp = vbp_settings,
+      strategy_vbp = dots$vbp$strat,
+      wtp_thresholds = c(0, 100000)
+    )
+    eq <- vbp_res$lin_eq
+    
+  } else {
+    # Heterogeneous model
+    # Run VBP analysis for each group
+    vbps <- plyr::alply(dots$groups, 1, function(x) {
+      
+      # Run model for given group
+      group_args <- dots
+      group_args$groups <- x
+      group_model <- do.call(run_hero_vbp, group_args)
+      
+      # Extract linear equation and apply weight
+      eq <- group_model$eq
+      eq$a <- eq$a * as.numeric(x$weight)
+      eq$b <- eq$b * as.numeric(x$weight)
+      eq
+    })
+    
+    # Aggregate results over all groups
+    average_vbp <- vbps[[1]]
+    weights <- as.numeric(dots$groups$weight)
+    average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
+    average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
+    eq <- average_vbp
+  }
+  
+  # Return Result
+  list(
+    eq = eq
+  )
+  
+}
+
+#' @export
+run_hero_dsa <- function(...) {
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  if(nrow(as.data.frame(dots$groups)) <= 1) {
+    # Homogenous model
+    # Compile model object
+    args <- do.call(build_hero_model, dots)
+    args$run_dsa = TRUE
+    
+    # Run Model
+    heemod_res <- do.call(run_model_api, args)
+    
+    # Extract BC results
+    
+    bc_outcome_res <- hero_extract_summ(heemod_res$model_runs, dots$hsumms)
+    bc_cost_res <- hero_extract_summ(heemod_res$model_runs, dots$esumms)
+    bc_nmb_res <- hero_extract_nmb(bc_outcome_res, bc_cost_res, dots$hsumms)
+    bc_ce_res <- hero_extract_ce(heemod_res$model_runs, dots$hsumms, dots$esumms)
+ 
+    # Extract DSA results
+    outcome_res <- hero_extract_dsa_summ(heemod_res$dsa, bc_outcome_res, dots$hsumms)
+    cost_res <- hero_extract_dsa_summ(heemod_res$dsa, bc_cost_res, dots$esumms)
+    ce_res <- hero_extract_dsa_ce(heemod_res$dsa, dots$hsumms, dots$esumms)
+    nmb_res <- hero_extract_dsa_nmb(outcome_res, cost_res, bc_nmb_res, dots$hsumms, dots$esumms)
+    
+    ret <- list(
+      main = as.data.frame(heemod_res$dsa$dsa, stringsAsFactors=F),
+      outcomes = outcome_res,
+      cost = cost_res,
+      ce = ce_res,
+      nmb = nmb_res
+    )
+    
+  } else {
+    # Heterogeneous model
+    # Run DSA analysis for each group
+    dsas <- plyr::alply(dots$groups, 1, function(x) {
+      
+      # Run model for given group
+      group_args <- dots
+      group_args$groups <- x
+      group_model <- do.call(run_hero_dsa, group_args)
+      
+      # Extract results and apply weights
+      group_model$outcomes$base <- group_model$outcomes$base * as.numeric(x$weight)
+      group_model$outcomes$low <- group_model$outcomes$low * as.numeric(x$weight)
+      group_model$outcomes$high <- group_model$outcomes$high * as.numeric(x$weight)
+      group_model$cost$base <- group_model$cost$base * as.numeric(x$weight)
+      group_model$cost$low <- group_model$cost$low * as.numeric(x$weight)
+      group_model$cost$high <- group_model$cost$high * as.numeric(x$weight)
+      group_model$nmb$base <- group_model$nmb$base * as.numeric(x$weight)
+      group_model$nmb$low <- group_model$nmb$low * as.numeric(x$weight)
+      group_model$nmb$high <- group_model$nmb$high * as.numeric(x$weight)
+      group_model$ce$.cost <- group_model$ce$cost * as.numeric(x$weight)
+      group_model$ce$.effect <- group_model$ce$eff * as.numeric(x$weight)
+      
+      group_model
+    })
+    
+    # Aggregate results over all groups
+    
+    weights <- as.numeric(dots$groups$weight)
+    nmb_res <- dsas[[1]]$nmb
+    nmb_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$low)) / sum(weights)
+    nmb_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$high)) / sum(weights)
+    nmb_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$base)) / sum(weights)
+    
+    outcomes_res <- dsas[[1]]$outcomes
+    outcomes_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$low)) / sum(weights)
+    outcomes_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$high)) / sum(weights)
+    outcomes_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$base)) / sum(weights)
+    
+    cost_res <- dsas[[1]]$cost
+    cost_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$cost$low)) / sum(weights)
+    cost_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$cost$high)) / sum(weights)
+    cost_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$cost$base)) / sum(weights)
+    
+    ce_res <- dsas[[1]]$ce
+    ce_res$.cost <- Reduce(`+`, purrr::map(dsas, ~ .$ce$.cost)) / sum(weights)
+    ce_res$.eff <- Reduce(`+`, purrr::map(dsas, ~ .$ce$.eff)) / sum(weights)
+    ce_res %>%
+      plyr::ddply(c("health_outcome","econ_outcome", "param", "type"), function(x) {
+        thresh <- dots$hsumms %>% dplyr::filter(name == substring(x$health_outcome,7)[1]) %>% .$wtp %>% .[1]
+        dplyr::mutate(x, .strategy_names = series) %>%
+          compute_icer(threshold = thresh)
+      }) %>%
+      dplyr::transmute(
+        param = param,
+        type = type,
+        param_value = param_value,
+        health_outcome = health_outcome,
+        econ_outcome = econ_outcome,
+        series = .strategy_names,
+        cost = .cost,
+        eff = .effect,
+        dcost = .dcost,
+        deffect = .deffect,
+        dref = .dref,
+        icer = .icer,
+        nmb = .nmb
+      )
+    
+    ret <- list(
+      outcomes = outcomes_res,
+      cost = cost_res,
+      ce = ce_res,
+      nmb = nmb_res
+    )
+
+  }
+  ret
+}
+
+#' @export
+export_hero_xlsx <- function(...) {
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  # Compile model object
+  args <- do.call(build_hero_model, dots)
+  args$run_demo = !(is.null(args$demo))
+  
+  # Run model
+  heemod_res <- do.call(run_model_api, args)
+  
+  # Extract Main Results
+  if(is.null(heemod_res$demographics)) {
+    main_res <- heemod_res$model_runs
+  } else {
+    main_res <- heemod_res$demographics$combined_model
+  }
+  
+  health_res <- hero_extract_summ(main_res, dots$hsumms)
+  econ_res <- hero_extract_summ(main_res, dots$esumms)
+  nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms) %>%
+    dplyr::rename(
+      "Outcome" = outcome,
+      "Strategy" = series,
+      "Component" = group,
+      "Type" = type,
+      "Value" = value
+    ) %>%
+    dplyr::select(-disc)
+  health_res <- health_res %>%
+    dplyr::rename(
+      "Outcome" = outcome,
+      "Strategy" = series,
+      "Component" = group,
+      "Discounted" = disc,
+      "Value" = value
+    )
+  econ_res <- econ_res %>%
+    dplyr::rename(
+      "Outcome" = outcome,
+      "Strategy" = series,
+      "Component" = group,
+      "Discounted" = disc,
+      "Value" = value
+    )
+  ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms) %>%
+    dplyr::mutate(
+      health_outcome = substring(health_outcome, 7),
+      econ_outcome = substring(econ_outcome, 7)
+    ) %>%
+    dplyr::rename(
+      "Health Outcome" = health_outcome,
+      "Economic Outcome" = econ_outcome,
+      "Strategy" = series,
+      "Cost" = cost,
+      "Effect" = eff,
+      "Δ Cost" = dcost,
+      "Δ Effect" = deffect,
+      "Reference" = dref,
+      "ICER" = icer
+    ) %>%
+    dplyr::select(-hsumm, esumm)
+  trace_res <- hero_extract_trace(main_res) %>%
+    dplyr::rename(
+      "Day" = model_day,
+      "Week" = model_week,
+      "Month" = model_month,
+      "Year" = model_year,
+      "Strategy" = series
+    )
+  param_res <- compile_parameters(heemod_res)
+  trans_res <- compile_transitions(heemod_res)
+  values_res <- compile_values(heemod_res)
+  if(length(dots$tables) > 0) {
+    tables_list <- dots$tables
+    names(tables_list) <- paste0("Tbl - ", names(dots$tables))
+  } else {
+    tables_list <- list()
+  }
+  wb_list <- list(
+    "Inputs - Decision" = data.frame("Decision" = dots$decision),
+    "Inputs - Settings" = data.frame(setting = names(dots$settings), value = as.character(dots$settings)),
+    "Inputs - Groups" = dots$groups,
+    "Inputs - Strategies" = dots$strategies,
+    "Inputs - States" = dots$states,
+    "Inputs - Transitions" = dots$transitions,
+    "Inputs - Health Values" = dots$hvalues,
+    "Inputs - Econ Values" = dots$evalues,
+    "Inputs - Health Summ" = dots$hsumms,
+    "Inputs - Econ Summ" = dots$esumms,
+    "Inputs - Parameters" = dots$variables,
+    "Inputs - Surv Dists" = dots$surv_dists
+  ) %>%
+    append(tables_list) %>%
+    append(list(
+      "Calc - Params"= param_res,
+      "Calc - Trans"= trans_res,
+      "Calc - Values"= values_res,
+      "Results - Trace" = trace_res,
+      "Results - Outcomes" = health_res,
+      "Results - Costs" = econ_res,
+      "Results - CE" = ce_res,
+      "Results - NMB" = nmb_res
+    )) %>%
+    purrr::keep(~(ncol(.) > 0) && (nrow(.) > 0))
+  writeWorkbook(lapply(wb_list, as.data.frame), "model.xlsx")
+  ret <- wb_list
+  
+}
 
 #' @export
 run_markdown <- function(text, data = NULL) {
@@ -976,7 +1553,7 @@ LaTeX: pdfLaTeX"
   library(heRomod)
 }
 model <- readRDS('./model.rds')
-results <- do.call(run_hero_model, model)
+results <- do.call(run_hero_bc, model)
 "
   write(rproj_string, paste0(name, ".rproj"))
   write(rcode_string, "run.R")

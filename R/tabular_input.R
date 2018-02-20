@@ -21,8 +21,8 @@
 #' @export
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
-                          data = NULL, run_dsa = TRUE, run_psa = TRUE,
-                          run_demo = TRUE, state_time_limit = NULL, aux_params = NULL) {
+                          data = NULL, run_dsa = FALSE, run_psa = FALSE,
+                          run_demo = FALSE, state_time_limit = NULL, aux_params = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
                                   source, data, aux_params = aux_params)
@@ -175,7 +175,7 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
           tm_info,
           ~ .strategy == names(state_info)[i])$part_surv[[1]]
       } else {
-        this_tm <- tm_info[[i]]
+        this_tm <- tm_info[[names(state_info)[i]]]
         if(is.null(state_trans_info)) {
           this_state_trans <- NULL
         } else{
@@ -932,15 +932,12 @@ create_parameters_from_tabular <- function(param_defs,
   dsa <- psa <- NULL
   
   if ("low" %in% names(param_defs) &&
-      "high" %in% names(param_defs)) {
+      "high" %in% names(param_defs) &&
+      (!all(is.na(param_defs$low)))) {
     
     if (! all(is.na(param_defs$low) ==
               is.na(param_defs$high))) {
       stop("'low' and 'high' must be both non missing in DSA tabular definition.")
-    }
-    
-    if (all(is.na(param_defs$low))) {
-      stop("No non-missing values in columns 'low' and 'high'.")
     }
     
     param_sens <- param_defs$parameter[! is.na(param_defs$low)]
