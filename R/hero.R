@@ -21,6 +21,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   )
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
+      dplyr::mutate(group = name) %>%
       dplyr::rename_(.dots = c(".group" = "name"))
     group_vars <- groups %>%
       colnames() %>%
@@ -861,9 +862,7 @@ compile_transitions <- function(x) {
 }
 
 #' @export
-run_hero_model <- function(decision, settings, groups, strategies, states, transitions,
-                           hvalues, evalues, hsumms, esumms, variables,
-                           tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
+run_hero_model <- function(...) {
   
   if(type %in% c("base case", "export") || (type == "vbp" && nrow(as.data.frame(groups)) <= 1)) {
     params <- parse_hero_vars(
@@ -1156,8 +1155,8 @@ build_hero_model <- function(...) {
     demo = groups_tbl,
     options = tibble::tribble(
       ~option,  ~value,
-      "cost",   paste0(".disc_", dots$cost),
-      "effect", paste0(".disc_", dots$effect),
+      "cost",   paste0(".disc_", dots$hsumms$name[1]),
+      "effect", paste0(".disc_", dots$esumms$name[1]),
       "method", method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      1,
@@ -1492,7 +1491,7 @@ export_hero_xlsx <- function(...) {
       "Results - NMB" = nmb_res
     )) %>%
     purrr::keep(~(ncol(.) > 0) && (nrow(.) > 0))
-  writeWorkbook(lapply(wb_list, as.data.frame), "model.xlsx")
+  writeWorkbook(lapply(wb_list, as.data.frame), paste0(dots$name, ".xlsx"))
   ret <- wb_list
   
 }
@@ -1511,28 +1510,25 @@ run_markdown <- function(text, data = NULL) {
   ls(eval_env)
 }
 
-package_hero_model <- function(name, decision, settings, groups, strategies, states, transitions,
-                               hvalues, evalues, hsumms, esumms, variables,
-                               tables, scripts, cost, effect, surv_dists = NULL, type = "base case", vbp = NULL) {
+package_hero_model <- function(...) {
+  dots <- list(...)
   model_object <- list(
-    decision = decision,
-    settings = settings,
-    groups = groups,
-    strategies = strategies,
-    states = states,
-    transitions = transitions,
-    hvalues = hvalues,
-    evalues = evalues,
-    hsumms = hsumms,
-    esumms = esumms,
-    variables = variables,
-    tables = tables,
-    scripts = scripts,
-    cost = cost,
-    effect = effect,
-    surv_dists = surv_dists,
-    type = type,
-    vbp = vbp
+    decision = dots$decision,
+    settings = dots$settings,
+    groups = dots$groups,
+    strategies = dots$strategies,
+    states = dots$states,
+    transitions = dots$transitions,
+    hvalues = dots$hvalues,
+    evalues = dots$evalues,
+    hsumms = dots$hsumms,
+    esumms = dots$esumms,
+    variables = dots$variables,
+    tables = dots$tables,
+    scripts = dots$scripts,
+    surv_dists = dots$surv_dists,
+    type = dots$type,
+    vbp = dots$vbp
   )
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
@@ -1555,12 +1551,12 @@ LaTeX: pdfLaTeX"
 model <- readRDS('./model.rds')
 results <- do.call(run_hero_bc, model)
 "
-  write(rproj_string, paste0(name, ".rproj"))
+  write(rproj_string, paste0(dots$name, ".rproj"))
   write(rcode_string, "run.R")
   saveRDS(model_object, "model.rds")
   utils::zip(
-    paste0(name, ".zip"),
-    c(paste0(name, ".rproj"), "run.R", "model.rds")
+    paste0(dots$name, ".zip"),
+    c(paste0(dots$name, ".rproj"), "run.R", "model.rds")
   )
 }
 

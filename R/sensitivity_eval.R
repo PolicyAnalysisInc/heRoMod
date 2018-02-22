@@ -52,10 +52,27 @@ run_dsa.run_model <- function(model, dsa) {
     message(sprintf(
       "Running DSA on strategy '%s'...", n
     ))
+    
+    n_scenario <- nrow(dsa$dsa)
+    n_var <- ncol(dsa$dsa)
+    var_names <- colnames(dsa$dsa)
+    bc_param <- model$eval_strategy_list[[n]]$parameters
+    dsa_table <- as.data.frame(dsa$dsa)
+    for (i in seq_len(n_var)) {
+      dsa_table[[i]] <- lapply(seq_len(n_scenario), function(j) {
+        lazy_param <- dsa$dsa[[i]][[j]]
+        if ("lazy" %in% class(dsa$dsa[[i]][[j]])) {
+          lazy_param$env <- new.env(parent = dsa$dsa[[i]][[j]]$env)
+          lazy_param$env$bc <- bc_param[[var_names[i]]]
+        }
+        lazy_param
+      })
+    }
+    
     tab <- eval_strategy_newdata(
       model,
       strategy = n,
-      newdata = dsa$dsa
+      newdata = dsa_table
     )
     
     res <- tab %>% 
