@@ -1217,6 +1217,10 @@ run_hero_vbp <- function(...) {
     # Compile model object
     args <- do.call(build_hero_model, dots)
     
+    # Use cost/effect specified by vbp config
+    args$options$value[args$options$option == "cost"] <- paste0(".disc_", dots$vbp$cost)
+    args$options$value[args$options$option == "effect"] <- paste0(".disc_", dots$vbp$effect)
+    
     # Run base case
     heemod_res <- do.call(run_model_api, args)
     
