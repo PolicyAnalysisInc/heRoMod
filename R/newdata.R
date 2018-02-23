@@ -49,6 +49,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
   inflow <- get_inflow(x)
   method <- get_method(x)
   old_parameters <- get_parameters(x)
+  aux_params <- x$aux_params
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
   expand_limit <- get_expand_limit(x, strategy)
   
@@ -104,6 +105,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
             .,
             strategy = uneval_strategy,
             old_parameters = old_parameters,
+            aux_params = aux_params,
             cycles = cycles,
             init = init,
             method = method,
@@ -123,7 +125,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
 
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
-                         strategy_name, expand_limit) {
+                         strategy_name, expand_limit, aux_params = NULL) {
   
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
@@ -145,6 +147,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     method = method,
     inflow = inflow,
     strategy_name = strategy_name,
-    expand_limit = expand_limit
+    expand_limit = expand_limit,
+    aux_params = aux_params
   )
 }
