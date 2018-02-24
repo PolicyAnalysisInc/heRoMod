@@ -10,7 +10,7 @@ Authors@R: c(
     person("Vojtech", "Filipec", role = "ctb"),
 	  person("Yonatan", "Carranza Alarcon", role=c("ctb")),
 	  person("Vince", "Daniels", role=c("ctb")),
-	  person("Fernando", "Alarid", role=c("ctb"))
+	  person("Fernando", "Alarid-Escudero", role=c("ctb"))
     )
 Description: A package for developing and running cost-effectiveness
     models in R.  Forked from the HEEMOD package.
