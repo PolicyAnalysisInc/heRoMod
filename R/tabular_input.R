@@ -89,7 +89,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   model_options <- NULL
   if(!is.null(options)) {
-    model_options <- create_options_from_tabular(options)
+    model_options <- create_options_from_tabular(options, models, df_env)
   }
 
   
@@ -300,7 +300,9 @@ gather_model_info <- function(base_dir, ref_file) {
   if ("options" %in% ref$data) {
     if (options()$heRomod.verbose) message("** Reading options...")
     model_options <- create_options_from_tabular(
-      read_file(ref$full_file[ref$data == "options"])
+      read_file(ref$full_file[ref$data == "options"]),
+      models,
+      df_env = df_env
     )
   }
   
@@ -1032,7 +1034,7 @@ create_part_surv_from_tabular <- function(ps_info, state_names, df_env = globale
 #' @return A list of model options.
 #'   
 #' @keywords internal
-create_options_from_tabular <- function(opt) {
+create_options_from_tabular <- function(opt, models, df_env = globalenv()) {
   
   allowed_opt <- c("cost", "effect", "init",
                    "method", "base", "cycles", "n",
@@ -1066,8 +1068,10 @@ create_options_from_tabular <- function(opt) {
       res$init <- substr(res$init, 1, nchar(res$init) - 1)
       warning("initial values enclosed in c(); removing")
     }
-    res$init <- as_numeric_safe(
-      strsplit(res$init, ",")[[1]]
+    init_vector <- strsplit(res$init, ",")[[1]]
+    names(init_vector) <- names(models[[1]]$states)
+    res$init <- lazyeval::as.lazy_dots(
+      init_vector
     )
   }
   

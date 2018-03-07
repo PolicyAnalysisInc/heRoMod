@@ -117,6 +117,9 @@ eval_init <- function(x, parameters, expand) {
   
   expanding <- any(expand$.expand)
   
+  # Replace complement with negative pi
+  parameters$C <- -pi
+  
   if(expanding) {
     init_df <- parameters %>%
       dplyr::filter(model_time == 1) %>%
@@ -149,13 +152,21 @@ eval_init <- function(x, parameters, expand) {
       )
   }
   
-  stopifnot(
-    all(init_df$.value >= 0),
-    all(!is.na(init_df$.value))
-  )
-  
   init_vector <- init_df$.value
   names(init_vector) <- init_df$.full_state
+  
+  # Calculate complementary probability if necessary
+  uses_complement <- init_vector == -pi
+  if(sum(uses_complement) > 1) {
+    stop("Complement can only be referenced for at most one state in calculation of initial probabilities.")
+  } else if(sum(uses_complement == 1)) {
+    init_vector[uses_complement] <- 1 - sum(init_vector[!uses_complement])
+  }
+  
+  stopifnot(
+    all(init_vector >= 0),
+    all(!is.na(init_vector))
+  )
   
   init_vector
   

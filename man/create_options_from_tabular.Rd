@@ -4,7 +4,7 @@
 \alias{create_options_from_tabular}
 \title{Create Model Options From a Tabular Input}
 \usage{
-create_options_from_tabular(opt)
+create_options_from_tabular(opt, models, df_env = globalenv())
 }
 \arguments{
 \item{opt}{An option data frame.}
