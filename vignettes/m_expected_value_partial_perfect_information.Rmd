@@ -1,0 +1,281 @@
+---
+title: "Expected Value of Partial Perfect Information"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Probabilistic Uncertainty Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+
+references:
+- id: jalal2018
+  title: A Gaussian Approximation Approach for Value of Information Analysis
+  author:
+  - family: Jalal
+    given: Hawre
+  - family: Alarid-Escudero
+    given: Fernando    
+  container-title: Medical Decision Making
+  volume: 38
+  URL: 'https://doi.org/10.1177/0272989X17715627'
+  DOI: 10.1177/0272989X17715627
+  issue: 2
+  page: 174–188
+  type: article-journal
+  issued:
+    year: 2018
+    month: 2
+---
+  
+---
+
+```{r, echo=FALSE, include=FALSE}
+# library(heRomod)
+devtools::load_all()
+```
+
+This vignette shows how to compute expected value of partial perfect information (EVPPI) of the parameters of the probabilistic Markov model in `vignette("e_probabilistic", "heRomod")` using a linear regression metamodel approach by @jalal2018.
+
+## Model definition
+
+We will start by re-specifying the deterministic model of HIV therapy described previously (a monotherapy strategy `mono` and combined therapy strategy `comb`).
+
+But instead of defining transition probabilities and state values directly in `define_transition()` or `define_state()` (as in the previous vignette), parameters will be defined first in a `define_parameters()` step. This is because only parameters defined this way can be resampled in a probabilistic analysis.
+
+```{r}
+param <- define_parameters(
+  rr = .509,
+  
+  p_AA_mono = .721,
+  p_AB_mono = .202,
+  p_AC_mono = .067,
+  p_AD_mono = .010,
+  
+  p_BC_mono = .407,
+  p_BD_mono = .012,
+  
+  p_CD_mono = .250,
+  
+  
+  p_AB_comb = p_AB_mono * rr,
+  p_AC_comb = p_AC_mono * rr,
+  p_AD_comb = p_AD_mono * rr,
+  
+  p_BC_comb = p_BC_mono * rr,
+  p_BD_comb = p_BD_mono * rr,
+  
+  p_CD_comb = p_CD_mono * rr,
+  
+  p_AA_comb = 1 - (p_AB_comb + p_AC_comb + p_AD_comb),
+  
+  
+  cost_zido = 2278,
+  cost_lami = 2086,
+  
+  cost_A = 2756,
+  cost_B = 3052,
+  cost_C = 9007
+)
+```
+
+We need to define `p_AA_mono` and `p_AA_comb` in `define_parameters()` because we will need to resample that value. Only values defined with `define_parameters()` can be resampled. So we cannot use the complement alias `C` to specify `p_AA_comb` in `define_transition()`, as we did before.
+
+```{r}
+mat_trans_mono <- define_transition(
+  p_AA_mono, p_AB_mono, p_AC_mono, p_AD_mono,
+  0,         C,         p_BC_mono, p_BD_mono,
+  0,         0,         C,         p_CD_mono,
+  0,         0,         0,         1
+)
+mat_trans_comb <- define_transition(
+  p_AA_comb, p_AB_comb, p_AC_comb, p_AD_comb,
+  0,         C,         p_BC_comb, p_BD_comb,
+  0,         0,         C,         p_CD_comb,
+  0,         0,         0,         1
+)
+```
+
+State definition remains the same in this example.
+
+```{r}
+state_A <- define_state(
+    cost_health = 2756,
+    cost_drugs = dispatch_strategy(
+      mono = cost_zido,
+      comb = cost_zido + cost_lami
+    ),
+    cost_total = discount(cost_health + cost_drugs, .06),
+    life_year = 1
+  )
+state_B <- define_state(
+    cost_health = 3052,
+    cost_drugs = dispatch_strategy(
+      mono = cost_zido,
+      comb = cost_zido + cost_lami
+    ),
+    cost_total = discount(cost_health + cost_drugs, .06),
+    life_year = 1
+  )
+state_C <- define_state(
+    cost_health = 9007,
+    cost_drugs = dispatch_strategy(
+      mono = cost_zido,
+      comb = cost_zido + cost_lami
+    ),
+    cost_total = discount(cost_health + cost_drugs, .06),
+    life_year = 1
+  )
+state_D <- define_state(
+    cost_health = 0,
+    cost_drugs = 0,
+    cost_total = discount(cost_health + cost_drugs, .06),
+    life_year = 0
+  )
+```
+
+Strategies must be first defined and run as in a standard deterministic analysis.
+
+```{r}
+strat_mono <- define_strategy(
+  transition = mat_trans_mono,
+  state_A,
+  state_B,
+  state_C,
+  state_D
+)
+
+strat_comb <- define_strategy(
+  transition = mat_trans_comb,
+  state_A,
+  state_B,
+  state_C,
+  state_D
+)
+
+res_mod <- run_model(
+  mono = strat_mono,
+  comb = strat_comb,
+  parameters = param,
+  cycles = 50,
+  cost = cost_total,
+  effect = life_year
+)
+```
+
+## Resampling distributions
+
+Now we can define the resampling distributions. The following parameters will be resampled:
+
+  * Relative risk.
+  * Costs (such that cost are always positive).
+  * Transition probability from AIDS to death.
+  * The transition probabilities from state A.
+
+Since the log of a relative risk follows a lognormal distribution, relative risk follows a lognormal distribution whose mean is `rr` and standard deviation on the log scale can be deduced from the relative risk confidence interval.
+
+$$rr \sim lognormal(\mu = .509, \sigma = .173)$$
+
+Programmed as:
+
+```r
+rr ~ lognormal(mean = .509, sdlog = .173)
+```
+
+Usually costs are resampled on a gamma distribution, which has the property of being always positive. Shape and scale parameters of the gamma distribution can be calculated from the mean and standard deviation desired in the distribution. Here we assume that *mean = variance*.
+
+$$cost_A \sim \Gamma(\mu = 2756, \sigma = \sqrt{2756})$$
+
+This can be programmed as:
+
+```r
+cost_A ~ make_gamma(mean = 2756, sd = sqrt(2756))
+```
+
+Proportions follow a binomial distribution that can be estimated by giving the mean proportion and the size of the sample used to estimate that proportion with `p_CD ~ prop(prob = .25, size = 40)`.
+
+Finally multinomial distributions are declared with the number of individuals in each group in the sample used to estimate the proportions. These proportions follow a Dirichlet distribution:
+
+  * `p_AA + p_AB + p_AC + p_AD ~ multinomial(721, 202, 67, 10)`
+
+```{r}
+rsp <- define_psa(
+  rr ~ lognormal(mean = .509, sdlog = .173),
+  
+  cost_A ~ gamma(mean = 2756, sd = sqrt(2756)),
+  cost_B ~ gamma(mean = 3052, sd = sqrt(3052)),
+  cost_C ~ gamma(mean = 9007, sd = sqrt(9007)),
+  
+  p_CD_mono ~ binomial(prob = .25, size = 40),
+  
+  p_AA_mono + p_AB_mono + p_AC_mono + p_AD_mono ~ multinomial(721, 202, 67, 10)
+)
+```
+
+## Run probabilistic model
+
+Now that the distributions of parameters are set we can simply run the probabilistic model as follow:
+
+```{r}
+pm <- run_psa(
+  model = res_mod,
+  psa = rsp,
+  N = 100
+)
+```
+
+The average results are computed. In theory these values are more accurate than simple estimates because of non-linearities. An optional `threshold` can be passed to `summary()` to compute net monetary benefit.
+
+```{r}
+summary(
+  pm, 
+  threshold = c(1000, 5000, 6000, 1e4))
+```
+
+## VOI results
+
+### EVPI
+The first result in value of information (VOI) analysis is often the expected value of perfect information (EVPI). EVPI determines the value of eliminating uncertainty on all model parameters. We can see that EVPI is hightest at a WTP of appraximately $4,800/LY.
+
+```{r, fig.width = 6, fig.align='center'}
+plot(pm, type = "evpi", max_wtp = 10000, log_scale = FALSE)
+```
+
+### EVPPI
+A more detailed VOI outcome is the expected value of partial perfect information (EVPPI), which determines the value of eliminating uncertainty for specific parameters. To compute the EVPPI of the uncertain parameters of the Markov model, we first define the parameters of interest.
+
+```{r}
+def_evppi <- define_evppi(
+  rr,
+  p_CD_mono,
+  p_AA_mono,
+  p_AB_mono,
+  p_AC_mono,
+  p_AD_mono,
+  cost_A,
+  cost_B,
+  cost_C
+)
+```
+
+We then compute the EVPPI of the parameters of interest over 50 different WTP thresholds using a linear regression metamodeling approach. [@jalal2018]
+
+```{r, message=FALSE}
+evppi <- compute_evppi(x = pm, 
+                       evppi = def_evppi, 
+                       max_wtp = 10000, n = 100,
+                       verbose = FALSE)
+```
+
+```{r, fig.align='center', fig.height=4, fig.width=6, message=FALSE}
+plot(evppi)
+```
+
+As usual, plots can be output in black and white.
+
+```{r, fig.align='center', fig.height=4, fig.width=6, message=FALSE}
+plot(evppi, bw = TRUE)
+```
+
+## References
