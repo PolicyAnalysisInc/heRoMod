@@ -85,6 +85,8 @@ eval_parameters <- function(x, cycles = 1,
 
 eval_obj_parameters <- function(x, params) {
   
+  x <- dispatch_strategy_hack(x)
+  
   if(length(x) > 0) {
     env <- x[[1]]$env
     purrr::imap(
@@ -112,6 +114,8 @@ eval_init <- function(x, parameters, expand) {
   
   # Assinging NULLS to avoid CMD Check issues
   .state <- .limit <- model_time <- state_time <- .value <- NULL
+  
+  x <- dispatch_strategy_hack(x)
   
   to_keep <- names(x)
   

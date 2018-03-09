@@ -1068,11 +1068,9 @@ create_options_from_tabular <- function(opt, state_names, df_env = globalenv()) 
       res$init <- substr(res$init, 1, nchar(res$init) - 1)
       warning("initial values enclosed in c(); removing")
     }
-    init_vector <- strsplit(res$init, ",")[[1]]
-    names(init_vector) <- state_names
-    res$init <- lazyeval::as.lazy_dots(
-      init_vector
-    )
+    call_string <- paste0("lazyeval::lazy_dots(", res$init, ")")
+    res$init <- eval(parse(text = call_string))
+    names(res$init) <- state_names
   }
   
   if (! is.null(res$cycles)) {
