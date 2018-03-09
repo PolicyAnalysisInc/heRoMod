@@ -429,7 +429,7 @@ test_that(
       class = "data.frame")
     
     expect_warning(
-      heRomod:::create_options_from_tabular(opt_pb),
+      heRomod:::create_options_from_tabular(opt_pb, state_names = c("A","B", "C", "D")),
       "initial values enclosed in c(); removing",
       fixed = TRUE
     )
