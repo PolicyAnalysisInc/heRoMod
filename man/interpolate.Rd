@@ -7,6 +7,7 @@
 \alias{interpolate.state}
 \alias{interpolate.state_transition}
 \alias{interpolate.part_surv}
+\alias{interpolate.part_surv_custom}
 \alias{interpolate.uneval_state_list}
 \alias{interpolate.uneval_state_transition_list}
 \title{Interpolate Lazy Dots}
@@ -22,6 +23,8 @@ interpolate(x, ...)
 \method{interpolate}{state_transition}(x, ...)
 
 \method{interpolate}{part_surv}(x, ...)
+
+\method{interpolate}{part_surv_custom}(x, ...)
 
 \method{interpolate}{uneval_state_list}(x, ...)
 

@@ -34,6 +34,11 @@ has_state_time.part_surv <- function(x, ...) {
 }
 
 #' @export
+has_state_time.part_surv_custom <- function(x, ...) {
+  FALSE
+}
+
+#' @export
 has_state_time.uneval_state_list <- function(x, ...) {
   state_names <- get_state_names(x)
   s_expand <- unlist(lapply(x, function(y) has_state_time(y)))
@@ -173,6 +178,12 @@ interpolate.state_transition <- function(x, ...) {
 #' @export
 #' @rdname interpolate
 interpolate.part_surv <- function(x, ...) {
+  x
+}
+
+#' @export
+#' @rdname interpolate
+interpolate.part_surv_custom <- function(x, ...) {
   x
 }
 

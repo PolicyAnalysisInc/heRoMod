@@ -254,7 +254,7 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   rbind(sum_undisc, sum_disc)
 }
 parse_hero_trans <- function(data, strategies) {
-  if (!is.null(data$from)) {
+  if ("from" %in% colnames(data)) {
     # Markov
     data %>%
       dplyr::rowwise() %>%
@@ -279,8 +279,13 @@ parse_hero_trans <- function(data, strategies) {
       }) %>%
       dplyr::ungroup()
   } else {
-    # PSM
-    dplyr::rename(data, .model = strategy)
+    if ("value" %in% colnames(data)) {
+      # Custom PSM
+      dplyr::rename(data, .model = strategy, prob = value)
+    } else {
+      # Regular PSM
+      dplyr::rename(data, .model = strategy)
+    }
   }
 }
 parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {

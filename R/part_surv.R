@@ -102,10 +102,7 @@ define_part_surv <- function(pfs, os, state_names,
     os = lazyeval::lazy_(substitute(os), env = parent.frame()),
     state_names = state_names,
     cycle_length = cycle_length)
-  }
-
-
-
+}
 
 #' @export
 #' @rdname define_part_surv
@@ -150,6 +147,8 @@ define_part_surv_ <- function(pfs, os, state_names,
   )
 }
 
+
+
 #' Convert saved fits to partitioned survival objects
 #'
 #' @param surv_inputs a list of matrices of `flexsurvreg` objects,
@@ -162,6 +161,26 @@ define_part_surv_ <- function(pfs, os, state_names,
 #'   dist (for survival distribution assumptions),
 #'   fit (for the fitted survival object) and set_def
 #'   (how the subset of data was defined, just to keep it around)
+
+
+#' @export
+define_part_surv_custom <- function(...) {
+  .dots <- lazyeval::lazy_dots(...)
+  define_part_surv_custom_(.dots = .dots)
+}
+
+#' @export
+define_part_surv_custom_ <- function(.dots) {
+  
+  if (length(.dots)){
+    check_names(names(.dots))
+  }
+  structure(.dots,
+            class = c("part_surv_custom", class(.dots)))
+  
+}
+
+
 
 #' @return a tibble of partitioned survival objects, similar to the
 #'   original tibble of survival fits, with all the columns
@@ -217,6 +236,33 @@ eval_transition.part_surv <- function(x, parameters, expand) {
       state_names = x$state_names
     ),
     class = "eval_part_surv")
+}
+
+eval_transition.part_surv_custom <- function(x, parameters, expand) {
+  
+  parameters$C <- -pi
+  
+  trace <- dplyr::mutate_(parameters, .dots = x) %>%
+    dplyr::select_(.dots = names(x))
+  
+  posC <- trace == -pi
+  
+  if (! all(rowSums(posC) <= 1)) {
+    stop("Only one 'C' is allowed per cycle.")
+  }
+  
+  valC <- dplyr::mutate_all(trace, funs(ifelse(. == -pi, 0, .))) %>%
+    rowSums() %>%
+    {1- .}
+  
+  trace <- dplyr::mutate_all(trace, funs(ifelse(. == -pi, valC, .)))
+  
+  structure(
+    list(
+      trace = trace,
+      state_names = names(x)
+    ),
+    class = "eval_part_surv_custom")
 }
 
 compute_counts.eval_part_surv <- function(x, init,
@@ -276,6 +322,41 @@ compute_counts.eval_part_surv <- function(x, init,
     res,
     class = c("cycle_counts", class(res)),
     transitions = trans_counts
+  )
+}
+
+
+
+compute_counts.eval_part_surv_custom <- function(x, init,
+                                          inflow) {
+  
+  res <- x$trace
+  if (any(res < 0)) {
+    neg_cycles <- which(res < 0, arr.ind = TRUE)[, 1]
+    stop("Negative counts in partitioned survival model, at cycle",
+         plur(length(neg_cycles)),
+         ": ",
+         paste(neg_cycles, collapse = ", "))
+  }
+  
+  if (all.equal(rowSums(res), rep(1,nrow(res))) != TRUE) {
+    err_cycles <- which(any(rowSums(res) != 1))
+    stop("Counts do not equal to 1, at cycle",
+         plur(length(err_cycles)),
+         ": ",
+         paste(err_cycles, collapse = ", "))
+  }
+  
+  res <- rbind(
+    init,
+    res * sum(init)
+  )
+  
+  colnames(res) <- x$state_names
+  
+  structure(
+    res,
+    class = c("cycle_counts", class(res))
   )
 }
 

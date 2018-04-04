@@ -159,6 +159,42 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
     }
     
   }
+  else {
+    if (trans_type == "part_surv_custom") {
+      tm_info <- parse_multi_spec(
+        tm_info,
+        group_vars = "state")
+      tab_undefined <- 
+        dplyr::bind_rows(tm_info) %>%
+        dplyr::filter_(~ is.na(prob))
+      
+      if (nrow(tab_undefined) > 0) {
+        rownames(tab_undefined) <- NULL
+        print(tab_undefined)
+        stop("Undefined probabilities in the trace (see above).")
+      }
+      one_way <- setdiff(names(state_info), names(tm_info))
+      other_way <- setdiff(names(tm_info), names(state_info))
+      
+      if (length(c(one_way, other_way))){
+        err_string <- "Mismatching model names between transition file and state file.\n"
+        if(length(one_way))
+          err_string <-
+            paste(err_string,
+                  "In state file but not transition file:", 
+                  paste(one_way, collapse = ", "),
+                  "\n")
+        if(length(other_way))
+          err_string <-
+            paste(err_string,
+                  "In transition but not state file:", 
+                  paste(other_way, collapse = ", "),
+                  "\n")
+        stop(err_string)
+      }
+      
+    }
+  }
   if (trans_type == "part_surv") {
     tm_info <- parse_multi_spec(
       tm_info,
@@ -1027,6 +1063,36 @@ create_part_surv_from_tabular <- function(ps_info, state_names, df_env = globale
   )
 }
 
+create_part_surv_custom_from_tabular <- function(trace_info, state_names,
+                                       df_env = globalenv()) {
+  if(! inherits(trace_info, "data.frame")) {
+    stop("'trace_info' must be a data frame.")
+  }
+  stopifnot(
+    all(c("state", "prob") %in% names(trace_info)),
+    length(state_names) > 0
+  )
+  
+  unique_states <- unique(trace_info$state)
+  
+  if (! all(state_names %in% trace_info$state)) {
+    stop(sprintf(
+      "Some states do not have a probability: %s.",
+      paste(
+        unique(state_names)[! state_names %in% v$state],
+        sep = ", "
+      )
+    ))
+  }
+  
+  dots <- trace_info$prob
+  names(dots) <- state_names
+  
+  res <- define_part_surv_custom_(lazyeval::as.lazy_dots(dots, env = df_env))
+  if (options()$heRomod.verbose) print(res)
+  res
+}
+
 #' Create Model Options From a Tabular Input
 #'
 #' @param opt An option data frame.
@@ -1125,7 +1191,7 @@ create_model_from_tabular <- function(state_info,
   }
   
   if (!is.null(tm_info) &&
-      ! inherits(tm_info, c("data.frame", "part_surv"))) {
+      ! inherits(tm_info, c("data.frame", "part_surv", "part_surv_custom"))) {
     stop("'tm_info' must be either a data frame ",
          "defining a transition matrix or a part_surv object ",
          "defining a partitioned survival model.")
@@ -1141,6 +1207,14 @@ create_model_from_tabular <- function(state_info,
   if (trans_type == "matrix") {
     TM <- create_matrix_from_tabular(
       tm_info, get_state_names(states),
+      df_env = df_env
+    )
+  }
+  
+  if (trans_type == "part_surv_custom") {
+    TM <- create_part_surv_custom_from_tabular(
+      tm_info,
+      get_state_names(states),
       df_env = df_env
     )
   }
@@ -1578,8 +1652,13 @@ transition_type <- function(tm_info){
     which_defines <- "matrix"
   }
   else{
-    if(all(c(".model", "endpoint", "cycle_length", "value") %in% names(tm_info))) {
-      which_defines <- "part_surv"
+    if(all(c(".model", "state", "prob") %in% names(tm_info))) {
+      which_defines <- "part_surv_custom"
+    }
+    else {
+      if(all(c(".model", "endpoint", "cycle_length", "value") %in% names(tm_info))) {
+        which_defines <- "part_surv"
+      }
     }
   }
   if(is.null(which_defines))
