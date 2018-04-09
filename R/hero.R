@@ -814,8 +814,8 @@ compile_values <- function(x) {
 compile_transitions <- function(x) {
   if (is.null(x$demographics)) {
     # Homogenous model
-    
-    if("eval_part_surv" %in% class(x$model_runs$eval_strategy_list[[1]]$transition)) {
+    the_class <-  class(x$model_runs$eval_strategy_list[[1]]$transition)
+    if("eval_part_surv" %in% the_class) {
       plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
         data.frame(
           cycle = seq_len(length(y$transition$pfs_surv)) - 1,
@@ -826,23 +826,28 @@ compile_transitions <- function(x) {
         dplyr::select_(.dots = c("strategy", "cycle", "pfs", "os")) %>%
         as.tbl()
     } else {
-      state_names <- rownames(x$model_runs$eval_strategy_list[[1]]$transition[[1]])
-      n_states <- length(state_names)
-      n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
-      plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
-        do.call(rbind, y$transition) %>%
-          as.data.frame(stringsAsFactors=F) %>%
-          dplyr::mutate(
-            from = rep(state_names, n_cycles),
-            cycle = rep(seq_len(n_cycles), each = n_states)
-          )
+      if("eval_part_surv_custom" %in% the_class) {
+        data.frame()
+      } else {
+        state_names <- rownames(x$model_runs$eval_strategy_list[[1]]$transition[[1]])
+        n_states <- length(state_names)
+        n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
+        plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
+          do.call(rbind, y$transition) %>%
+            as.data.frame(stringsAsFactors=F) %>%
+            dplyr::mutate(
+              from = rep(state_names, n_cycles),
+              cycle = rep(seq_len(n_cycles), each = n_states)
+            )
         }, .id = "strategy") %>%
-        dplyr::select_(.dots = c("strategy", "cycle", "from", state_names)) %>%
-        as.tbl()
+          dplyr::select_(.dots = c("strategy", "cycle", "from", state_names)) %>%
+          as.tbl()
+      }
     }
   } else {
     # Heterogeneous model
-    if("eval_part_surv" %in% class(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])) {
+    the_class <- class(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
+    if("eval_part_surv" %in% the_class) {
       state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
       n_states <- length(state_names)
       n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
@@ -862,24 +867,28 @@ compile_transitions <- function(x) {
         as.tbl()
       
     } else {
-      state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
-      n_states <- length(state_names)
-      n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
-      plyr::ldply(x$demographics$model_list, function(x) {
-        group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
-        group_list <- x$.mod
-        names(group_list) <- group_names
-        plyr::ldply(group_list, function(y) {
-          do.call(rbind, y$transition) %>%
-            as.data.frame(stringsAsFactors=F) %>%
-            dplyr::mutate(
-              from = rep(state_names, n_cycles),
-              cycle = rep(seq_len(n_cycles), each = n_states)
-            )
-        }, .id = "group")
-      }, .id = "strategy") %>%
-        dplyr::select_(.dots = c("strategy", "group", "cycle", "from", state_names)) %>%
-        as.tbl()
+      if ("eval_part_surv_custom" %in% the_class) {
+        data.frame()
+      } else {
+        state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
+        n_states <- length(state_names)
+        n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
+        plyr::ldply(x$demographics$model_list, function(x) {
+          group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
+          group_list <- x$.mod
+          names(group_list) <- group_names
+          plyr::ldply(group_list, function(y) {
+            do.call(rbind, y$transition) %>%
+              as.data.frame(stringsAsFactors=F) %>%
+              dplyr::mutate(
+                from = rep(state_names, n_cycles),
+                cycle = rep(seq_len(n_cycles), each = n_states)
+              )
+          }, .id = "group")
+        }, .id = "strategy") %>%
+          dplyr::select_(.dots = c("strategy", "group", "cycle", "from", state_names)) %>%
+          as.tbl()
+      }
     }
   }
   
