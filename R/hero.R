@@ -281,7 +281,26 @@ parse_hero_trans <- function(data, strategies) {
   } else {
     if ("value" %in% colnames(data)) {
       # Custom PSM
-      dplyr::rename(data, .model = strategy, prob = value)
+      data %>%
+        dplyr::rowwise() %>%
+        dplyr::do({
+          if(.$strategy == "All") {
+            data.frame(
+              .model = strategies,
+              state = .$state,
+              prob = .$value,
+              stringsAsFactors=F
+            )
+          } else {
+            data.frame(
+              .model = .$strategy,
+              state = .$state,
+              prob = .$value,
+              stringsAsFactors=F
+            )
+          }
+        }) %>%
+        dplyr::ungroup()
     } else {
       # Regular PSM
       dplyr::rename(data, .model = strategy)
