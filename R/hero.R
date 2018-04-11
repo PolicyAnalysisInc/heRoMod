@@ -279,7 +279,7 @@ parse_hero_trans <- function(data, strategies) {
       }) %>%
       dplyr::ungroup()
   } else {
-    if ("value" %in% colnames(data)) {
+    if ("state" %in% colnames(data)) {
       # Custom PSM
       data %>%
         dplyr::rowwise() %>%
