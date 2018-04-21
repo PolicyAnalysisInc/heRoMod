@@ -23,12 +23,6 @@ Main features:
   * Deterministic sensitivity analysis (DSA).
   * Value-based pricing analysis (VBP).
 
-Most of the analyses presented in [Decision Modelling for Health Economic Evaluation](http://ukcatalogue.oup.com/product/9780198526629.do) can be performed with `heemod`. See the *Reproducing Exact Results from DMHEE* vignette for an exact reproduction of the analyses from the book.
-
-## Learning heemod
-
-To get started read the *An Introduction to `heemod`* vignette. Specific analysis examples (mostly inspired from [Decision Modelling for Health Economic Evaluation](http://ukcatalogue.oup.com/product/9780198526629.do)) can be found in the package vignettes.
-
 ## Devs
   * [Jordan Amdahl](https://github.com/jrdnmdhl)
 
