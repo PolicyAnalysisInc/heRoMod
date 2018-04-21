@@ -12,8 +12,6 @@ devtools::install_github("heRomod")
 
 ## Features
 
-Main features:
-
   * Support for Markov cohort and partitioned-survival models.
   * Comprehensive tools for defining and operation of survival distribtions.
   * Probabilistic uncertainty analysis (PSA).
