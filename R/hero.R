@@ -3,21 +3,21 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
   edisc_adj <- rescale_discount_rate(edisc, 365, clength)
   hero_pars <- tibble::tribble(
-    ~parameter,            ~value,                                 ~low, ~high,
-    "cycle_length_days",   as.character(clength),                  NA,   NA,
-    "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA,
-    "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA,
-    "cycle_length_years",  "cycle_length_days / 365",              NA,   NA,
-    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA,
-    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA,
-    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA,
-    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA,
-    "state_day",           "state_time * cycle_length_days",       NA,   NA,
-    "state_week",          "state_time * cycle_length_weeks",      NA,   NA,
-    "state_month",         "state_time * cycle_length_months",     NA,   NA,
-    "state_year",          "state_time * cycle_length_years",      NA,   NA,
-    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA,
-    "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA
+    ~parameter,            ~value,                                 ~low, ~high, ~psa,
+    "cycle_length_days",   as.character(clength),                  NA,   NA, NA,
+    "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
+    "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
+    "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
+    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA, NA,
+    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA, NA,
+    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA, NA,
+    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA, NA,
+    "state_day",           "state_time * cycle_length_days",       NA,   NA, NA,
+    "state_week",          "state_time * cycle_length_weeks",      NA,   NA, NA,
+    "state_month",         "state_time * cycle_length_months",     NA,   NA, NA,
+    "state_year",          "state_time * cycle_length_years",      NA,   NA, NA,
+    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA, NA,
+    "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA, NA
   )
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
@@ -26,7 +26,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     group_vars <- groups %>%
       colnames() %>%
       setdiff(".weights") %>%
-      plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1], low =  NA, high = NA))
+      plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1], low =  NA, high = NA, psa = NA))
   } else {
     group_vars <- NULL
   }
@@ -36,7 +36,8 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
       parameter = name,
       value = value,
       low = ifelse(low == "", NA, low),
-      high = ifelse(high == "", NA, high)
+      high = ifelse(high == "", NA, high),
+      psa = ifelse(psa == "", NA, psa)
     )
   } else {
     user_pars <- NULL
@@ -946,7 +947,7 @@ run_hero_model <- function(...) {
         "effect", paste0(".disc_", effect),
         "method", method,
         "cycles", max(1, round(settings$n_cycles,0)),
-        "n",      1,
+        "n",      1000,
         "init",   paste(states$prob,collapse=", ")
       ),
       data = tables,
@@ -1192,13 +1193,14 @@ build_hero_model <- function(...) {
       "effect", paste0(".disc_", dots$esumms$name[1]),
       "method", method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
-      "n",      1,
+      "n",      20,
       "init",   paste(dots$states$prob,collapse=", ")
     ),
     data = dots$tables,
     state_time_limit = limits,
     source = dots$scripts,
-    aux_params = surv
+    aux_params = surv,
+    psa = dots$psa
   )
 }
 
@@ -1419,6 +1421,59 @@ run_hero_dsa <- function(...) {
 
   }
   ret
+}
+
+#' @export
+run_hero_psa <- function(...) {
+  
+  
+  # Capture arguments
+  dots <- list(...)
+  
+  if(nrow(as.data.frame(dots$groups)) <= 1) {
+    # Homogenous model
+    # Compile model object
+    args <- do.call(build_hero_model, dots)
+    args$run_psa <- 1000
+    
+    # Run Model
+    heemod_res <- do.call(run_model_api, args)
+    
+  } else {
+    # Heterogeneous model
+    # Run PSA analysis for each group
+    the_seed <- sample.int(99999, 1)
+    psas <- plyr::alply(dots$groups, 1, function(x) {
+      
+      # Run model for given group
+      group_args <- dots
+      group_args$groups <- x
+      set.seed(the_seed)
+      group_model <- do.call(run_hero_psa, group_args)
+      
+      group_model
+    })
+    
+    combined_model <- psas[[1]]
+    
+    psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
+    col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
+    psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
+    combined_model$psa$psa <- psa_res_df %>%
+      dplyr::select(-name) %>%
+      dplyr::group_by(.strategy_names, .index) %>%
+      dplyr::summarize_all(sum)
+    
+    ceac <- acceptability_curve(combined_model$psa$psa, seq(from=0,to=100000,by=100))
+    evpi <- compute_evpi(combined_model$psa, seq(from=0,to=100000,by=100))
+    evppi <- compute_evppi(
+      combined_model$psa,
+      define_evppi_(combined_model$psa$resamp_par),
+      max_wtp = 100000,
+      n = 100
+    )
+    print(evpi)
+  }
 }
 
 #' @export

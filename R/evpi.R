@@ -85,24 +85,18 @@ export_savi <- function(x, folder = ".") {
 }
 
 export_psa <- function(x) {
-  res <- x$psa[c(x$resamp_par, ".cost", ".effect", ".strategy_names")] %>% 
-    reshape_long(
-      key_col = ".key",
-      value_col = ".value",
-      gather_cols = c(".cost", ".effect")) %>% 
-    dplyr::mutate_(
-      .var_name = ~ paste(.key, .strategy_names, sep = "_")) %>% 
-    dplyr::select_(~ - .key, ~ - .strategy_names) %>% 
-    reshape_wide(key_col = ".var_name", value_col = ".value")
+  strats <- unique(x$psa$.strategy_names)
   
   list(
-    par = res[x$resamp_par],
-    c = res %>% 
-      dplyr::select(dplyr::starts_with(".cost")) %>% 
-      stats::setNames(get_strategy_names(x)),
-    e = res %>% 
-      dplyr::select(dplyr::starts_with(".effect")) %>% 
-      stats::setNames(get_strategy_names(x))
+    par = x$psa[x$psa$.strategy_names == strats[1],x$resamp_par],
+    c = x$psa %>%
+      dplyr::select_(~.strategy_names, ~.cost, ~.index) %>%
+      reshape2::dcast(.index~.strategy_names, value.var = ".cost") %>%
+      dplyr::select_(~-.index),
+    e = x$psa %>%
+      dplyr::select_(~.strategy_names, ~.effect, ~.index) %>%
+      reshape2::dcast(.index~.strategy_names, value.var = ".effect") %>%
+      dplyr::select_(~-.index)
   )
 }
 

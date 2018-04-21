@@ -22,10 +22,10 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
-                          run_demo = FALSE, state_time_limit = NULL, aux_params = NULL) {
+                          run_demo = FALSE, state_time_limit = NULL, aux_params = NULL, psa = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data, aux_params = aux_params)
+                                  source, data, aux_params = aux_params, psa = psa)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
@@ -37,7 +37,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
-                                  data = NULL, aux_params = NULL) {
+                                  data = NULL, aux_params = NULL, psa = NULL) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -69,7 +69,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   # Setup parameters
   param_info <- NULL
   if(!is.null(param)) {
-    param_info <- create_parameters_from_tabular(param, df_env)
+    param_info <- create_parameters_from_tabular(param, df_env, psa_options = psa)
   }
   
   # Setup aux parameters
@@ -947,7 +947,7 @@ create_matrix_from_tabular <- function(trans_probs, state_names,
 #'   
 #' @keywords internal
 create_parameters_from_tabular <- function(param_defs,
-                                           df_env = globalenv()) {
+                                           df_env = globalenv(), psa_options = NULL) {
   if(! inherits(param_defs, "data.frame"))
     stop("'param_defs' must be a data frame.")
   if(! "parameter" %in% names(param_defs))
@@ -1009,20 +1009,33 @@ create_parameters_from_tabular <- function(param_defs,
     
     param_psa <- param_defs$parameter[! is.na(param_defs$psa)]
     distrib_psa <- stats::na.omit(param_defs$psa)
+    psa_vars <- lapply(
+      seq_along(param_psa),
+      function(i) {
+        substitute(
+          lhs ~ rhs,
+          list(
+            lhs = parse(text = param_psa[i])[[1]],
+            rhs = parse(text = distrib_psa[i])[[1]]))
+      }
+    )
     
-    psa <- 
-      do.call(define_psa,    
-              lapply(
-                seq_along(param_psa),
-                function(i) {
-                  substitute(
-                    lhs ~ rhs,
-                    list(
-                      lhs = parse(text = param_psa[i])[[1]],
-                      rhs = parse(text = distrib_psa[i])[[1]]))
-                }
-              )
+    if (!is.null(psa_options)) {
+      
+      correlation_args <- plyr::alply(psa_options$correlation, 1, function(x) {
+        list(x$var1, x$var2, x$value)
+      }) %>% unlist(recursive=F, use.names = F) %>%
+        as.lazy_dots
+      correlation <- define_correlation_(correlation_args)
+      psa_args <- append(
+        psa_vars,
+        list(correlation = correlation)
       )
+    } else {
+      psa_args <- psa_vars
+    }
+    
+    psa <- do.call(define_psa, psa_args)
     
   }
   

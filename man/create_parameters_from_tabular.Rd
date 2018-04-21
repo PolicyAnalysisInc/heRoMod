@@ -4,7 +4,8 @@
 \alias{create_parameters_from_tabular}
 \title{Create a Parameter Definition From Tabular Input}
 \usage{
-create_parameters_from_tabular(param_defs, df_env = globalenv())
+create_parameters_from_tabular(param_defs, df_env = globalenv(),
+  psa_options = NULL)
 }
 \arguments{
 \item{param_defs}{A parameter definition file.}

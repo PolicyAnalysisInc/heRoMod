@@ -653,7 +653,7 @@ reshape_wide <- function(data, key_col, value_col, fill = NA) {
   res <- data[! duplicated(ids), idvar, drop = FALSE]
   
   cbind(
-    res,
+    dplyr::ungroup(res),
     do.call(
       cbind,
       stats::setNames(
