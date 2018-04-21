@@ -2,9 +2,7 @@
 
 The heRomod package allows users to develop and run cost-effectiveness models in R and is the calculation engine used in the heRo web-based modeling platform.  A fork of the HEEMOD package.
 
-You can install:
-
-  * the latest released version from github with:
+You can install the latest released version from github with:
 
 ```r
 devtools::install_github("heRomod")
