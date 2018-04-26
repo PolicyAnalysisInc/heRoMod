@@ -1243,6 +1243,11 @@ build_hero_model <- function(...) {
     method <- dots$settings$method
   }
   
+  cores <- 1
+  if (dots$psa$parallel) {
+    cores <- max(1, round(parallel::detectCores()/2, 0))
+  }
+  
   # Return model object
   list(
     states = state_list,
@@ -1257,7 +1262,8 @@ build_hero_model <- function(...) {
       "method", method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
-      "init",   paste(dots$states$prob,collapse=", ")
+      "init",   paste(dots$states$prob,collapse=", "),
+      "num_cores", cores
     ),
     data = dots$tables,
     state_time_limit = limits,
