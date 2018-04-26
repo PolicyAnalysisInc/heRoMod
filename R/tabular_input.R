@@ -1001,11 +1001,11 @@ create_parameters_from_tabular <- function(param_defs,
     )
   }
   
-  if ("psa" %in% names(param_defs)) {
+  if (("psa" %in% names(param_defs)) && (!all(is.na(param_defs$psa)))) {
     
-    if (all(is.na(param_defs$psa))) {
-      stop("No non-missing values in column 'psa'.")
-    }
+    # if (all(is.na(param_defs$psa))) {
+    #   stop("No non-missing values in column 'psa'.")
+    # }
     
     param_psa <- param_defs$parameter[! is.na(param_defs$psa)]
     distrib_psa <- stats::na.omit(param_defs$psa)

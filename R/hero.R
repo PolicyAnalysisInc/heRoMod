@@ -31,6 +31,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     group_vars <- NULL
   }
   if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
+    if(is.null(data$psa)) data$psa <- ""
     user_pars <- dplyr::transmute(
       data,
       parameter = name,
@@ -387,6 +388,7 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
   }
   st_df
 }
+
 hero_extract_summ <- function(res, summ) {
   
   model_res <- res$run_model
@@ -519,6 +521,61 @@ hero_extract_trace <- function(res) {
       series = .id
     )
   cbind(time, trace)
+}
+
+hero_extract_psa_summ <- function(res, summ) {
+  
+  strategies <- unique(res$.strategy_names)
+  n_strat <- length(strategies)
+  
+  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
+    dplyr::filter(referent != comparator)
+  value_names <- setdiff(colnames(res), c(".strategy_names", ".index"))
+  
+  ref_res <- res[indices$referent, ]
+  comp_res <- res[indices$comparator, ]
+  delta_res <- ref_res
+  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
+  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
+  all_res <- rbind(res, delta_res) %>%
+    reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
+    dplyr::mutate(variable = as.character(variable))
+  
+  summ_unique <- dplyr::distinct(summ, name, value)
+  
+  undisc <- dplyr::inner_join(
+    dplyr::rename(summ_unique,variable = value),
+    all_res,
+    by = "variable"
+  ) %>%
+    dplyr::mutate(
+      sim = .index,
+      outcome = name,
+      series = .strategy_names,
+      group = variable,
+      disc = F
+    ) %>%
+    dplyr::select(outcome, series, sim, group, disc, value)
+  
+  disc <- dplyr::inner_join(
+    dplyr::mutate(
+      summ_unique,
+      variable1 = paste0(".disc_", value),
+      variable = value
+    ) %>%
+      dplyr::select(-value),
+    all_res,
+    by = c("variable1" = "variable")
+  ) %>%
+    dplyr::mutate(
+      sim = .index,
+      outcome = name,
+      series = .strategy_names,
+      group = variable,
+      disc = T
+    ) %>%
+    dplyr::select(outcome, series, sim, group, disc, value)
+  rbind(disc, undisc)
 }
 
 hero_extract_dsa_summ <- function(res, bc_res, summ) {
@@ -1129,6 +1186,12 @@ build_hero_model <- function(...) {
   # Capture arguments
   dots <- list(...)
   
+  if (is.null(dots$psa)) {
+    dots$psa <- list(
+      n = 1
+    )
+  }
+  
   # Format parameters Table
   params <- parse_hero_vars(
     dots$variables,
@@ -1189,11 +1252,11 @@ build_hero_model <- function(...) {
     demo = groups_tbl,
     options = tibble::tribble(
       ~option,  ~value,
-      "cost",   paste0(".disc_", dots$hsumms$name[1]),
-      "effect", paste0(".disc_", dots$esumms$name[1]),
+      "cost",   paste0(".disc_", dots$esumms$name[1]),
+      "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
-      "n",      20,
+      "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", ")
     ),
     data = dots$tables,
@@ -1434,11 +1497,10 @@ run_hero_psa <- function(...) {
     # Homogenous model
     # Compile model object
     args <- do.call(build_hero_model, dots)
-    args$run_psa <- 1000
+    args$run_psa <- T
     
     # Run Model
-    heemod_res <- do.call(run_model_api, args)
-    
+    psa_model <- do.call(run_model_api, args)
   } else {
     # Heterogeneous model
     # Run PSA analysis for each group
@@ -1449,31 +1511,49 @@ run_hero_psa <- function(...) {
       group_args <- dots
       group_args$groups <- x
       set.seed(the_seed)
-      group_model <- do.call(run_hero_psa, group_args)
-      
-      group_model
+      args <- do.call(build_hero_model, group_args)
+      args$run_psa <- T
+      do.call(run_model_api, args)
     })
     
-    combined_model <- psas[[1]]
-    
+    psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
     psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
-    combined_model$psa$psa <- psa_res_df %>%
+    psa_model$psa$psa <- psa_res_df %>%
       dplyr::select(-name) %>%
       dplyr::group_by(.strategy_names, .index) %>%
       dplyr::summarize_all(sum)
-    
-    ceac <- acceptability_curve(combined_model$psa$psa, seq(from=0,to=100000,by=100))
-    evpi <- compute_evpi(combined_model$psa, seq(from=0,to=100000,by=100))
-    evppi <- compute_evppi(
-      combined_model$psa,
-      define_evppi_(combined_model$psa$resamp_par),
-      max_wtp = 100000,
-      n = 100
-    )
-    print(evpi)
   }
+  
+  thresh_max <- dots$psa$thresh_max
+  thresh_step <- dots$psa$thresh_step
+  thresh_n_steps <- thresh_max / thresh_step
+  
+  outcomes <- hero_extract_psa_summ(psa_model$psa$psa, dots$hsumms)
+  costs <- hero_extract_psa_summ(psa_model$psa$psa, dots$esumms)
+  ceac <- acceptability_curve(psa_model$psa$psa, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
+    reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
+    dplyr::rename(wtp = .ceac)
+  evpi <- compute_evpi(psa_model$psa, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
+    dplyr::rename(wtp = .ceac, value = .evpi)
+  evppi <- compute_evppi(
+    psa_model$psa,
+    define_evppi_(psa_model$psa$resamp_par),
+    max_wtp = dots$psa$thresh_max,
+    n = thresh_n_steps + 1,
+    verbose = F
+  )$evppi_res %>%
+    dplyr::rename(wtp = WTP) %>%
+    reshape2::melt(id.vars = "wtp", value.name = "value")
+  
+  list(
+    outcomes = outcomes,
+    costs = costs,
+    ceac = ceac,
+    evpi = evpi,
+    evppi = evppi
+  )
 }
 
 #' @export
@@ -1620,7 +1700,8 @@ package_hero_model <- function(...) {
     scripts = dots$scripts,
     surv_dists = dots$surv_dists,
     type = dots$type,
-    vbp = dots$vbp
+    vbp = dots$vbp,
+    psa = dots$psa
   )
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
