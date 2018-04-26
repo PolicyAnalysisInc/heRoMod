@@ -1537,22 +1537,22 @@ run_hero_psa <- function(...) {
     dplyr::rename(wtp = .ceac)
   evpi <- compute_evpi(psa_model$psa, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
     dplyr::rename(wtp = .ceac, value = .evpi)
-  evppi <- compute_evppi(
-    psa_model$psa,
-    define_evppi_(psa_model$psa$resamp_par),
-    max_wtp = dots$psa$thresh_max,
-    n = thresh_n_steps + 1,
-    verbose = F
-  )$evppi_res %>%
-    dplyr::rename(wtp = WTP) %>%
-    reshape2::melt(id.vars = "wtp", value.name = "value")
-  
+  # evppi <- compute_evppi(
+  #   psa_model$psa,
+  #   define_evppi_(psa_model$psa$resamp_par),
+  #   max_wtp = dots$psa$thresh_max,
+  #   n = thresh_n_steps + 1,
+  #   verbose = F
+  # )$evppi_res %>%
+  #   dplyr::rename(wtp = WTP) %>%
+  #   reshape2::melt(id.vars = "wtp", value.name = "value")
+  # 
   list(
     outcomes = outcomes,
     costs = costs,
     ceac = ceac,
-    evpi = evpi,
-    evppi = evppi
+    evpi = evpi#,
+    #evppi = evppi
   )
 }
 
