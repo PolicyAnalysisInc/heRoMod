@@ -1507,6 +1507,7 @@ run_hero_psa <- function(...) {
     
     # Run Model
     psa_model <- do.call(run_model_api, args)
+    psa_res_df <- psa_model$psa$psa
   } else {
     # Heterogeneous model
     # Run PSA analysis for each group
