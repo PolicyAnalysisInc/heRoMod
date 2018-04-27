@@ -1540,6 +1540,7 @@ run_hero_psa <- function(...) {
   thresh_n_steps <- thresh_max / thresh_step
   
   if (!is.null(dots$results_so_far)) {
+    psa_res_df$.index <- psa_res_df$.index + max(dots$results_so_far$.index, na.rm = T)
     psa_res_df <- rbind(dots$results_so_far, psa_res_df)
   }
   
