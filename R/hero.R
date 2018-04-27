@@ -1550,7 +1550,7 @@ run_hero_psa <- function(...) {
     dplyr::rename(wtp = .ceac)
   temp_model <- psa_model$psa
   temp_model$psa <- psa_res_df
-  evpi <- compute_evpi(psa_res_df, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
+  evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
     dplyr::rename(wtp = .ceac, value = .evpi)
   # evppi <- compute_evppi(
   #   psa_model$psa,
