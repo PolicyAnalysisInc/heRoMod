@@ -745,6 +745,19 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
   
 }
 
+hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
+  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
+  unique_esumms <- paste0(".disc_", unique(esumms$name))
+  expand.grid(
+    hsumm = unique_hsumms,
+    esumm = unique_esumms,
+    stringsAsFactors = F
+  ) %>%
+    ddply(c("hsumm","esumm"), function(x) acceptability_curve(res, wtps)) %>%
+    reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
+    dplyr::rename(wtp = .ceac)
+}
+
 compile_parameters <- function(x) {
   if (is.null(x$demographics)) {
     # Homogenous model
@@ -1548,9 +1561,10 @@ run_hero_psa <- function(...) {
   
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
-    ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
-      reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
-      dplyr::rename(wtp = .ceac)
+    # ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
+    #   reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
+    #   dplyr::rename(wtp = .ceac)
+    ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
     evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
