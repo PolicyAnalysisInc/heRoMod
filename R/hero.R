@@ -1523,7 +1523,7 @@ run_hero_psa <- function(...) {
       args$run_psa <- T
       do.call(run_model_api, args)
     })
-    
+    psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
     col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
@@ -1548,6 +1548,8 @@ run_hero_psa <- function(...) {
   ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
     reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
     dplyr::rename(wtp = .ceac)
+  temp_model <- psa_model$psa
+  temp_model$psa <- psa_res_df
   evpi <- compute_evpi(psa_res_df, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
     dplyr::rename(wtp = .ceac, value = .evpi)
   # evppi <- compute_evppi(
