@@ -1511,6 +1511,7 @@ run_hero_psa <- function(...) {
     # Heterogeneous model
     # Run PSA analysis for each group
     the_seed <- sample.int(99999, 1)
+    group_vars <- setdiff(colnames(dots$groups), c("name", "weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
       # Run model for given group
@@ -1524,7 +1525,9 @@ run_hero_psa <- function(...) {
     
     psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
+    psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
     col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
+    psa_res_df$weight <- as.numeric(psa_res_df$weight)
     psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
     psa_model$psa$psa <- psa_res_df %>%
       dplyr::select(-name) %>%
