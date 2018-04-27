@@ -18,7 +18,7 @@
 
 
 compute_evpi <- function(x, wtp_thresholds) {
-  x$psa %>% 
+  x %>% 
     dplyr::mutate(.key = 1) %>% 
     dplyr::left_join(
       tibble::tibble(

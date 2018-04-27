@@ -1523,13 +1523,12 @@ run_hero_psa <- function(...) {
       do.call(run_model_api, args)
     })
     
-    psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
     col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
     psa_res_df$weight <- as.numeric(psa_res_df$weight)
     psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
-    psa_model$psa$psa <- psa_res_df %>%
+    psa_res_df <- psa_res_df %>%
       dplyr::select(-name) %>%
       dplyr::group_by(.strategy_names, .index) %>%
       dplyr::summarize_all(sum)
@@ -1539,12 +1538,16 @@ run_hero_psa <- function(...) {
   thresh_step <- dots$psa$thresh_step
   thresh_n_steps <- thresh_max / thresh_step
   
-  outcomes <- hero_extract_psa_summ(psa_model$psa$psa, dots$hsumms)
-  costs <- hero_extract_psa_summ(psa_model$psa$psa, dots$esumms)
-  ceac <- acceptability_curve(psa_model$psa$psa, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
+  if (!is.null(dots$results_so_far)) {
+    psa_res_df <- rbind(dots$results_so_far, psa_res_df)
+  }
+  
+  outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
+  costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
+  ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
     reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
     dplyr::rename(wtp = .ceac)
-  evpi <- compute_evpi(psa_model$psa, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
+  evpi <- compute_evpi(psa_res_df, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
     dplyr::rename(wtp = .ceac, value = .evpi)
   # evppi <- compute_evppi(
   #   psa_model$psa,
@@ -1557,6 +1560,7 @@ run_hero_psa <- function(...) {
   #   reshape2::melt(id.vars = "wtp", value.name = "value")
   # 
   list(
+    results = psa_res_df,
     outcomes = outcomes,
     costs = costs,
     ceac = ceac,
