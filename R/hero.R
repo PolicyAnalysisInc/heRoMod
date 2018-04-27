@@ -1544,33 +1544,41 @@ run_hero_psa <- function(...) {
     psa_res_df <- rbind(dots$results_so_far, psa_res_df)
   }
   
-  outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
-  costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
-  ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
-    reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
-    dplyr::rename(wtp = .ceac)
-  temp_model <- psa_model$psa
-  temp_model$psa <- psa_res_df
-  evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
-    dplyr::rename(wtp = .ceac, value = .evpi)
-  # evppi <- compute_evppi(
-  #   psa_model$psa,
-  #   define_evppi_(psa_model$psa$resamp_par),
-  #   max_wtp = dots$psa$thresh_max,
-  #   n = thresh_n_steps + 1,
-  #   verbose = F
-  # )$evppi_res %>%
-  #   dplyr::rename(wtp = WTP) %>%
-  #   reshape2::melt(id.vars = "wtp", value.name = "value")
-  # 
-  list(
-    results = psa_res_df,
-    outcomes = outcomes,
-    costs = costs,
-    ceac = ceac,
-    evpi = evpi#,
-    #evppi = evppi
-  )
+  if(is.null(dots$interim) || !dots$interim) {
+  
+    outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
+    costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
+    ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
+      reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
+      dplyr::rename(wtp = .ceac)
+    temp_model <- psa_model$psa
+    temp_model$psa <- psa_res_df
+    evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
+      dplyr::rename(wtp = .ceac, value = .evpi)
+    # evppi <- compute_evppi(
+    #   psa_model$psa,
+    #   define_evppi_(psa_model$psa$resamp_par),
+    #   max_wtp = dots$psa$thresh_max,
+    #   n = thresh_n_steps + 1,
+    #   verbose = F
+    # )$evppi_res %>%
+    #   dplyr::rename(wtp = WTP) %>%
+    #   reshape2::melt(id.vars = "wtp", value.name = "value")
+    # 
+    list(
+      results = psa_res_df,
+      outcomes = outcomes,
+      costs = costs,
+      ceac = ceac,
+      evpi = evpi#,
+      #evppi = evppi
+    )
+  } else {
+    
+    list(
+      results = psa_res_df
+    )
+  }
 }
 
 #' @export
