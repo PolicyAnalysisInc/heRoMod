@@ -523,61 +523,6 @@ hero_extract_trace <- function(res) {
   cbind(time, trace)
 }
 
-hero_extract_psa_summ <- function(res, summ) {
-  
-  strategies <- unique(res$.strategy_names)
-  n_strat <- length(strategies)
-  
-  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
-    dplyr::filter(referent != comparator)
-  value_names <- setdiff(colnames(res), c(".strategy_names", ".index"))
-  
-  ref_res <- res[indices$referent, ]
-  comp_res <- res[indices$comparator, ]
-  delta_res <- ref_res
-  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
-  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
-  all_res <- rbind(res, delta_res) %>%
-    reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
-    dplyr::mutate(variable = as.character(variable))
-  
-  summ_unique <- dplyr::distinct(summ, name, value)
-  
-  undisc <- dplyr::inner_join(
-    dplyr::rename(summ_unique,variable = value),
-    all_res,
-    by = "variable"
-  ) %>%
-    dplyr::mutate(
-      sim = .index,
-      outcome = name,
-      series = .strategy_names,
-      group = variable,
-      disc = F
-    ) %>%
-    dplyr::select(outcome, series, sim, group, disc, value)
-  
-  disc <- dplyr::inner_join(
-    dplyr::mutate(
-      summ_unique,
-      variable1 = paste0(".disc_", value),
-      variable = value
-    ) %>%
-      dplyr::select(-value),
-    all_res,
-    by = c("variable1" = "variable")
-  ) %>%
-    dplyr::mutate(
-      sim = .index,
-      outcome = name,
-      series = .strategy_names,
-      group = variable,
-      disc = T
-    ) %>%
-    dplyr::select(outcome, series, sim, group, disc, value)
-  rbind(disc, undisc)
-}
-
 hero_extract_dsa_summ <- function(res, bc_res, summ) {
   
   bc_res_summs <- bc_res %>%
@@ -745,6 +690,61 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
   
 }
 
+
+hero_extract_psa_summ <- function(res, summ) {
+  
+  strategies <- unique(res$.strategy_names)
+  n_strat <- length(strategies)
+  
+  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
+    dplyr::filter(referent != comparator)
+  value_names <- setdiff(colnames(res), c(".strategy_names", ".index"))
+  
+  ref_res <- res[indices$referent, ]
+  comp_res <- res[indices$comparator, ]
+  delta_res <- ref_res
+  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
+  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
+  all_res <- rbind(res, delta_res) %>%
+    reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
+    dplyr::mutate(variable = as.character(variable))
+  
+  summ_unique <- dplyr::distinct(summ, name, value)
+  
+  undisc <- dplyr::inner_join(
+    dplyr::rename(summ_unique,variable = value),
+    all_res,
+    by = "variable"
+  ) %>%
+    dplyr::mutate(
+      sim = .index,
+      outcome = name,
+      series = .strategy_names,
+      group = variable,
+      disc = F
+    ) %>%
+    dplyr::select(outcome, series, sim, group, disc, value)
+  
+  disc <- dplyr::inner_join(
+    dplyr::mutate(
+      summ_unique,
+      variable1 = paste0(".disc_", value),
+      variable = value
+    ) %>%
+      dplyr::select(-value),
+    all_res,
+    by = c("variable1" = "variable")
+  ) %>%
+    dplyr::mutate(
+      sim = .index,
+      outcome = name,
+      series = .strategy_names,
+      group = variable,
+      disc = T
+    ) %>%
+    dplyr::select(outcome, series, sim, group, disc, value)
+  rbind(disc, undisc)
+}
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
   unique_esumms <- paste0(".disc_", unique(esumms$name))
@@ -760,6 +760,57 @@ hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
     }) %>%
     reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
     dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
+}
+hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
+  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
+  unique_esumms <- paste0(".disc_", unique(esumms$name))
+  expand.grid(
+    hsumm = unique_hsumms,
+    esumm = unique_esumms,
+    stringsAsFactors = F
+  ) %>%
+    ddply(c("hsumm","esumm"), function(x) {
+      res$psa$.effect <- res[[x$hsumm]]
+      res$psa$.cost <- res[[x$esumm]]
+      compute_evpi(res, seq(from = 0, to = max, by = step))
+    }) %>%
+    dplyr::rename(wtp = .ceac, value = .evpi)
+}
+hero_extract_psa_scatter <- function(res, hsumms, esumms) {
+  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
+  unique_esumms <- paste0(".disc_", unique(esumms$name))
+  abs_res <- expand.grid(
+    hsumm = unique_hsumms,
+    esumm = unique_esumms,
+    stringsAsFactors = F
+  ) %>%
+    ddply(c("hsumm","esumm"), function(x) {
+      data.frame(
+        series = .strategy_names,
+        sim = x$.index,
+        x = res[[x$esumm]],
+        y = res[[x$hsumm]],
+        stringsAsFactors = F
+      )
+    })
+  strategies <- unique(abs_res$series)
+  expand.grid(
+    referent = strategies,
+    comparator = strategies,
+    stringsAsFactors = F
+  ) %>%
+    ddply(c("referent","comparator"), function(x) {
+      ref_df <- dplyr::filter(abs_rfs, series == x$referent) %>%
+        dplyr::arrange(hsumm, esumm, sim)
+      comp_df <- dplyr::filter(abs_rfs, series == x$comparator) %>%
+        dplyr::arrange(hsumm, esumm, sim)
+      
+      res_df <- ref_df
+      res_df$x <- ref_df$x - comp_df$x
+      res_df$y <- ref_df$y - comp_df$y
+      res_df$series <- paste0(ref_df$series, " vs. ", comp_df$series)
+      res_df
+    })
 }
 
 compile_parameters <- function(x) {
@@ -1563,16 +1614,39 @@ run_hero_psa <- function(...) {
   
   if(is.null(dots$interim) || !dots$interim) {
   
+    scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
+    outcomes_summary <- outcomes %>%
+      dplyr::group_by(series, variable) %>%
+      dplyr::summarize(
+        mean = mean(value),
+        sd = sd(value),
+        min = min(value),
+        lowerq = quantile(value, 0.25),
+        median = median(value),
+        upperq = quantile(value, 0.75),
+        max = max(value)
+      ) %>%
+      reshape2::melt(id.vars = c("series", "variable"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(variable+statistic~series, value.var = "value")
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
-    # ceac <- acceptability_curve(psa_res_df, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step)) %>%
-    #   reshape2::dcast(.ceac~.strategy_names, value.var = ".p") %>%
-    #   dplyr::rename(wtp = .ceac)
+    costs_summary <- costs %>%
+      dplyr::group_by(series, variable) %>%
+      dplyr::summarize(
+        mean = mean(value),
+        sd = sd(value),
+        min = min(value),
+        lowerq = quantile(value, 0.25),
+        median = median(value),
+        upperq = quantile(value, 0.75),
+        max = max(value)
+      ) %>%
+      reshape2::melt(id.vars = c("series", "variable"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(variable+statistic~series, value.var = "value")
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
-    evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
-      dplyr::rename(wtp = .ceac, value = .evpi)
+    evpi <- hero_extract_psa_evpi(temp_model, dots$hsumms, dots$esumms, thresh_step, dots$psa$thresh_max)
     # evppi <- compute_evppi(
     #   psa_model$psa,
     #   define_evppi_(psa_model$psa$resamp_par),
@@ -1585,8 +1659,11 @@ run_hero_psa <- function(...) {
     # 
     list(
       results = psa_res_df,
+      scatter = scatter,
       outcomes = outcomes,
+      outcomes_summary = outcomes_summary,
       costs = costs,
+      costs_summary = costs_summary,
       ceac = ceac,
       evpi = evpi#,
       #evppi = evppi
