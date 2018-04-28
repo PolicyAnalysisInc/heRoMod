@@ -754,10 +754,10 @@ hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
     stringsAsFactors = F
   ) %>%
     ddply(c("hsumm","esumm"), function(x) {
-      res$.effect <- res[x$hsumm]
-      res$.cost <- res[x$esumm]
+      res$.effect <- res[[x$hsumm]]
+      res$.cost <- res[[x$esumm]]
       acceptability_curve(res, wtps)
-      }) %>%
+    }) %>%
     reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
     dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
 }
