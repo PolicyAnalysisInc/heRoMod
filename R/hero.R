@@ -799,10 +799,10 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
     comparator = strategies,
     stringsAsFactors = F
   ) %>%
-    ddply(c("referent","comparator"), function(x) {
-      ref_df <- dplyr::filter(abs_rfs, series == x$referent) %>%
+    ddply(c("referent","comparator"), function(comparison) {
+      ref_df <- dplyr::filter(abs_res, series == comparison$referent) %>%
         dplyr::arrange(hsumm, esumm, sim)
-      comp_df <- dplyr::filter(abs_rfs, series == x$comparator) %>%
+      comp_df <- dplyr::filter(abs_res, series == comparison$comparator) %>%
         dplyr::arrange(hsumm, esumm, sim)
       
       res_df <- ref_df
@@ -1617,7 +1617,7 @@ run_hero_psa <- function(...) {
     scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     outcomes_summary <- outcomes %>%
-      dplyr::group_by(series, variable) %>%
+      dplyr::group_by(series, group) %>%
       dplyr::summarize(
         mean = mean(value),
         sd = sd(value),
@@ -1627,11 +1627,11 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
-      reshape2::melt(id.vars = c("series", "variable"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(variable+statistic~series, value.var = "value")
+      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(group+statistic~series, value.var = "value")
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
     costs_summary <- costs %>%
-      dplyr::group_by(series, variable) %>%
+      dplyr::group_by(series, group) %>%
       dplyr::summarize(
         mean = mean(value),
         sd = sd(value),
@@ -1641,8 +1641,8 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
-      reshape2::melt(id.vars = c("series", "variable"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(variable+statistic~series, value.var = "value")
+      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(group+statistic~series, value.var = "value")
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
