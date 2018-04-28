@@ -799,6 +799,7 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
     comparator = strategies,
     stringsAsFactors = F
   ) %>%
+    dplyr::filter(referent != comparator) %>%
     ddply(c("referent","comparator"), function(comparison) {
       ref_df <- dplyr::filter(abs_res, series == comparison$referent) %>%
         dplyr::arrange(hsumm, esumm, sim)
