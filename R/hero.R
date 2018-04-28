@@ -811,7 +811,11 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
       res_df$y <- ref_df$y - comp_df$y
       res_df$series <- paste0(ref_df$series, " vs. ", comp_df$series)
       res_df
-    })
+    }) %>%
+    dplyr::rename(
+      health_outcome = hsumm,
+      econ_outcome = esumm
+    )
 }
 
 compile_parameters <- function(x) {
