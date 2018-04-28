@@ -770,8 +770,8 @@ hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
     stringsAsFactors = F
   ) %>%
     ddply(c("hsumm","esumm"), function(x) {
-      res$psa$.effect <- res[[x$hsumm]]
-      res$psa$.cost <- res[[x$esumm]]
+      res$psa$.effect <- res$psa[[x$hsumm]]
+      res$psa$.cost <- res$psa[[x$esumm]]
       compute_evpi(res, seq(from = 0, to = max, by = step))
     }) %>%
     dplyr::rename(wtp = .ceac, value = .evpi)
