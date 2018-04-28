@@ -755,7 +755,7 @@ hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   ) %>%
     ddply(c("hsumm","esumm"), function(x) acceptability_curve(res, wtps)) %>%
     reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
-    dplyr::rename(wtp = .ceac)
+    dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
 }
 
 compile_parameters <- function(x) {
@@ -1568,7 +1568,7 @@ run_hero_psa <- function(...) {
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
     evpi <- compute_evpi(temp_model, seq(from = 0, to = dots$psa$thresh_max, by = thresh_step)) %>%
-      dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac, value = .evpi)
+      dplyr::rename(wtp = .ceac, value = .evpi)
     # evppi <- compute_evppi(
     #   psa_model$psa,
     #   define_evppi_(psa_model$psa$resamp_par),
