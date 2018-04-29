@@ -788,8 +788,8 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
       data.frame(
         series = res$.strategy_names,
         sim = res$.index,
-        x = res[[x$esumm]],
-        y = res[[x$hsumm]],
+        x = res[[x$hsumm]],
+        y = res[[x$esumm]],
         stringsAsFactors = F
       )
     })
