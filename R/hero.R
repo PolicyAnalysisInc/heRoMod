@@ -1579,19 +1579,19 @@ run_hero_psa <- function(...) {
     args$run_psa <- T
     
     # Run Model
+    set.seed(dots$psa$seed)
     psa_model <- do.call(run_model_api, args)
     psa_res_df <- psa_model$psa$psa
   } else {
     # Heterogeneous model
     # Run PSA analysis for each group
-    the_seed <- sample.int(99999, 1)
     group_vars <- setdiff(colnames(dots$groups), c("name", "weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
       # Run model for given group
       group_args <- dots
       group_args$groups <- x
-      set.seed(the_seed)
+      set.seed(dots$psa$seed)
       args <- do.call(build_hero_model, group_args)
       args$run_psa <- T
       do.call(run_model_api, args)
