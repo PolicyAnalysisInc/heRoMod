@@ -1633,7 +1633,7 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+statistic~series, value.var = "value")
+      reshape2::dcast(group+series~statistic, value.var = "value")
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
     costs_summary <- costs %>%
       dplyr::group_by(series, group) %>%
@@ -1647,7 +1647,7 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+statistic~series, value.var = "value")
+      reshape2::dcast(group+series~statistic, value.var = "value")
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
