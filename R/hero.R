@@ -777,7 +777,8 @@ hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
     dplyr::rename(wtp = .ceac, value = .evpi)
 }
 hero_extract_psa_scatter <- function(res, hsumms, esumms) {
-  hsumms_df <- dplyr::distinct(hsumms, name, wtp) %>%
+  hsumms_df <- dplyr::distinct(hsumms, name, .keep_all = T) %>%
+    dplyr::select(name, wtp) %>%
     dplyr::mutate(name = paste0(".disc_", name))
   unique_hsumms <- hsumms_df$name
   unique_esumms <- paste0(".disc_", unique(esumms$name))
@@ -788,12 +789,13 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
   ) %>%
     dplyr::left_join(hsumms_df, by = c("hsumm" = "name")) %>%
     plyr::ddply(c("hsumm","esumm"), function(x) {
+      the_wtp <- x$wtp
       data.frame(
         series = res$.strategy_names,
         sim = res$.index,
         x = res[[x$hsumm]],
         y = res[[x$esumm]],
-        wtp = x$wtp,
+        wtp = the_wtp,
         stringsAsFactors = F
       )
     })
