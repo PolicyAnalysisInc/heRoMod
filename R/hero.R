@@ -774,7 +774,7 @@ hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
       res$psa$.cost <- res$psa[[x$esumm]]
       compute_evpi(res, seq(from = 0, to = max, by = step))
     }) %>%
-    dplyr::rename(wtp = .ceac, value = .evpi)
+    dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac, value = .evpi)
 }
 hero_extract_psa_scatter <- function(res, hsumms, esumms) {
   hsumms_df <- dplyr::distinct(hsumms, name, .keep_all = T) %>%
