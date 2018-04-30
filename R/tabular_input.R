@@ -1021,16 +1021,19 @@ create_parameters_from_tabular <- function(param_defs,
     )
     
     if (!is.null(psa_options)) {
-      
-      correlation_args <- plyr::alply(psa_options$correlation, 1, function(x) {
-        list(x$var1, x$var2, x$value)
-      }) %>% unlist(recursive=F, use.names = F) %>%
-        as.lazy_dots
-      correlation <- define_correlation_(correlation_args)
-      psa_args <- append(
-        psa_vars,
-        list(correlation = correlation)
-      )
+      if(length(psa_options$correlation > 0)) {
+        correlation_args <- plyr::alply(psa_options$correlation, 1, function(x) {
+          list(x$var1, x$var2, x$value)
+        }) %>% unlist(recursive=F, use.names = F) %>%
+          as.lazy_dots
+        correlation <- define_correlation_(correlation_args)
+        psa_args <- append(
+          psa_vars,
+          list(correlation = correlation)
+        )
+      } else {
+        psa_args <- psa_vars
+      }
     } else {
       psa_args <- psa_vars
     }
