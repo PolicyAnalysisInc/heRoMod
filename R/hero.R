@@ -63,8 +63,7 @@ parse_hero_obj_vars <- function(data) {
 parse_hero_groups <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
     dplyr::rename_(data, .dots = c(".group" = "name", ".weights" = "weight")) %>%
-      dplyr::mutate_(data, .dots = c("group" = ".group")) %>%
-    dplyr::mutate(.weights = as.numeric(.weights))
+    dplyr::mutate(group = .group, .weights = as.numeric(.weights))
   } else {
     NULL
   }
