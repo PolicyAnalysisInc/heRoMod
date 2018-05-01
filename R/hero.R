@@ -63,6 +63,7 @@ parse_hero_obj_vars <- function(data) {
 parse_hero_groups <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
     dplyr::rename_(data, .dots = c(".group" = "name", ".weights" = "weight")) %>%
+      dplyr::mutate_(data, .dots = c("group" = ".group")) %>%
     dplyr::mutate(.weights = as.numeric(.weights))
   } else {
     NULL
@@ -1267,8 +1268,9 @@ build_hero_model <- function(...) {
   
   if (is.null(dots$psa)) {
     dots$psa <- list(
-      n = 1
+      parallel = F
     )
+    dots$psa$n = 1
   }
   
   # Format parameters Table
@@ -1342,7 +1344,7 @@ build_hero_model <- function(...) {
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", "),
-      "num_cores", cores
+      "num_cores", 1#cores
     ),
     data = dots$tables,
     state_time_limit = limits,
