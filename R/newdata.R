@@ -71,7 +71,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
       envir = environment()
     )
     suppressMessages(
-      pieces <- parallel::parLapply(cl, pnewdata, function(newdata) {
+      #pieces <- parallel::parLapply(cl, pnewdata, function(newdata) {
+      pieces <- lapply(pnewdata, function(newdata) {
         newdata %>% 
           dplyr::rowwise() %>% 
           dplyr::do_(
@@ -79,6 +80,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
               .,
               strategy = uneval_strategy,
               old_parameters = old_parameters,
+              aux_params = aux_params,
               cycles = cycles,
               init = init,
               inflow = inflow,
