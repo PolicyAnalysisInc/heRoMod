@@ -1343,7 +1343,7 @@ build_hero_model <- function(...) {
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", "),
-      "num_cores", 1#cores
+      "num_cores", cores
     ),
     data = dots$tables,
     state_time_limit = limits,
