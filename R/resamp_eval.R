@@ -47,7 +47,7 @@ run_psa <- function(model, psa, N, resample) {
     stop("No cost and/or effect defined, probabilistic analysis unavailable.")
   }
   
-  newdata <- eval_resample(psa, N)
+  newdata <- eval_resample(psa, N, model)
   
   list_res <- list()
   
@@ -156,7 +156,14 @@ eval_correlation <- function(x, var_names) {
 #'   column per parameter and `N` rows.
 #'   
 #' @keywords internal
-eval_resample <- function(psa, N) {
+eval_resample <- function(psa, N, model) {
+  
+  # Populate bc parameter
+  for(i in seq_len(length(psa$list_qdist))) {
+    var_env <- environment(psa$list_qdist[[i]])
+    var_name <- names(psa$list_qdist)[i]
+    var_env$bc <- model$parameters[[var_name]][1]
+  }
   
   mat_p <- stats::pnorm(
     mvnfast::rmvn(
