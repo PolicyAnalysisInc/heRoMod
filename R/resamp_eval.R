@@ -156,13 +156,15 @@ eval_correlation <- function(x, var_names) {
 #'   column per parameter and `N` rows.
 #'   
 #' @keywords internal
-eval_resample <- function(psa, N, model) {
+eval_resample <- function(psa, N, model = NULL) {
   
-  # Populate bc parameter
-  for(i in seq_len(length(psa$list_qdist))) {
-    var_env <- environment(psa$list_qdist[[i]])
-    var_name <- names(psa$list_qdist)[i]
-    var_env$bc <- model$parameters[[var_name]][1]
+  if(!is.null(model)) {
+    # Populate bc parameter
+    for(i in seq_len(length(psa$list_qdist))) {
+      var_env <- environment(psa$list_qdist[[i]])
+      var_name <- names(psa$list_qdist)[i]
+      var_env$bc <- model$parameters[[var_name]][1]
+    }
   }
   
   mat_p <- stats::pnorm(
