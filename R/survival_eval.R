@@ -538,7 +538,11 @@ eval_surv.surv_projection <- function(x, time, ...) {
     .internal = TRUE)
   
   ret[ind_s1] <- surv1[ind_s1]
-  ret[ind_s2] <- (surv2 * surv1_p_at / surv2_p_at)[ind_s2]
+  if (surv2_p_at == 0) {
+    ret[ind_s2] <- 0
+  } else {
+    ret[ind_s2] <- (surv2 * surv1_p_at / surv2_p_at)[ind_s2]
+  }
   
   ret
 }
@@ -670,6 +674,7 @@ eval_surv.surv_dist <- function(x, time, ...) {
             envir = asNamespace("flexsurv"))
   
   args <- x[- match("distribution", names(x))]
+  args <- lapply(args, function(x) x[1])
   args[["q"]] <- time
   args[["lower.tail"]] <- FALSE
   ret <- do.call(pf, args)
@@ -696,6 +701,7 @@ eval_surv.surv_dist_cure <- function(x, time, ...) {
   }
   
   args <- x[- match(c("distribution", "mixture"), names(x))]
+  args <- lapply(args, function(x) x[1])
   args[["pfun"]] <- pf
   args[["q"]] <- time
   args[["lower.tail"]] <- FALSE
@@ -723,6 +729,7 @@ eval_surv.surv_dist_spline <- function(x, time, ...) {
   )
   
   args <- x[- match("distribution", names(x))]
+  args <- lapply(args, function(x) x[1])
   args[["q"]] <- time
   args[["lower.tail"]] <- FALSE
   ret <- do.call(pf, args)
