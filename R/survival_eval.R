@@ -736,6 +736,14 @@ eval_surv.surv_table <- function(x, time, ...){
   look_up(data = x, time = time, bin = "time", value = "survival")
 }
 
+
+
+#' @rdname eval_surv
+#' @export
+eval_surv.surv_lifetable <- function(x, time, ...){
+  attr(x, "surv_func")(time)
+}
+
 eval_surv.lazy <- function(x, ...){
   dots <- list(...)
   use_data <- list()

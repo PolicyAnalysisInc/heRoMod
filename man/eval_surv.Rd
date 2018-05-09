@@ -22,6 +22,7 @@
 \alias{eval_surv.surv_dist_cure}
 \alias{eval_surv.surv_dist_spline}
 \alias{eval_surv.surv_table}
+\alias{eval_surv.surv_lifetable}
 \title{Evaluate Survival Distributions}
 \usage{
 eval_surv(x, time, ...)
@@ -59,6 +60,8 @@ event_prob_(x, start, end, ...)
 \method{eval_surv}{surv_dist_spline}(x, time, ...)
 
 \method{eval_surv}{surv_table}(x, time, ...)
+
+\method{eval_surv}{surv_lifetable}(x, time, ...)
 }
 \arguments{
 \item{x}{A survival distribution object}

@@ -300,3 +300,68 @@ define_surv_table.data.frame <- function(x){
 define_surv_table.character <- function(x){
   define_surv_table(read_file(x))
 }
+
+#' Define a survival distribution based on explicit survival probabilities
+#'
+#' @param x a data frame with columns `age`, `male`, and `female`, where age is
+#' a counting sequence representing each age covered by the life-table, male
+#' represents the conditional probability of death at each age for men, and female represents
+#' the conditional probability  of death at each age for women.
+#'
+#' @return a `surv_lifetable` object, which can be used with [compute_surv()].
+#' @export
+#'
+#' @examples
+#'  x <- data.frame(age = c(0, 1, 2, 3), male = c(0.011, 0.005, 0.003, 0.002), female = c(0.010, 0.005, 0.004, 0.002))
+#'  define_surv_lifetable(x, 1, 0.45)
+#'  
+define_surv_lifetable <- function(x, start_age, percent_male){
+  UseMethod("define_surv_lifetable", x)
+}
+
+#' @rdname define_surv_lifetable
+#' @export
+define_surv_lifetable.data.frame <- function(x, start_age, percent_male) {
+  required_names <- c("age", "male", "female")
+  names_present <- required_names %in% names(x)
+  if(any(!names_present)){
+    stop("missing column",
+         plur(sum(!names_present)),
+         " in surv_lifetable object: ",
+         paste(required_names[!names_present], collapse = ", ")
+    )
+  }
+  x$age <- as.numeric(x$age)
+  x <- x[order(x$age),]
+  dup_time <- duplicated(x$age)
+  if(any(dup_time))
+    stop("any age can appear only once in life table data. ",
+         "Duplicated age",
+         plur(sum(dup_time)),
+         ": ",
+         paste(x$age[dup_time], collapse = ", ")
+    )
+  if(any(diff(x$age) != 1)) {
+    stop("ages in a life table must appear in a counting sequence (e.g. 0, 1, 2, ...)")
+  }
+  
+  class(x) <- c("surv_lifetable", "surv_object", "data.frame")
+  
+  lambdas_male <- -log(1 - x$male)
+  func_male <- function(time) msm::ppexp(time,  rate = lambdas_male, t = x$age, lower.tail = F)
+  
+  lambdas_female <- -log(1 - x$female)
+  func_female <- function(time) msm::ppexp(time,  rate = lambdas_female, t = x$age, lower.tail = F)
+  
+  the_surv_func <- function(time) {
+    init_surv <- func_male(start_age) * percent_male + func_female(start_age) * (1 - percent_male)
+    full_surv <- func_male(time + start_age) * percent_male + func_female(time + start_age) * (1 - percent_male)
+    full_surv / init_surv
+  }
+  
+  attr(x, "start_age") <- start_age[1]
+  attr(x, "percent_male") <- percent_male[1]
+  attr(x, "surv_func") <- the_surv_func
+
+  x
+}
