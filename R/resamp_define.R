@@ -75,24 +75,14 @@ define_psa_ <- function(.dots = list(), correlation) {
       eval(rhs(x), envir = asNamespace("heRomod"))
     })
   
-  list_qdist <- unlist(
-    list_input,
-    recursive = FALSE
-  )
-  lapply(list_qdist, function(x) {
-    if (! inherits(x, "function")) {
-      stop("Distributions must be defined as functions.")
-    }
-  })
-  
-  n_par <- unlist(lapply(list_input, length))
-  
-  names(list_qdist) <- unlist(
+  par_names <- unlist(
     lapply(
       eval_dots,
       function(x) all.vars(lhs(x))
     )
   )
+  
+  n_par <- unlist(lapply(list_input, length))
   
   is_multinom <- unlist(lapply(
     list_input,
@@ -118,10 +108,10 @@ define_psa_ <- function(.dots = list(), correlation) {
   }
   
   if (missing(correlation)){
-    correlation <- diag(length(list_qdist))
+    correlation <- diag(sum(n_par))
   }
   
-  if (any(duplicated(names(list_qdist)))) {
+  if (any(duplicated(par_names))) {
     stop("Some parameter names are duplicated.")
   }
   
@@ -130,12 +120,12 @@ define_psa_ <- function(.dots = list(), correlation) {
   # all r_multi or r_binom are present in 1 and only 1 multi
   
   if ("correlation_matrix" %in% class(correlation)) {
-    correlation <- eval_correlation(correlation, names(list_qdist))
+    correlation <- eval_correlation(correlation, par_names)
   }
   
   stopifnot(
     nrow(correlation) == ncol(correlation),
-    nrow(correlation) == length(list_qdist),
+    nrow(correlation) == length(par_names),
     all(correlation >= -1) & all(correlation <= 1),
     isTRUE(all.equal(as.vector(diag(correlation)),
                      rep(1, ncol(correlation))))
@@ -143,7 +133,7 @@ define_psa_ <- function(.dots = list(), correlation) {
   
   structure(
     list(
-      list_qdist = list_qdist,
+      list_qdist = eval_dots,
       correlation = correlation,
       multinom = list_multi
     ),

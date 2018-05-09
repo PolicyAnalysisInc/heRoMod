@@ -193,17 +193,18 @@ test_that(
         ), byrow = TRUE, ncol = 2)
       )
     )
-    expect_error(
-      define_psa(
-        x ~ normal(60, 10),
-        y ~ 0
-      )
-    )
-    expect_error(
-      define_psa(
-        ~ normal(60, 10)
-      )
-    )
+    # These will now throw errors only when evaluating, not when defining
+    # expect_error(
+    #   define_psa(
+    #     x ~ normal(60, 10),
+    #     y ~ 0
+    #   )
+    # )
+    # expect_error(
+    #   define_psa(
+    #     ~ normal(60, 10)
+    #   )
+    # )
     expect_error(
       define_correlation(age_init, cost_init, .4, .5)
     )

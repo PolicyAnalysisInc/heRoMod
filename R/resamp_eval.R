@@ -162,15 +162,39 @@ eval_resample <- function(psa, N, model = NULL) {
     # Populate bc parameter
     for(i in seq_len(length(psa$list_qdist))) {
       var_env <- environment(psa$list_qdist[[i]])
-      var_name <- names(psa$list_qdist)[i]
-      var_env$bc <- model$parameters[[var_name]][1]
+      var_name <- as.character(lhs(psa$list_qdist[[i]]))
+      var_env$bc <- model$eval_strategy_list[[1]]$parameters[[var_name]][1]
     }
   }
+  list_qdist <- lapply(
+    psa$list_qdist,
+    function(x) {
+      the_env <- new.env(parent = asNamespace("heRomod"))
+      old_env <- as.list(environment(x))
+      for(i in seq_len(length(old_env))) {
+        the_env[[names(old_env)[i]]] <- old_env[[names(old_env)[i]]]
+      }
+      eval(rhs(x), envir = the_env)
+    }) %>% 
+    unlist(recursive = FALSE)
+  
+  lapply(list_qdist, function(x) {
+    if (! inherits(x, "function")) {
+      stop("Distributions must be defined as functions.")
+    }
+  })
+  
+  names(list_qdist) <- unlist(
+    lapply(
+      psa$list_qdist,
+      function(x) all.vars(lhs(x))
+    )
+  )
   
   mat_p <- stats::pnorm(
     mvnfast::rmvn(
       n = N,
-      mu = rep(0, length(psa$list_qdist)),
+      mu = rep(0, length(list_qdist)),
       sigma = psa$correlation
     )
   )
@@ -178,14 +202,14 @@ eval_resample <- function(psa, N, model = NULL) {
   list_res <- mapply(
     function(i, f) f(mat_p[, i]),
     seq_len(ncol(mat_p)),
-    psa$list_qdist
+    list_qdist
   )
   
   if (length(dim(list_res)) < 2) {
     list_res <- matrix(list_res, ncol = length(list_res))
   }
   
-  colnames(list_res) <- names(psa$list_qdist)
+  colnames(list_res) <- names(list_qdist)
   res <- as.data.frame(list_res)
   
   for (m in psa$multinom) {

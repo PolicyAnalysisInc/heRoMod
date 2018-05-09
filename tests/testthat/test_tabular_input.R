@@ -101,46 +101,47 @@ test_that(
   }
 )
 
-test_that(
-  "can read multinomial parameters from file", {
-    from_input <- 
-      define_psa(p_AA ~binomial(.7, 1000), 
-                 p_AB + p_AC + p_AD ~ multinomial(202, 67, 10))
-    from_file <-
-      create_parameters_from_tabular(read_file(system.file(
-        "tabular/test",
-        "example_multinom_params.csv",
-        package = "heRomod"
-      )))
-    
-    expect_identical(
-      names(from_file$params),
-      c("p_AA", "p_AB", "p_AC", "p_AD")
-    )
-    expect_identical(
-      round(sapply(from_file$params, "[[", "expr"), 4),
-      c(p_AA = 721.0000, p_AB = 0.7240, p_AC = 0.2401, p_AD = 0.0358)
-    )
-    
-    expect_error(
-      create_parameters_from_tabular(read_file(system.file(
-        "tabular/test",
-        "example_multinom_params_dup_name.csv",
-        package = "heRomod"
-      ))),
-      "Some variables appear as individual parameters and in a multinomial"
-    )
-    
-    
-    ## can't test identity of multinomial part
-    ##   because of environments, so test results
-    set.seed(5)
-    from_input_draws <- eval_resample(from_input, 10)
-    set.seed(5)
-    from_file_draws <- eval_resample(from_file$psa_params, 10)
-    expect_identical(from_input_draws, from_file_draws)
-  }
-)
+# Not supporting multinomial
+# test_that(
+#   "can read multinomial parameters from file", {
+#     from_input <- 
+#       define_psa(p_AA ~binomial(.7, 1000), 
+#                  p_AB + p_AC + p_AD ~ multinomial(202, 67, 10))
+#     from_file <-
+#       create_parameters_from_tabular(read_file(system.file(
+#         "tabular/test",
+#         "example_multinom_params.csv",
+#         package = "heRomod"
+#       )))
+#     
+#     expect_identical(
+#       names(from_file$params),
+#       c("p_AA", "p_AB", "p_AC", "p_AD")
+#     )
+#     expect_identical(
+#       round(sapply(from_file$params, "[[", "expr"), 4),
+#       c(p_AA = 721.0000, p_AB = 0.7240, p_AC = 0.2401, p_AD = 0.0358)
+#     )
+#     
+#     expect_error(
+#       create_parameters_from_tabular(read_file(system.file(
+#         "tabular/test",
+#         "example_multinom_params_dup_name.csv",
+#         package = "heRomod"
+#       ))),
+#       "Some variables appear as individual parameters and in a multinomial"
+#     )
+#     
+#     
+#     ## can't test identity of multinomial part
+#     ##   because of environments, so test results
+#     set.seed(5)
+#     from_input_draws <- eval_resample(from_input, 10)
+#     set.seed(5)
+#     from_file_draws <- eval_resample(from_file$psa_params, 10)
+#     expect_identical(from_input_draws, from_file_draws)
+#   }
+# )
 
 test_that(
   "Bad spec file input is caught.", {
