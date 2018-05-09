@@ -158,21 +158,14 @@ eval_correlation <- function(x, var_names) {
 #' @keywords internal
 eval_resample <- function(psa, N, model = NULL) {
   
-  if(!is.null(model)) {
-    # Populate bc parameter
-    for(i in seq_len(length(psa$list_qdist))) {
-      var_env <- environment(psa$list_qdist[[i]])
-      var_name <- as.character(lhs(psa$list_qdist[[i]]))
-      var_env$bc <- model$eval_strategy_list[[1]]$parameters[[var_name]][1]
-    }
-  }
   list_qdist <- lapply(
     psa$list_qdist,
     function(x) {
       the_env <- new.env(parent = asNamespace("heRomod"))
       old_env <- as.list(environment(x))
-      for(i in seq_len(length(old_env))) {
-        the_env[[names(old_env)[i]]] <- old_env[[names(old_env)[i]]]
+      if(!is.null(model)) {
+        var_name <- as.character(lhs(x))
+        the_env$bc <- model$eval_strategy_list[[1]]$parameters[[var_name]][1]
       }
       eval(rhs(x), envir = the_env)
     }) %>% 
