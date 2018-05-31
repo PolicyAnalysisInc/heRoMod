@@ -796,7 +796,8 @@ test_that("Defining Survival Distributions",
             reg <- define_surv_lifetable(surv_lifetable_df, 1, 0.5)
             
             expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
-                         c(1, 0.9974969, 0.9950000, 0.9932571, 0.9915172, 0.9895342, 0.9757636))
+                         c(1, 0.9974969, 0.9950000, 0.9932571, 0.9915172, 0.9895342, 0.9757636),
+                         tolerance = 1e-7)
           })
 
 test_that("Survfit",

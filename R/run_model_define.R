@@ -400,7 +400,7 @@ get_counts.run_model <- function(x, ...) {
         get_counts(x$eval_strategy_list[[.n]]) %>% 
           dplyr::mutate_(
             .strategy_names = ~ .n,
-            markov_cycle = ~ row_number())
+            markov_cycle = ~ dplyr::row_number())
       }
     )
   )

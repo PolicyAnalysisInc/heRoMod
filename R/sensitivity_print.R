@@ -153,7 +153,7 @@ plot.dsa <- function(x, type = c("simple", "difference"),
     dplyr::arrange_(
       ".par_names", var_plot) %>%
     dplyr::group_by_(~ .par_names, ~ .strategy_names) %>%
-    dplyr::mutate_(.hjust = ~ 1 - (row_number() - 1))
+    dplyr::mutate_(.hjust = ~ 1 - (dplyr::row_number() - 1))
   
   if (remove_ns) {
     tab <- tab %>% 
