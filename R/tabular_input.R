@@ -1104,7 +1104,7 @@ create_part_surv_custom_from_tabular <- function(trace_info, state_names,
   dots <- trace_info$prob
   names(dots) <- state_names
   
-  res <- define_part_surv_custom_(lazyeval::as.lazy_dots(dots, env = df_env))
+  res <- define_part_surv_custom_(lazyeval::as.lazy_dots(dots[state_names], env = df_env))
   if (options()$heRomod.verbose) print(res)
   res
 }
