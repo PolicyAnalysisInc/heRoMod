@@ -29,5 +29,5 @@ devtools::install_github("heRomod")
   * [Vojtech Filipec](https://github.com/vojtech-filipec)
   * [Yonatan Carranza Alarcon](https://github.com/salmuz)
   * [Vince Daniels](https://github.com/daniels4321)
-  * [Fernando Alarid](https://github.com/feralaes)
+  * [Fernando Alarid-Escudero](https://github.com/feralaes)
   
