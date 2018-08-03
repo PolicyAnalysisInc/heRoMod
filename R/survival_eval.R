@@ -615,7 +615,7 @@ eval_surv.surv_aft <- function(x, time, ...) {
   
   ret <- eval_surv(
     x$dist,
-    time = time * x$af 
+    time = time / x$af 
   )
   
   ret
