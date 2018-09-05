@@ -153,22 +153,6 @@ r_beta <- function(shape1, shape2){
 }
 
 #' @rdname distributions
-triangle <- function(lower, upper, peak = (lower + upper)/2) {
-  if (! requireNamespace("triangle")) {
-    stop("'triangle' package required for logitnormal distributions.")
-  }
-  stopifnot(peak >= lower,
-            upper >= peak,
-            upper > lower
-            )
-  list(r_triangle(lower, upper, peak))
-}
-r_triangle <- function(lower, upper, peak) {
-  function(x) triangle::qtriangle(p = x, a = lower, b = upper, c = peak)
-}
-
-
-#' @rdname distributions
 poisson <- function(mean) {
   list(r_poisson(mean))
 }
@@ -195,14 +179,16 @@ triangle <- function(lower, upper, peak = (lower + upper)/2) {
   if (! requireNamespace("triangle")) {
     stop("'triangle' package required for triangle distributions.")
   }
-  stopifnot(peak >= lower,
-            upper >= peak,
-            upper > lower
-  )
   list(r_triangle(lower, upper, peak))
 }
 r_triangle <- function(lower, upper, peak) {
-  function(x) triangle::qtriangle(p = x, a = lower, b = upper, c = peak)
+  function(x) {
+    stopifnot(peak >= lower,
+              upper >= peak,
+              upper > lower
+    )
+    triangle::qtriangle(p = x, a = lower, b = upper, c = peak)
+  }
 }
 
 #' @rdname distributions
