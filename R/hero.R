@@ -754,16 +754,27 @@ hero_extract_psa_summ <- function(res, summ) {
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
   unique_esumms <- paste0(".disc_", unique(esumms$name))
+  do_ceacs <- function(x) {
+    do_one_ceac <- function(y) {
+      y$.effect <- y[[x$hsumm]]
+      y$.cost <- y[[x$esumm]]
+      acceptability_curve(y, wtps)
+    }
+    if (nrow(x) == 1) {
+      res_df <- do_one_ceac(res)
+      res_df$hsumm <- x$hsumm
+      res_df$esumm <- x$esumm
+    } else {
+      res_df <- plyr::ddply(c("hsumm","esumm"), do_one_ceac)
+    }
+    res_df
+  }
   expand.grid(
     hsumm = unique_hsumms,
     esumm = unique_esumms,
     stringsAsFactors = F
   ) %>%
-    ddply(c("hsumm","esumm"), function(x) {
-      res$.effect <- res[[x$hsumm]]
-      res$.cost <- res[[x$esumm]]
-      acceptability_curve(res, wtps)
-    }) %>%
+    do_ceacs() %>%
     reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
     dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
 }
