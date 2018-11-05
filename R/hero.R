@@ -756,16 +756,17 @@ hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_esumms <- paste0(".disc_", unique(esumms$name))
   do_ceacs <- function(x) {
     do_one_ceac <- function(y) {
-      y$.effect <- y[[x$hsumm]]
-      y$.cost <- y[[x$esumm]]
-      acceptability_curve(y, wtps)
+      ceac_res <- res
+      ceac_res$.effect <- res[[y$hsumm]]
+      ceac_res$.cost <- res[[y$esumm]]
+      acceptability_curve(ceac_res, wtps)
     }
     if (nrow(x) == 1) {
-      res_df <- do_one_ceac(res)
+      res_df <- do_one_ceac(x)
       res_df$hsumm <- x$hsumm
       res_df$esumm <- x$esumm
     } else {
-      res_df <- plyr::ddply(c("hsumm","esumm"), do_one_ceac)
+      res_df <- plyr::ddply(x, c("hsumm","esumm"), do_one_ceac)
     }
     res_df
   }
