@@ -1001,7 +1001,7 @@ compile_transitions <- function(x) {
     }
   } else {
     # Heterogeneous model
-    the_class <- class(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
+    the_class <- class(x$demographics$model_list[[1]]$.mod[[1]]$transition)
     if("eval_part_surv" %in% the_class) {
       state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
       n_states <- length(state_names)
