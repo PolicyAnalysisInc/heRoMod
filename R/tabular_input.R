@@ -752,14 +752,16 @@ parse_state_info <- function(state_info, df_env) {
     state_info$.state,
     function(state) {
       define_state_(
-        lazyeval::as.lazy_dots(
-          stats::setNames(as.character(lapply(
+        safe_lazy_dots(
+          as.character(lapply(
             values,
             function(value) {
               state_info[[value]][state_info$.state == state]
             }
-          )), values),
-          env = df_env
+          )),
+          values,
+          df_env,
+          "value"
         )
       )
     }
@@ -829,15 +831,19 @@ parse_state_trans_info <- function(x, df_env) {
   lapply(
     x$.transition,
     function(state_trans) {
-      state_vals <- lapply(
+      state_vals_char <- as.character(lapply(
         values,
         function(value) {
           x[[value]][x$.transition == state_trans]
         }
-      ) %>%
-        as.character %>%
-        stats::setNames(values) %>%
-        lazyeval::as.lazy_dots(env = df_env)
+      ))
+      
+      state_vals <- safe_lazy_dots(
+          state_vals_char,
+          values,
+          df_env,
+          "value"
+        )
       
       define_state_transition_(
         from = x$from[x$.transition == state_trans],
@@ -918,9 +924,18 @@ create_matrix_from_tabular <- function(trans_probs, state_names,
   prob_mat <- matrix(0, nrow = num_states, ncol = num_states,
                      dimnames = list(state_names, state_names))
   prob_mat[as.matrix(trans_probs[, c("to", "from")])] <- trans_probs$prob
-  
+  trans_names <- paste(
+    rep(state_names, each = num_states),
+    rep(state_names, num_states),
+    sep = " to "
+  )
   res <- define_transition_(
-    lazyeval::as.lazy_dots(as.character(prob_mat), env = df_env),
+    safe_lazy_dots(
+      as.character(prob_mat),
+      trans_names,
+      df_env,
+      "transition probability from"
+    ),
     state_names = state_names
   )
   if (options()$heRomod.verbose) print(res)
@@ -958,13 +973,7 @@ create_parameters_from_tabular <- function(param_defs,
     stop("Both 'low' and 'high' columns must be present in parameter file to define DSA.")
   }
   parameters <- define_parameters_(
-    lazyeval::as.lazy_dots(
-      stats::setNames(
-        as.character(lapply(param_defs$value, function(x) x)),
-        param_defs$parameter
-      ),
-      env = df_env
-    )
+    safe_lazy_dots(param_defs$value, param_defs$parameter, df_env, "parameter")
   )
   
   dsa <- psa <- NULL
@@ -984,19 +993,17 @@ create_parameters_from_tabular <- function(param_defs,
     
     dsa <- define_dsa_(
       par_names = param_sens,
-      low_dots = lazyeval::as.lazy_dots(
-        stats::setNames(
-          as.character(lapply(low, function(x) x)),
-          param_sens
-        ),
-        env = df_env
+      low_dots = safe_lazy_dots(
+        as.character(lapply(low, function(x) x)),
+        param_sens,
+        df_env,
+        "DSA lower bound for parameter"
       ),
-      high_dots = lazyeval::as.lazy_dots(
-        stats::setNames(
-          as.character(lapply(high, function(x) x)),
-          param_sens
-        ),
-        env = df_env
+      high_dots = safe_lazy_dots(
+        as.character(lapply(high, function(x) x)),
+        param_sens,
+        df_env,
+        "DSA upper bound for parameter"
       )
     )
   }
@@ -1048,12 +1055,11 @@ create_parameters_from_tabular <- function(param_defs,
     modify_param_defs_for_multinomials(param_defs, psa)
   
   parameters <- define_parameters_(
-    lazyeval::as.lazy_dots(
-      stats::setNames(
-        as.character(lapply(param_defs_new$value, function(x) x)),
-        param_defs_new$parameter
-      ),
-      env = df_env
+    safe_lazy_dots(
+      as.character(lapply(param_defs_new$value, function(x) x)),
+      param_defs_new$parameter,
+      df_env,
+      "sampling distribution for parameter"
     )
   )
   if(!is.null(parameters)) {
@@ -1104,7 +1110,14 @@ create_part_surv_custom_from_tabular <- function(trace_info, state_names,
   dots <- trace_info$prob
   names(dots) <- trace_info$state
   
-  res <- define_part_surv_custom_(lazyeval::as.lazy_dots(dots[state_names], env = df_env))
+  res <- define_part_surv_custom_(
+    safe_lazy_dots(
+      dots[state_names],
+      trace_info$state,
+      df_env,
+      "trace probabilities for state"
+    )
+  )
   if (options()$heRomod.verbose) print(res)
   res
 }
@@ -1151,7 +1164,16 @@ create_options_from_tabular <- function(opt, state_names, df_env = globalenv()) 
       warning("initial values enclosed in c(); removing")
     }
     call_string <- paste0("lazyeval::lazy_dots(", res$init, ")")
-    res$init <- eval(parse(text = call_string))
+    
+    evaled_init <- try(
+      eval(parse(text = call_string)),
+      silent = TRUE
+    )
+    if (inherits(evaled_init, "try-error")) {
+      stop("Error in initial state probabilities, syntax error in R expression.",
+           call. = FALSE)
+    }
+    res$init <- evaled_init
     names(res$init) <- state_names
   }
   
@@ -1872,4 +1894,28 @@ load_surv_models <- function(location, survival_specs, use_envir){
   names(surv_models) <- survival_specs$fit_name
   list(do.call("rbind", mget(survival_specs$fit_name)),
        env = use_envir)
+}
+
+safe_lazy_dots <- function(exprs, names, env, type = "parameter") {
+  tryCatch({
+    lazy <- lazyeval::as.lazy_dots(
+      stats::setNames(
+        exprs,
+        names
+      ),
+      env = env
+    )
+  }, error = function(err) {
+    # Determine which parameter caused the error
+    for(i in seq_along(exprs)) {
+      param_name <- names[i]
+      param_value <- as.character(exprs[i])
+      lazy <- try(lazyeval::as.lazy(param_value), silent = TRUE)
+      if (inherits(lazy, "try-error")) {
+        stop(sprintf(
+          "Error in %s '%s', syntax error in R expression.", type, param_name),
+          call. = FALSE)
+      }
+    }
+  })
 }

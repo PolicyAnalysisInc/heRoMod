@@ -153,7 +153,7 @@ test_that(
     )
     expect_error(
       eval_parameters(par1),
-      "Error in parameter: d",
+      "Error in parameter 'd', \n  Evaluation error: object 'A' not found.\n",
       fixed = TRUE)
   }
 )

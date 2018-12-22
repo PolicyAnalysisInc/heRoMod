@@ -153,24 +153,36 @@ eval_init <- function(x, parameters, expand) {
   } else if(sum(uses_complement == 1)) {
     init_vector[uses_complement] <- 1 - sum(init_vector[!uses_complement])
   }
-  
-  # Check that probabilities are within [0-1]
-  if(any(init_vector < 0) || any(init_vector > 1)) {
-    error_states <- paste0("'", init_df$.full_state[init_vector < 0 | init_vector > 1], "'")
+  # Check that probabilities are non-negative
+  if(any(init_vector < 0)) {
+    error_states <- paste0("'", init_df$.full_state[init_vector < 0], "'")
     error_states_string <- paste0(error_states, collapse = ",")
     stop(
       paste0(
-        "Error in initial probabilities, probabilites are outside range [0-1] for states: ",
+        "Error in initial probabilities, probabilites are negative for states: ",
         error_states_string
       ),
       call. = F
     )
   }
   
+  # Check that probabilities are within [0-1]
+  # if(any(init_vector < 0) || any(init_vector > 1)) {
+  #   error_states <- paste0("'", init_df$.full_state[init_vector < 0 | init_vector > 1], "'")
+  #   error_states_string <- paste0(error_states, collapse = ",")
+  #   stop(
+  #     paste0(
+  #       "Error in initial probabilities, probabilites are outside range [0-1] for states: ",
+  #       error_states_string
+  #     ),
+  #     call. = F
+  #   )
+  # }
+  
   # Check that probabiltiies sum to 1
-  if(sum(init_vector) != 1) {
-    stop("Error in initial probabiltiies, values do not sum to 1.", call. = F)
-  }
+  # if(sum(init_vector) != 1) {
+  #   stop("Error in initial probabiltiies, values do not sum to 1.", call. = F)
+  # }
   
   init_vector
   
