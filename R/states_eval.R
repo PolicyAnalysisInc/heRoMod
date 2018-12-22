@@ -69,13 +69,13 @@ eval_state_list <- function(x, parameters, expand = NULL) {
     if(expanding) {
       # bottleneck!
       parameters %>%
-        dplyr::mutate_(.dots = obj) %>%
+        safe_eval(obj, .vartype = "value") %>%
         dplyr::mutate(.state = state_names[i]) %>%
         .[c("markov_cycle", "state_time", ".state", var_names)]
     } else {
       
       # bottleneck!
-      res <- dplyr::mutate_(parameters, .dots = obj)
+      res <- safe_eval(parameters, obj, .vartype = "value")
       res$.state <- state_names[i]
       res[ ,c("markov_cycle", "state_time", ".state", var_names)]
     }
@@ -127,11 +127,13 @@ eval_state_list <- function(x, parameters, expand = NULL) {
       # bottleneck!
       if(expanding) {
         eval_params <- parameters %>%
-          dplyr::mutate_(.trans_id = i, .dots = obj) %>%
+          dplyr::mutate_(.trans_id = i) %>%
+          safe_eval(obj, .vartype = "value") %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       } else {
         eval_params <- parameters %>%
-          dplyr::mutate_(.trans_id = i, .dots = obj) %>%
+          dplyr::mutate_(.trans_id = i) %>%
+          safe_eval(obj, .vartype = "value") %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       }
       

@@ -334,6 +334,10 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
       expresion_text = "parameter"
     } else if (.vartype == "init") {
       expresion_text = "initial probability for state"
+    } else if (.vartype == "value") {
+      expresion_text = "value"
+    } else {
+      expression_text = .vartype
     }
     
     stop(sprintf(
