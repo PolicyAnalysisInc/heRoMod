@@ -1630,7 +1630,8 @@ run_hero_psa <- function(...) {
     psa_res_df <- psa_res_df %>%
       dplyr::select(-name) %>%
       dplyr::group_by(.strategy_names, .index) %>%
-      dplyr::summarize_all(sum)
+      dplyr::summarize_all(sum) %>%
+      dplyr::ungroup()
   }
   
   thresh_max <- dots$psa$thresh_max
@@ -1657,6 +1658,7 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
+      dplyr::ungroup() %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
       reshape2::dcast(group+series~statistic, value.var = "value")
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
@@ -1671,6 +1673,7 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
+      dplyr::ungroup() %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
       reshape2::dcast(group+series~statistic, value.var = "value")
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))

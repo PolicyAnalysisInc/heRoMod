@@ -46,17 +46,25 @@ check_matrix <- function(x) {
     state_names <- get_state_names(x)
     problem_rows <- data.frame(
       cycle = problem_rows[,1], 
-      state = state_names[problem_rows[,2]])
-    problem_rows <- format.data.frame(problem_rows, justify = "left")
+      state = state_names[problem_rows[,2]]) %>%
+      plyr::ddply("state", function(x) {
+        first_cycle <- min(x$cycle)
+        last_cycle <- max(x$cycle)
+        if (all(x$cycles == seq(from = first_cycle, to = last_cycle, by = 1))) {
+          cycles = paste0(first_cycle, "-", last_cycle)
+        } else {
+          cycles = paste(x$cycle,collapse=",")
+        }
+        data.frame(cycles = cycles)
+      })
     
-    stop(sprintf(
-      "Not all transition matrix rows sum to 1:\n%s",
-      paste(sprintf(
-        "cycle: %s, state: %s",
-        problem_rows[,1],
-        problem_rows[,2]),
-        collapse = "\n")
-    ))
+    stop(
+      paste0(
+        "Not all transition matrix rows sum to 1.\n",
+        paste(capture.output(problem_rows), collapse = "\n")
+      ),
+      call. = F
+    )
     
     
   }
