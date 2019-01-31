@@ -255,7 +255,7 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   }
   rbind(sum_undisc, sum_disc)
 }
-parse_hero_trans <- function(data, strategies) {
+parse_hero_trans <- function(data, strategies, states) {
   if ("from" %in% colnames(data)) {
     # Markov
     data %>%
@@ -306,6 +306,7 @@ parse_hero_trans <- function(data, strategies) {
           }
         }) %>%
         dplyr::ungroup() %>%
+        dplyr::mutate(state = factor(state, levels = states)) %>%
         reshape2::dcast(.model ~ state, value.var = "prob", fill = 0) %>%
         reshape2::melt(id.vars = ".model", value.name = "prob", variable.name = "state") %>%
         dplyr::mutate(state = as.character(state))
@@ -1306,7 +1307,7 @@ build_hero_model <- function(...) {
   groups_tbl <- parse_hero_groups(dots$groups)
   
   # Format transitions table
-  trans <- parse_hero_trans(dots$transitions, dots$strategies$name)
+  trans <- parse_hero_trans(dots$transitions, dots$strategies$name, dots$states$name)
   
   # Format state list
   state_list <- parse_hero_states(
