@@ -1238,6 +1238,7 @@ run_hero_model <- function(...) {
           dimensions <- c(nrow(.), ncol(.))
           !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
         })
+      print(names(wb_list))
       writeWorkbook(lapply(wb_list, as.data.frame), "model.xlsx")
       ret <- wb_list
     }
