@@ -44,6 +44,7 @@
 #' @importFrom dplyr ungroup
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr funs
+#' @importFrom dplyr n row_number
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
