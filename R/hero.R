@@ -1819,7 +1819,11 @@ export_hero_xlsx <- function(...) {
       "Results - CE" = ce_res,
       "Results - NMB" = nmb_res
     )) %>%
-    purrr::keep(~(ncol(.) > 0) && (nrow(.) > 0))
+    purrr::keep(function(x) {
+      isNull <- is.null(x)
+      dimensions <- c(nRow(.), nCol(.))
+      !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
+    })
   writeWorkbook(lapply(wb_list, as.data.frame), paste0(dots$name, ".xlsx"))
   ret <- wb_list
   
