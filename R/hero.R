@@ -1235,7 +1235,7 @@ run_hero_model <- function(...) {
         )) %>%
         purrr::keep(function(x) {
           isNull <- is.null(x)
-          dimensions <- c(nRow(.), nCol(.))
+          dimensions <- c(nrow(.), ncol(.))
           !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
         })
       writeWorkbook(lapply(wb_list, as.data.frame), "model.xlsx")
@@ -1821,7 +1821,7 @@ export_hero_xlsx <- function(...) {
     )) %>%
     purrr::keep(function(x) {
       isNull <- is.null(x)
-      dimensions <- c(nRow(.), nCol(.))
+      dimensions <- c(nrow(.), ncol(.))
       !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
     })
   writeWorkbook(lapply(wb_list, as.data.frame), paste0(dots$name, ".xlsx"))
