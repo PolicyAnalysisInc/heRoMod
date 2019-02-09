@@ -2,11 +2,8 @@
 % Please edit documentation in R/survival_eval.R
 \name{eval_surv}
 \alias{eval_surv}
-\alias{eval_surv}
 \alias{compute_surv_}
-\alias{eval_surv}
 \alias{surv_prob_}
-\alias{eval_surv}
 \alias{event_prob_}
 \alias{eval_surv.survfit}
 \alias{eval_surv.flexsurvreg}
@@ -27,7 +24,8 @@
 \usage{
 eval_surv(x, time, ...)
 
-compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"), ...)
+compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"),
+  ...)
 
 surv_prob_(x, time, ...)
 

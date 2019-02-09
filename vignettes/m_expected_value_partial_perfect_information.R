@@ -1,5 +1,6 @@
 ## ---- echo=FALSE, include=FALSE------------------------------------------
-library(heRomod)
+# library(heRomod)
+devtools::load_all()
 
 ## ------------------------------------------------------------------------
 param <- define_parameters(
@@ -134,32 +135,27 @@ summary(
   pm, 
   threshold = c(1000, 5000, 6000, 1e4))
 
-## ---- fig.width = 6, fig.height=4, fig.align='center'--------------------
-plot(pm, type = "ce")
-
 ## ---- fig.width = 6, fig.align='center'----------------------------------
-plot(pm, type = "ac", max_wtp = 10000, log_scale = FALSE)
 plot(pm, type = "evpi", max_wtp = 10000, log_scale = FALSE)
 
-## ---- fig.width = 6, fig.height = 4, fig.align='center'------------------
-plot(pm, type = "cov")
+## ------------------------------------------------------------------------
+def_evppi <- define_evppi(
+  rr,
+  p_CD_mono,
+  cost_A,
+  cost_B,
+  cost_C
+)
 
-## ---- fig.width = 4, fig.height = 4, fig.align='center'------------------
-plot(pm, type = "cov", diff = TRUE, threshold = 5000)
+## ---- message=FALSE------------------------------------------------------
+evppi <- compute_evppi(x = pm, 
+                       evppi = def_evppi, 
+                       max_wtp = 10000, n = 100,
+                       verbose = FALSE)
 
 ## ---- fig.align='center', fig.height=4, fig.width=6, message=FALSE-------
-library(ggplot2)
+plot(evppi)
 
-plot(pm, type = "ce") +
-  xlab("Life-years gained") +
-  ylab("Additional cost") +
-  scale_color_brewer(
-    name = "Strategy",
-    palette = "Set1"
-  ) +
-  theme_minimal()
-
-## ---- fig.height=6, fig.width=6------------------------------------------
-bcea <- run_bcea(pm, plot = TRUE, Kmax = 10000)
-summary(bcea)
+## ---- fig.align='center', fig.height=4, fig.width=6, message=FALSE-------
+plot(evppi, bw = TRUE)
 

@@ -23,7 +23,7 @@ where the treatment was most effective).
 Acceptability Curve from Probabilistic Analysis
 }
 \section{Copyright}{
- © 2016  Antoine Pierucci
+ 2016  Antoine Pierucci
 }
 
 \keyword{internal}

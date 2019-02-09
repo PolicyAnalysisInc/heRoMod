@@ -1,6 +1,7 @@
 Package: heRomod
 Title: Health Economic Modeling
 Version: 0.0.1
+Encoding: UTF-8
 Authors@R: c(
     person("Jordan", "Amdahl", email = "jrdnmdhl@gmail.com", role = c("cre")),
     person("Antoine", "Filipovic-Pierucci", role = c("aut")),
@@ -58,7 +59,7 @@ Imports:
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 URL: https://github.com/PolicyAnalysisInc/heRoMod
 BugReports: https://github.com/PolicyAnalysisInc/heRoMod/issues
 Roxygen: list(markdown = TRUE)

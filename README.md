@@ -1,3 +1,5 @@
+[![Travis build status](https://travis-ci.org/PolicyAnalysisInc/heRoMod.svg?branch=master)](https://travis-ci.org/PolicyAnalysisInc/heRoMod)
+
 # heRomod - A Package for Health Economic Modeling
 
 The heRomod package allows users to develop and run cost-effectiveness models in R and is the calculation engine used in the heRo web-based modeling platform.  A fork of the HEEMOD package.

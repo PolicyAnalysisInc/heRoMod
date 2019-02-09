@@ -4,7 +4,6 @@
 \alias{define_state_transition}
 \alias{define_state_transition_}
 \alias{modify.state_transition}
-\alias{modify.state_transition}
 \title{Define a Markov Model State Transition}
 \usage{
 define_state_transition(from = NA, to = NA, ...)

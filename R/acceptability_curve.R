@@ -29,7 +29,7 @@
 #'   where the treatment was most effective).
 #'   
 #' @keywords internal
-#' @section Copyright: © 2016  Antoine Pierucci
+#' @section Copyright: 2016  Antoine Pierucci
 acceptability_curve <- function(x, wtp_thresholds) {
   x %>% 
     dplyr::mutate(.key = 1) %>% 

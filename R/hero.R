@@ -70,8 +70,7 @@ parse_hero_groups <- function(data) {
 }
 parse_hero_values <- function(data, health, strategies, states, clength) {
   
-  trans_string <- "→"
-  
+  trans_string <- "\U2192"
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -138,7 +137,7 @@ parse_hero_values <- function(data, health, strategies, states, clength) {
 }
 parse_hero_values_st <- function(data, health, strategies, clength) {
   
-  trans_string <- "→"
+  trans_string <- "\U2192"
   
   if(health) {
     disc_var <- "disc_h"
@@ -359,7 +358,7 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
     all_value_names,
     paste0(".disc_", all_value_names)
   )
-  trans_string <- "→"
+  trans_string <- "\U2192"
   values <- rbind(
     parse_hero_values_st(hvalues, TRUE, strategies, clength),
     parse_hero_values_st(evalues, FALSE, strategies, clength)
@@ -860,7 +859,7 @@ compile_parameters <- function(x) {
   }
 }
 
-compile_values <- function(x) {
+compile_unit_values <- function(x) {
   if (is.null(x$demographics)) {
     
     models <- x$model_runs$eval_strategy_list
@@ -898,7 +897,7 @@ compile_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        dplyr::mutate(state = paste0(.from_name_expanded, "→", .to_name_expanded)) %>%
+        dplyr::mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+state+markov_cycle~variable, value.var = "value")
     } else {
@@ -953,7 +952,7 @@ compile_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        dplyr::mutate(state = paste0(.from_name_expanded, "→", .to_name_expanded)) %>%
+        dplyr::mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+group+state+markov_cycle~variable, value.var = "value")
     } else {
@@ -964,6 +963,72 @@ compile_values <- function(x) {
       dplyr::rename(cycle = markov_cycle)
     
       out_df[ ,c("strategy", "group", "state", "cycle", value_names), drop = F]
+  }
+}
+
+compile_values <- function(x) {
+  if (is.null(x$demographics)) {
+    
+    models <- x$model_runs$eval_strategy_list
+    
+    strategy_names <- names(models)
+    n_strategy <- length(strategy_names)
+    
+    state_names <- names(models[[1]]$states)
+    n_state <- length(state_names)
+    
+    value_names <- colnames(models[[1]]$states[[1]])[-1]
+    
+    states_list <- vector(mode = "list", length = n_strategy * n_state)
+    trans_list <- vector(mode = "list", length = n_strategy)
+    state_count <- 1
+    trans_count <- 1
+    
+    value_list <- lapply(seq_len(n_strategy), function(i) {
+      the_df <- x$model_runs$eval_strategy_list[[i]]$values
+      the_df$strategy <- strategy_names[i]
+      the_df
+    })
+    
+    ret <- data.table::rbindlist(value_list) %>%
+      dplyr::arrange(strategy, markov_cycle) %>%
+      dplyr::rename(cycle = markov_cycle)
+    
+    ret[ ,c("strategy", "cycle", value_names), drop = F]
+  } else {
+    # Heterogeneous model
+    
+    models <- x$demographics$model_list
+    
+    strategy_names <- names(models)
+    n_strategy <- length(strategy_names)
+    
+    group_names <- as.character(lapply(models[[1]]$.mod, function(x) x$parameters$.group[1]))
+    n_group <- length(group_names)
+    
+    state_names <- names(models[[1]]$.mod[[1]]$states)
+    n_state <- length(state_names)
+    
+    value_names <- colnames(models[[1]]$.mod[[1]]$states[[1]])[-1]
+    
+    states_list <- vector(mode = "list", length = n_strategy * n_group * n_state)
+    trans_list <- vector(mode = "list", length = n_strategy * n_group)
+    state_count <- 1
+    trans_count <- 1
+    
+    value_list <- lapply(seq_len(n_strategy), function(i) {
+      lapply(seq_len(n_group), function(j) {
+        the_df <- x$model_runs$eval_strategy_list[[i]]$values
+        the_df$strategy <- strategy_names[i]
+        the_df$group <- group_names[j]
+        the_df
+      })
+    })
+    ret <- data.table::rbindlist(value_list) %>%
+      dplyr::arrange(strategy, group, markov_cycle) %>%
+      dplyr::rename(cycle = markov_cycle)
+    
+    ret[ ,c("strategy", "group", "cycle", value_names), drop = F]
   }
 }
 
@@ -1185,8 +1250,8 @@ run_hero_model <- function(...) {
           "Strategy" = series,
           "Cost" = cost,
           "Effect" = eff,
-          "Δ Cost" = dcost,
-          "Δ Effect" = deffect,
+          "\U394 Cost" = dcost,
+          "\U394 Effect" = deffect,
           "Reference" = dref,
           "ICER" = icer
         ) %>%
@@ -1771,8 +1836,8 @@ export_hero_xlsx <- function(...) {
       "Strategy" = series,
       "Cost" = cost,
       "Effect" = eff,
-      "Δ Cost" = dcost,
-      "Δ Effect" = deffect,
+      "\U394 Cost" = dcost,
+      "\U394 Effect" = deffect,
       "Reference" = dref,
       "ICER" = icer
     ) %>%
@@ -1787,6 +1852,7 @@ export_hero_xlsx <- function(...) {
     )
   param_res <- compile_parameters(heemod_res)
   trans_res <- compile_transitions(heemod_res)
+  unit_values_res <- compile_unit_values(heemod_res)
   values_res <- compile_values(heemod_res)
   if(length(dots$tables) > 0) {
     tables_list <- dots$tables
@@ -1812,6 +1878,7 @@ export_hero_xlsx <- function(...) {
     append(list(
       "Calc - Params"= param_res,
       "Calc - Trans"= trans_res,
+      "Calc - Unit Values"= unit_values_res,
       "Calc - Values"= values_res,
       "Results - Trace" = trace_res,
       "Results - Outcomes" = health_res,
