@@ -226,6 +226,14 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   #   replace_C
   trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
   trans_matrix[trans_table$.index] <- trans_table$.value
+  
+  # Make sure that the matrix is numeric
+  matrix_type <- class(trans_matrix[1,1,])
+  if (class(trans_matrix[1,1,]) != 'numeric') {
+    stop(sprintf(
+      "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
+      call. = FALSE)
+  }
   trans_matrix <- replace_C(trans_matrix)
   dimnames(trans_matrix) <- list(
     seq_len(n_cycles),

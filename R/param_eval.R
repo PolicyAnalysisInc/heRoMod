@@ -285,6 +285,26 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     }
   }
   
+  if (.vartype == "parameter") {
+    expresion_text = "parameter"
+  } else if (.vartype == "init") {
+    expresion_text = "initial probability for state"
+  } else if (.vartype == "value") {
+    expresion_text = "value"
+  } else {
+    expression_text = .vartype
+  }
+  
+  # Check for missing values
+  if (any(is.na(res))) {
+    index <- which(apply(res, 2, function(x) any(is.na(x)))==T)[1]
+    param_name <- colnames(res)[index]
+    text_error <- 'Caclulation resulted in missing values.'
+    stop(sprintf(
+        "Error in %s '%s', %s", expresion_text, param_name, text_error),
+        call. = FALSE)
+  }
+  
   ## if we run into an error, figure out which parameter caused it -
   ##    this is efficient enough unless we have a parameter that's
   ##    very expensive to calculate.
@@ -328,16 +348,6 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
         ),
         "'."
       )
-    }
-    
-    if (.vartype == "parameter") {
-      expresion_text = "parameter"
-    } else if (.vartype == "init") {
-      expresion_text = "initial probability for state"
-    } else if (.vartype == "value") {
-      expresion_text = "value"
-    } else {
-      expression_text = .vartype
     }
     
     stop(sprintf(

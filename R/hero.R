@@ -1680,6 +1680,7 @@ run_markdown <- function(text, data = NULL) {
   ls(eval_env)
 }
 
+#' @export
 package_hero_model <- function(...) {
   dots <- list(...)
   model_object <- list(
