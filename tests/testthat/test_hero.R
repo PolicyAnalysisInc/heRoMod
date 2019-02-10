@@ -75,6 +75,9 @@ test_that(
       model$name <- 'test'
       do.call(export_hero_xlsx,model)
       xl_file <- openxlsx::read.xlsx('test.xlsx')
+      
+      do.call(package_hero_model,model)
+      
     })
     
 })
@@ -202,6 +205,8 @@ test_that(
     
     dsa_res <- readRDS(system.file("hero","groups", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa,model)
+    
+    psa_res_test <- do.call(run_hero_psa,model)
     
     expect_equal(
       dsa_res$main,
