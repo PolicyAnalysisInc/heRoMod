@@ -2,7 +2,13 @@
 
 language: R
 sudo: false
-warnings_are_errors: false
 cache: packages
+r_packages:
+  - covr
+install:
+  - R -e 'devtools::install_deps(dep = T)'
+script:
+  - travis_wait R CMD build .
+  - travis_wait R CMD check *tar.gz
 after_success:
-    - Rscript -e 'covr::codecov()'
+  - Rscript -e 'library(covr); codecov()'
