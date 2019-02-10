@@ -251,7 +251,7 @@ c_linear <- function(res_vbp, strategy){
 #' 
 #' Returns the cost and effectiveness for selected strategy
 #' 
-#' @param model A heemod model
+#' @param model A heRomod model
 #' @param strategy Strategy
 #' 
 #' @return Cost and effectivness for selected strategy

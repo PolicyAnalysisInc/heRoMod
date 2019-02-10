@@ -1,5 +1,5 @@
 ## ---- echo=FALSE, include=FALSE------------------------------------------
-library(heemod)
+library(heRomod)
 
 ## ------------------------------------------------------------------------
 mat_trans <- define_transition(

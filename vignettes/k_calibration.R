@@ -1,5 +1,5 @@
 ## ---- echo=FALSE, include=FALSE------------------------------------------
-library(heemod)
+library(heRomod)
 
 ## ---- define, include = FALSE--------------------------------------------
 param <- define_parameters(

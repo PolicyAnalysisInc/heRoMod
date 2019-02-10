@@ -11,7 +11,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
-# library(heemod)
+library(heRomod)
 library(devtools)
 load_all()
 
@@ -184,7 +184,7 @@ The objective of value-based pricing (VBP) is to determine the maximum price at 
 
 ## Define the analysis
 
-This example uses the three-strategy model defined in the article "Markov Models for Health Economic Evaluation: The R Package heemod". See this article for an explanation of the model. Note that as in DSA and PSA, parameters need to be defined in `define_parameters()` in order to be modified in a VBP.
+This example uses the three-strategy model defined in the article "Markov Models for Health Economic Evaluation: The R Package heRomod". See this article for an explanation of the model. Note that as in DSA and PSA, parameters need to be defined in `define_parameters()` in order to be modified in a VBP.
 
 In this example we will compute the VBP of 1 price parameter:
 

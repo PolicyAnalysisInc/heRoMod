@@ -1,6 +1,6 @@
 
 ## These examples require \code{res_mod} from the hip replacement model discussed in
-## `vignette("non-homogeneous", package = "heemod")`.
+## `vignette("non-homogeneous", package = "heRomod")`.
 
 \dontrun{
   plot(res_mod)

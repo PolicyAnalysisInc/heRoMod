@@ -1,5 +1,5 @@
 ## ---- echo=FALSE, include=FALSE------------------------------------------
-library(heemod)
+library(heRomod)
 library(dplyr)
 format_na <- function(x, char = " ") {
   x[is.na(x)] <- char
@@ -7,33 +7,33 @@ format_na <- function(x, char = " ") {
 }
 
 ## ----echo = FALSE--------------------------------------------------------
-heemod:::read_file(system.file("tabular/thr/REFERENCE.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/REFERENCE.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 
 ## ----echo = FALSE--------------------------------------------------------
-heemod:::read_file(system.file("tabular/thr/THR_states.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_states.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 
 ## ----echo = FALSE--------------------------------------------------------
-heemod:::read_file(system.file("tabular/thr/THR_transition_probs.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_transition_probs.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 
 ## ----echo = FALSE--------------------------------------------------------
-heemod:::read_file(system.file("tabular/thr/THR_parameters.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_parameters.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable()
 
 ## ----echo = FALSE--------------------------------------------------------
-heemod:::read_file(system.file("tabular/thr/THR_options.csv", package = "heemod")) %>% 
+heRomod:::read_file(system.file("tabular/thr/THR_options.csv", package = "heRomod")) %>% 
   format_na %>% 
   knitr::kable(row.names = FALSE)
 
 ## ------------------------------------------------------------------------
 result <- run_model_tabular(
-  location = system.file("tabular/thr", package = "heemod")
+  location = system.file("tabular/thr", package = "heRomod")
 )
 
 ## ---- fig.width = 6, fig.align='center'----------------------------------

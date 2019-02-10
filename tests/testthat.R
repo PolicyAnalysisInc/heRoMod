@@ -1,5 +1,5 @@
 library(testthat)
-library(heemod)
+library(heRomod)
 
 ## the Sys.setenv fixes a problem running tests
 ##   with parallel processing; related to
@@ -8,4 +8,4 @@ library(heemod)
 
 Sys.setenv("R_TESTS" = "")
 
-test_check("heemod")
+test_check("heRomod")

@@ -60,7 +60,7 @@ mod <- define_strategy(
   B = define_state(cost = 2)
 )
 
-heemod:::eval_strategy(
+heRomod:::eval_strategy(
   strategy = mod,
   parameters = param,
   init = define_init(A = 10, B = 5),

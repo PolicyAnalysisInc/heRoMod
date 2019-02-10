@@ -1,5 +1,5 @@
 ## ---- echo=FALSE, include=FALSE, message=FALSE---------------------------
-# library(heemod)
+library(heRomod)
 library(devtools)
 load_all()
 

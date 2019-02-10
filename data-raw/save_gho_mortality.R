@@ -1,5 +1,5 @@
 library(rgho)
-library(heemod)
+library(heRomod)
 library(dplyr)
 
 countries <- get_gho_codes(dimension = "COUNTRY") %>% 
@@ -24,7 +24,7 @@ get_latest_morta <- function(country) {
     stop("Strange GHO mortality data.")
   }
   
-  pooled_data <- heemod:::pool_data(
+  pooled_data <- heRomod:::pool_data(
     mr_data_year,
     country = country, year = study_year
   )

@@ -7,7 +7,7 @@
 ce_strategy(model, strategy)
 }
 \arguments{
-\item{model}{A heemod model}
+\item{model}{A heRomod model}
 
 \item{strategy}{Strategy}
 }
