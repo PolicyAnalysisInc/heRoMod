@@ -11,4 +11,4 @@ script:
   - travis_wait R CMD build .
   - travis_wait R CMD check *tar.gz
 after_success:
-  - Rscript -e 'library(covr); codecov()'
+  - travis_wait Rscript -e 'library(covr); codecov()'
