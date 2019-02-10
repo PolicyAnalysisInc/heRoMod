@@ -112,7 +112,7 @@ test_that(
       bc_res_test$ce
     )
     
-    vbp_res <- readRDS(system.file("hero","example_simple_psm", "vbp_res.rds", package="heRomod"))
+    vbp_res <- readRDS(system.file("hero","psm_responders", "vbp_res.rds", package="heRomod"))
     vbp_res_test <- do.call(run_hero_vbp,model)
     
     
@@ -121,7 +121,7 @@ test_that(
       vbp_res_test$eq
     )
     
-    dsa_res <- readRDS(system.file("hero","example_simple_psm", "dsa_res.rds", package="heRomod"))
+    dsa_res <- readRDS(system.file("hero","psm_responders", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa,model)
     
     expect_equal(

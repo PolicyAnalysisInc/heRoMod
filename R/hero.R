@@ -990,7 +990,7 @@ compile_values <- function(x) {
       the_df
     })
     
-    ret <- data.table::rbindlist(value_list) %>%
+    ret <- dplyr::bind_rows(value_list) %>%
       dplyr::arrange(strategy, markov_cycle) %>%
       dplyr::rename(cycle = markov_cycle)
     
@@ -1024,7 +1024,10 @@ compile_values <- function(x) {
         the_df
       })
     })
-    ret <- data.table::rbindlist(value_list) %>%
+    ret <- value_list %>%
+      unlist(recursive=F) %>%
+      unname() %>%
+      dplyr::bind_rows() %>%
       dplyr::arrange(strategy, group, markov_cycle) %>%
       dplyr::rename(cycle = markov_cycle)
     
