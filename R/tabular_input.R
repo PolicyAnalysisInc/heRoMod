@@ -444,7 +444,8 @@ eval_models_from_tabular <- function(inputs,
       cycles = inputs$model_options$cycles,
       state_time_limit = inputs$state_time_limit,
       aux_params = inputs$aux_param_info$params,
-      parallel = parallel
+      parallel = !(run_dsa | run_psa | run_demo),
+      cores = inputs$model_options$num_cores
     )
   )
   
@@ -454,7 +455,7 @@ eval_models_from_tabular <- function(inputs,
   )
   
   
-  if (! is.null(inputs$model_options$num_cores)) {
+  if (! is.null(inputs$model_options$num_cores) && (run_dsa | run_psa | run_demo)) {
     use_cluster(inputs$model_options$num_cores)
     on.exit(
       close_cluster()

@@ -84,7 +84,8 @@ run_model <- function(...,
                       central_strategy = NULL,
                       inflow = rep(0L, get_state_number(get_states(list(...)[[1]]))),
                       aux_params = NULL,
-                      parallel = F) {
+                      parallel = F,
+                      cores = 1) {
   
   uneval_strategy_list <- list(...)
   
@@ -103,7 +104,8 @@ run_model <- function(...,
     central_strategy = central_strategy,
     inflow = inflow,
     aux_params = aux_params,
-    parallel = parallel
+    parallel = parallel,
+    cores = cores
   )
 }
 
@@ -119,7 +121,8 @@ run_model_ <- function(uneval_strategy_list,
                        central_strategy,
                        inflow,
                        aux_params = NULL,
-                       parallel = F) {
+                       parallel = F,
+                       cores = 1) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -186,10 +189,8 @@ run_model_ <- function(uneval_strategy_list,
   
   #eval_strategy_list <- list()
   
-  if (parallel) {
-    cl <- get_cluster()
-    num_cores <- length(cl)
-    eval_strategy_list <- parallel::parLapply(cl, seq_len(length(uneval_strategy_list)), function(i) {
+  if (parallel && .Platform$OS.type == "unix") {
+    eval_strategy_list <- parallel::mclapply(seq_len(length(uneval_strategy_list)), function(i) {
       eval_strategy(
         strategy = uneval_strategy_list[[i]], 
         parameters = parameters,
@@ -201,7 +202,7 @@ run_model_ <- function(uneval_strategy_list,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params
       )
-    })
+    }, mc.cores = cores)
   } else {
     eval_strategy_list <- lapply(seq_len(length(uneval_strategy_list)), function(i) {
       eval_strategy(
