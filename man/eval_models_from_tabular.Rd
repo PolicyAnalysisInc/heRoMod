@@ -5,7 +5,7 @@
 \title{Evaluate Models From a Tabular Source}
 \usage{
 eval_models_from_tabular(inputs, run_dsa = TRUE, run_psa = TRUE,
-  run_demo = TRUE)
+  run_demo = TRUE, parallel = FALSE)
 }
 \arguments{
 \item{inputs}{Result from
