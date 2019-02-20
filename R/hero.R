@@ -1677,6 +1677,8 @@ run_markdown <- function(text, data = NULL) {
   }
   writeLines(text, con = 'output.r')
   knitr::spin('output.r', knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
+  file.remove("output.md")
+  file.remove("output.r")
   ls(eval_env)
 }
 
