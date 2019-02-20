@@ -31,7 +31,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
-                                      run_demo = run_demo)
+                                      run_demo = run_demo, parallel = psa$parallel)
   outputs
 }
 
@@ -427,7 +427,8 @@ gather_model_info <- function(base_dir, ref_file) {
 eval_models_from_tabular <- function(inputs,
                                      run_dsa = TRUE,
                                      run_psa = TRUE,
-                                     run_demo = TRUE) {
+                                     run_demo = TRUE,
+                                     parallel = FALSE) {
   
   if (options()$heRomod.verbose) message("* Running files...")
   
@@ -442,7 +443,9 @@ eval_models_from_tabular <- function(inputs,
       method = inputs$model_options$method,
       cycles = inputs$model_options$cycles,
       state_time_limit = inputs$state_time_limit,
-      aux_params = inputs$aux_param_info$params
+      aux_params = inputs$aux_param_info$params,
+      parallel = !(run_dsa | run_psa | run_demo),
+      cores = inputs$model_options$num_cores
     )
   )
   
@@ -452,7 +455,7 @@ eval_models_from_tabular <- function(inputs,
   )
   
   
-  if (! is.null(inputs$model_options$num_cores)) {
+  if (! is.null(inputs$model_options$num_cores) && (run_dsa | run_psa | run_demo)) {
     use_cluster(inputs$model_options$num_cores)
     on.exit(
       close_cluster()
