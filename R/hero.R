@@ -1730,6 +1730,9 @@ results <- do.call(run_hero_bc, model)
     paste0(dots$name, ".zip"),
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds")
   )
+  file.remove(paste0(dots$name, ".rproj"))
+  file.remove("run.R")
+  file.remove("model.rds")
 }
 
 writeWorkbook <- function(dflist, path, ...){
