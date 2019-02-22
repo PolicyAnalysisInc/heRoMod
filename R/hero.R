@@ -1667,7 +1667,10 @@ export_hero_xlsx <- function(...) {
 }
 
 #' @export
-run_markdown <- function(text, data = NULL) {
+run_markdown <- function(...) {
+  
+  text <- dots$text
+  data <- dots$data
   eval_env <- new.env(parent = parent.frame())
   if(!is.null(data)) {
     plyr::l_ply(
