@@ -1668,7 +1668,7 @@ export_hero_xlsx <- function(...) {
 
 #' @export
 run_markdown <- function(...) {
-  
+  dots <- list(...)
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
