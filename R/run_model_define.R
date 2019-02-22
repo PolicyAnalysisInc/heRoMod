@@ -191,7 +191,7 @@ run_model_ <- function(uneval_strategy_list,
   
   if (parallel && .Platform$OS.type == "unix") {
     eval_strategy_list <- parallel::mclapply(seq_len(length(uneval_strategy_list)), function(i) {
-      eval_strategy(
+      try(eval_strategy(
         strategy = uneval_strategy_list[[i]], 
         parameters = parameters,
         init = init, 
@@ -201,8 +201,15 @@ run_model_ <- function(uneval_strategy_list,
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params
-      )
+      ))
     }, mc.cores = cores)
+    
+    plyr::l_ply(
+      eval_strategy_list,
+      function(x) {
+        if ("try-error" %in% class(x)) stop(x, call. = F)
+      }
+    )
   } else {
     eval_strategy_list <- lapply(seq_len(length(uneval_strategy_list)), function(i) {
       eval_strategy(
@@ -218,6 +225,8 @@ run_model_ <- function(uneval_strategy_list,
       )
     })
   }
+  
+  
   names(eval_strategy_list) <- names(uneval_strategy_list)
   
   list_res <- lapply(eval_strategy_list, get_total_state_values)
