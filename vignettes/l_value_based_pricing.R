@@ -1,5 +1,7 @@
 ## ---- echo=FALSE, include=FALSE, message=FALSE---------------------------
 library(heRomod)
+library(devtools)
+load_all()
 
 #### Three-strategy example ####
 #### Define parameters ####

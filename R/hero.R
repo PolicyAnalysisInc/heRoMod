@@ -1675,10 +1675,10 @@ run_markdown <- function(text, data = NULL) {
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
-  writeLines(text, con = 'output.r')
-  knitr::spin('output.r', knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
-  file.remove("output.md")
-  file.remove("output.r")
+  writeLines(text, con = paste0(dots$name, ".r"))
+  knitr::spin(paste0(dots$name, ".r"), knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
+  file.remove(paste0(dots$name, ".md"))
+  file.remove(paste0(dots$name, ".r"))
   ls(eval_env)
 }
 

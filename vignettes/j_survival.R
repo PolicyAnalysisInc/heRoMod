@@ -9,8 +9,12 @@ surv_dist_1 <- define_survival(
 
 surv_dist_2 <- define_spline_survival(
   scale = "odds",
-  gamma = c(-11.643, 1.843, 0.208),
-  knots = c(4.077537, 5.883183, 6.458338)
+  gamma1 = -11.643,
+  gamma2 = 1.843,
+  gamma3 = 0.208,
+  knots1 = 4.077537,
+  knots2 = 5.883183,
+  knots3 = 6.458338
 )
 
 ## ----fig.width=6, fig.height=6-------------------------------------------
@@ -63,12 +67,13 @@ km_medium_af <- apply_af(km_medium, af = 1.2)
 ## ------------------------------------------------------------------------
 km_poor_join <- join(
   km_poor,
-  fitcov_poor,
-  at = 365
+  365,
+  fitcov_poor
 )
 models_all <- mix(
-  fitcov_good, fitcov_medium, fitcov_poor,
-  weights = c(0.25, 0.25, 0.5)
+  fitcov_good, 0.25,
+  fitcov_medium, 0.25,
+  fitcov_poor, 0.5
 )
 combined_risks <- add_hazards(
   fit_w, fitcov_good
@@ -82,12 +87,13 @@ fit_cov %>%
   set_covariates(group = "Good") %>% 
   apply_hr(hr = 2) %>% 
   join(
-    fitcov_poor,
-    at = 3
+    3,
+    fitcov_poor
   ) %>%
   mix(
+    0.25,
     fitcov_medium,
-    weights = c(0.25, 0.75)
+    0.75
   ) %>%
   add_hazards(
     fit_w
@@ -101,7 +107,7 @@ param <- define_parameters(
     time = model_time # can also be state_time
   ),
   p2 = km_1 %>%
-    join(fit_w, at = 730) %>%
+    join(730, fit_w) %>%
     compute_surv(
       time = model_time,
       cycle_length = 365  # time is in days in km_medium, in years in model_time
@@ -145,7 +151,7 @@ plot(resTM)
 ps <- define_part_surv(
   pfs = surv_dist_1,
   os  = km_1 %>%
-    join(fit_w, at = 730),
+    join(730, fit_w),
   cycle_length = c(1, 365) # 1 for pfs, 365 for os
 )
 
