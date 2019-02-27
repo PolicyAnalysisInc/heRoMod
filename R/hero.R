@@ -343,7 +343,8 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
       .state = factor(.state, levels = states),
       name = factor(name, levels = all_value_names)
     ) %>%
-    reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F)
+    reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F) %>%
+    dplyr::mutate(.model = as.character(.model), .state = as.character(.state))
   
   states_df
 }
@@ -381,7 +382,11 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
         .transition = factor(.transition, levels = unique(values$.transition)),
         name = factor(name, levels = all_value_names)
       ) %>%
-      reshape2::dcast(.model+.transition~name, value.var = "value", fill = 0, drop=F)
+      reshape2::dcast(.model+.transition~name, value.var = "value", fill = 0, drop=F) %>%
+      dplyr::mutate(
+        .model = as.character(.model),
+        .transition = as.character(.transition)
+      )
     split_trans <- strsplit(as.character(st_df$.transition), trans_string)
     st_df <- dplyr::mutate(
       st_df,
