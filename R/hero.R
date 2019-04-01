@@ -482,16 +482,18 @@ hero_extract_ce <- function(res, hsumms, esumms) {
     esumm = unique_esumms,
     stringsAsFactors = F
   ) %>%
-    ddply(c("hsumm","esumm"), function(x){
+    plyr::ddply(c("hsumm","esumm"), function(x){
       temp_res <- res
       class(temp_res) <- "list"
       ce <- list(
         .effect = lazyeval::as.lazy(x$hsumm,  res$ce$.effect$env),
         .cost = lazyeval::as.lazy(x$esumm,  res$ce$.cost$env)
       )
-      temp_res$run_model <- dplyr::mutate_(temp_res$run_model, .dots = ce)
+      temp_res$run_model <- dplyr::mutate_(temp_res$run_model, .dots = ce) %>%
+        dplyr::arrange_(~ .cost, ~ desc(.effect))
+      ordering <- order(temp_res$run_model$.cost, temp_res$run_model$.effect)
       class(temp_res) <- c("run_model", "data.frame")
-      summary(temp_res)$res_comp %>%
+      summary(temp_res, strategy_order = ordering)$res_comp %>%
         dplyr::transmute(
           health_outcome = x$hsumm,
           econ_outcome = x$esumm,
@@ -792,7 +794,7 @@ hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
     esumm = unique_esumms,
     stringsAsFactors = F
   ) %>%
-    ddply(c("hsumm","esumm"), function(x) {
+    plyr::ddply(c("hsumm","esumm"), function(x) {
       res$psa$.effect <- res$psa[[x$hsumm]]
       res$psa$.cost <- res$psa[[x$esumm]]
       compute_evpi(res, seq(from = 0, to = max, by = step))
@@ -829,7 +831,7 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
     stringsAsFactors = F
   ) %>%
     dplyr::filter(referent != comparator) %>%
-    ddply(c("referent","comparator"), function(comparison) {
+    plyr::ddply(c("referent","comparator"), function(comparison) {
       ref_df <- dplyr::filter(abs_res, series == comparison$referent) %>%
         dplyr::arrange(hsumm, esumm, sim)
       comp_df <- dplyr::filter(abs_res, series == comparison$comparator) %>%

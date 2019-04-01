@@ -234,7 +234,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
       call. = FALSE)
   }
-  trans_matrix <- replace_C(trans_matrix)
+  trans_matrix <- replace_C(trans_matrix, expand$.full_state)
   dimnames(trans_matrix) <- list(
     seq_len(n_cycles),
     expand$.full_state,
@@ -262,11 +262,35 @@ split_array <- function(a) {
   return(the_list)
 }
 
-replace_C <- function(x) {
+replace_C <- function(x, state_names) {
   posC <- x == -pi
   
-  if (! all(rowSums(posC, dims = 2) <= 1)) {
-    stop("Only one 'C' is allowed per matrix row.")
+  c_counts <- rowSums(posC, dims = 2)
+  colnames(c_counts) <- state_names
+  if (!all(c_counts <= 1)) {
+    problem_states <- c_counts[, apply(c_counts, 2, function(z) any(z > 1))]
+    problems <- lapply(seq_len(ncol(problem_states)), function(i) {
+      cycles <- problem_states[ , i]
+      problem_cycles <- which(cycles > 1)
+      min_cycle <- min(problem_cycles)
+      max_cycle <- max(problem_cycles)
+      if (all(problem_cycles == min_cycle:max_cycle)) {
+        problem_cycles = paste0(min_cycle, '-', max_cycle)
+      }
+      data.frame(
+        state = colnames(problem_states)[i],
+        cycles = paste(problem_cycles, collapse = ', '),
+        stringsAsFactors = F
+      )
+    }) %>%
+      dplyr::bind_rows() %>%
+      as.data.frame()
+    
+    message <- paste0(
+      'Error in transition matrix, keyword "C" used more than once per state:\n',
+      paste(capture.output(problems), collapse = "\n")
+    )
+    stop(message, call. = F)
   }
   
   x[posC] <- 0

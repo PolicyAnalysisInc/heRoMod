@@ -4,7 +4,8 @@
 \alias{summary.run_model}
 \title{Summarise Markov Model Results}
 \usage{
-\method{summary}{run_model}(object, threshold = NULL, ...)
+\method{summary}{run_model}(object, threshold = NULL,
+  strategy_order = NULL, ...)
 }
 \arguments{
 \item{object}{Output from \code{\link[=run_model]{run_model()}}.}

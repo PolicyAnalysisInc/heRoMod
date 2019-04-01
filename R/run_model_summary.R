@@ -33,7 +33,7 @@ print.run_model <- function(x, ...) {
 #'   
 #' @return A `summary_run_model` object.
 #' @export
-summary.run_model <- function(object, threshold = NULL, ...) {
+summary.run_model <- function(object, threshold = NULL, strategy_order = NULL, ...) {
   if (! all(c(".cost", ".effect") %in% names(get_model_results(object)))) {
     warning("No cost and/or effect defined, model summary unavailable.")
     return(invisible(NULL))
@@ -77,7 +77,7 @@ summary.run_model <- function(object, threshold = NULL, ...) {
   
   res_comp <- object %>%
     scale.run_model(...) %>% 
-    compute_icer() %>% 
+    compute_icer(strategy_order = strategy_order) %>% 
     as.data.frame()
   
   structure(
@@ -152,8 +152,7 @@ scale.run_model <- function(x, center = FALSE, scale = TRUE) {
     res$.cost = res$.cost / res$.n_indiv
     res$.effect = res$.effect / res$.n_indiv
   }
-  
-  res[order(res$.effect), ]
+  res
 }
 
 #' Compute ICER
@@ -174,6 +173,8 @@ scale.run_model <- function(x, center = FALSE, scale = TRUE) {
 #' @keywords internal
 compute_icer <- function(x, strategy_order = order(x$.effect),
                          threshold = 3e4) {
+  
+  if (is.null(strategy_order)) strategy_order <- order(x$.effect)
   
   stopifnot(length(threshold) == 1)
   
