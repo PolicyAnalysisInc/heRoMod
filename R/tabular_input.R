@@ -462,14 +462,17 @@ eval_models_from_tabular <- function(inputs,
     )
   }
   
+  list_args_bc <- list_args
+  list_args_bc$parallel <- T
+  
   if (options()$heRomod.verbose) message("** Running models...")
   model_runs <- do.call(
     run_model,
-    list_args
+    list_args_bc
   )
   
   model_dsa <- NULL
-  if (run_dsa & ! is.null(inputs$param_info$dsa)) {
+  if (run_dsa & !is.null(inputs$param_info$dsa)) {
     if (options()$heRomod.verbose) message("** Running DSA...")
     model_dsa <- run_dsa(
       model_runs,
@@ -478,7 +481,7 @@ eval_models_from_tabular <- function(inputs,
   }
   
   model_psa <- NULL
-  if (! is.null(inputs$param_info$psa_params) & run_psa) {
+  if (!is.null(inputs$param_info$psa_params) & run_psa) {
     if (options()$heRomod.verbose) message("** Running PSA...")
     model_psa <- run_psa(
       model_runs,
@@ -488,7 +491,7 @@ eval_models_from_tabular <- function(inputs,
   }
   
   demo_res <- NULL
-  if (! is.null(inputs$demographic_file) & run_demo) {
+  if (!is.null(inputs$demographic_file) & run_demo) {
     if (options()$heRomod.verbose) message("** Running demographic analysis...")
     demo_res <- stats::update(model_runs, inputs$demographic_file)
   }
