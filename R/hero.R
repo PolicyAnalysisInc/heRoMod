@@ -1402,9 +1402,14 @@ run_hero_dsa <- function(...) {
     cost_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$cost$base)) / sum(weights)
     
     ce_res <- dsas[[1]]$ce
-    ce_res$.cost <- Reduce(`+`, purrr::map(dsas, ~ .$ce$.cost)) / sum(weights)
-    ce_res$.eff <- Reduce(`+`, purrr::map(dsas, ~ .$ce$.eff)) / sum(weights)
-    ce_res %>%
+    ce_res_keys <- dplyr::select(ce_res, param, type, health_outcome, econ_outcome, series)
+    ce_res$.cost <- Reduce(`+`, purrr::map(dsas, function(x) {
+      dplyr::left_join(ce_res_keys, x$ce, by = c('param', 'type', 'health_outcome', 'econ_outcome', 'series'))$.cost
+    })) / sum(weights)
+    ce_res$.effect <- Reduce(`+`, purrr::map(dsas, function(x) {
+      left_join(ce_res_keys, x$ce, by = c('param', 'type', 'health_outcome', 'econ_outcome', 'series'))$.effect
+    })) / sum(weights)
+    agg_ce_res <- ce_res %>%
       plyr::ddply(c("health_outcome","econ_outcome", "param", "type"), function(x) {
         thresh <- dots$hsumms %>% dplyr::filter(name == substring(x$health_outcome,7)[1]) %>% .$wtp %>% .[1]
         dplyr::mutate(x, .strategy_names = series) %>%
@@ -1429,7 +1434,7 @@ run_hero_dsa <- function(...) {
     ret <- list(
       outcomes = outcomes_res,
       cost = cost_res,
-      ce = ce_res,
+      ce = agg_ce_res,
       nmb = nmb_res
     )
 
