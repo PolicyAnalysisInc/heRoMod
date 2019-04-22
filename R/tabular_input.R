@@ -450,17 +450,9 @@ eval_models_from_tabular <- function(inputs,
   )
   
   list_args <- Filter(
-    function(x) ! is.null(x),
+    function(x) !is.null(x),
     list_args
   )
-  
-  
-  if (! is.null(inputs$model_options$num_cores) && (run_dsa | run_psa | run_demo)) {
-    use_cluster(inputs$model_options$num_cores)
-    on.exit(
-      close_cluster()
-    )
-  }
   
   list_args_bc <- list_args
   list_args_bc$parallel <- T
@@ -476,7 +468,8 @@ eval_models_from_tabular <- function(inputs,
     if (options()$heRomod.verbose) message("** Running DSA...")
     model_dsa <- run_dsa(
       model_runs,
-      inputs$param_info$dsa_params
+      inputs$param_info$dsa_params,
+      cores = inputs$model_options$num_cores
     )
   }
   
@@ -486,19 +479,17 @@ eval_models_from_tabular <- function(inputs,
     model_psa <- run_psa(
       model_runs,
       psa = inputs$param_info$psa_params,
-      N = inputs$model_options$n
+      N = inputs$model_options$n,
+      cores = inputs$model_options$num_cores
     )
   }
   
   demo_res <- NULL
   if (!is.null(inputs$demographic_file) & run_demo) {
     if (options()$heRomod.verbose) message("** Running demographic analysis...")
-    demo_res <- stats::update(model_runs, inputs$demographic_file)
+    demo_res <- stats::update(model_runs, inputs$demographic_file,
+                              cores = inputs$model_options$num_cores)
   }
-  
-  ##  if(! is.null(inputs$model_options$num_cores)) {
-  ##    close_cluster()
-  ##  }
   
   list(
     models = inputs$models,

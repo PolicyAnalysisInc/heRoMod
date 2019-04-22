@@ -28,10 +28,10 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_dsa.R
-run_dsa <- function(model, dsa) UseMethod("run_dsa")
+run_dsa <- function(model, dsa, cores = 1) UseMethod("run_dsa")
 
 #' @export
-run_dsa.run_model <- function(model, dsa) {
+run_dsa.run_model <- function(model, dsa, cores = 1) {
   
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
     stop("No cost and/or effect defined, sensitivity analysis unavailable.")
@@ -72,7 +72,8 @@ run_dsa.run_model <- function(model, dsa) {
     tab <- eval_strategy_newdata(
       model,
       strategy = n,
-      newdata = dsa_table
+      newdata = dsa_table,
+      cores = cores
     )
     
     res <- tab %>% 

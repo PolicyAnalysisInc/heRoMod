@@ -41,7 +41,7 @@
 #' @example inst/examples/example_eval_strategy_newdata.R
 #'   
 #' @keywords internal
-eval_strategy_newdata <- function(x, strategy = 1, newdata) {
+eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   strategy <- check_strategy_index(x = x, i = strategy)
   
   cycles <- get_cycles(x)
@@ -54,24 +54,14 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
   expand_limit <- get_expand_limit(x, strategy)
   
   if (status_cluster(verbose = FALSE)) {
-    cl <- get_cluster()
-    
-    num_cores <- length(cl)
-    
     message(paste("Using a cluster with", num_cores, "cores."))
     
     split_vec <- rep(1:num_cores, each = nrow(newdata) %/% num_cores)
     split_vec <- c(split_vec, rep(num_cores, nrow(newdata) %% num_cores))
     
     pnewdata <- split(newdata, split_vec)
-    parallel::clusterExport(
-      cl, 
-      c("uneval_strategy", "old_parameters", "pnewdata", 
-        "cycles", "init", "method", "strategy"),
-      envir = environment()
-    )
     suppressMessages(
-      pieces <- parallel::parLapply(cl, pnewdata, function(newdata) {
+      pieces <- parallel::mclapply(pnewdata, function(newdata) {
         newdata %>% 
           dplyr::rowwise() %>% 
           dplyr::do_(
@@ -92,7 +82,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata) {
           dplyr::bind_cols(
             newdata
           )
-      })
+      }, mc.cores = cores)
     )
     res <- dplyr::bind_rows(pieces)
     rownames(res) <- NULL
