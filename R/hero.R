@@ -706,19 +706,7 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
 
 hero_extract_psa_summ <- function(res, summ) {
   
-  strategies <- unique(res$.strategy_names)
-  n_strat <- length(strategies)
-  
-  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
-    dplyr::filter(referent != comparator)
-  value_names <- setdiff(colnames(res), c(".strategy_names", ".index"))
-  
-  ref_res <- res[indices$referent, ]
-  comp_res <- res[indices$comparator, ]
-  delta_res <- ref_res
-  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
-  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
-  all_res <- rbind(res, delta_res) %>%
+  all_res <- rbind(res) %>%
     reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
     dplyr::mutate(variable = as.character(variable))
   
@@ -1543,7 +1531,7 @@ run_hero_psa <- function(...) {
     #   reshape2::melt(id.vars = "wtp", value.name = "value")
     # 
     list(
-      #results = psa_res_df,
+      results = psa_res_df,
       scatter = scatter,
       outcomes = outcomes,
       outcomes_summary = outcomes_summary,
