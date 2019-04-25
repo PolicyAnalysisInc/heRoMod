@@ -1178,7 +1178,7 @@ build_hero_model <- function(...) {
   
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2) / 3 , 0))
+    cores <- max(1, round((parallel::detectCores() - 2) / 2 , 0))
   }
   
   # Return model object
@@ -1531,7 +1531,7 @@ run_hero_psa <- function(...) {
     #   reshape2::melt(id.vars = "wtp", value.name = "value")
     # 
     list(
-      results = psa_res_df,
+      #results = psa_res_df,
       scatter = scatter,
       outcomes = outcomes,
       outcomes_summary = outcomes_summary,
