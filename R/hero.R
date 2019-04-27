@@ -811,30 +811,13 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
         wtp = the_wtp,
         stringsAsFactors = F
       )
-    })
-  strategies <- unique(abs_res$series)
-  expand.grid(
-    referent = strategies,
-    comparator = strategies,
-    stringsAsFactors = F
-  ) %>%
-    dplyr::filter(referent != comparator) %>%
-    plyr::ddply(c("referent","comparator"), function(comparison) {
-      ref_df <- dplyr::filter(abs_res, series == comparison$referent) %>%
-        dplyr::arrange(hsumm, esumm, sim)
-      comp_df <- dplyr::filter(abs_res, series == comparison$comparator) %>%
-        dplyr::arrange(hsumm, esumm, sim)
-      
-      res_df <- ref_df
-      res_df$x <- ref_df$x - comp_df$x
-      res_df$y <- ref_df$y - comp_df$y
-      res_df$series <- paste0(ref_df$series, " vs. ", comp_df$series)
-      res_df
     }) %>%
     dplyr::rename(
       health_outcome = hsumm,
       econ_outcome = esumm
     )
+  
+  abs_res
 }
 
 compile_parameters <- function(x) {
