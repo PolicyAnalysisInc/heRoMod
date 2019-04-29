@@ -42,6 +42,7 @@
 #'   
 #' @keywords internal
 eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
+  if (is.null(cores)) cores <- 1
   strategy <- check_strategy_index(x = x, i = strategy)
   
   cycles <- get_cycles(x)
@@ -53,43 +54,12 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
   expand_limit <- get_expand_limit(x, strategy)
   
-  if (status_cluster(verbose = FALSE)) {
-    message(paste("Using a cluster with", num_cores, "cores."))
-    
-    split_vec <- rep(1:num_cores, each = nrow(newdata) %/% num_cores)
-    split_vec <- c(split_vec, rep(num_cores, nrow(newdata) %% num_cores))
-    
-    pnewdata <- split(newdata, split_vec)
-    suppressMessages(
-      pieces <- parallel::mclapply(pnewdata, function(newdata) {
-        newdata %>% 
-          dplyr::rowwise() %>% 
-          dplyr::do_(
-            .mod = ~ eval_newdata(
-              .,
-              strategy = uneval_strategy,
-              old_parameters = old_parameters,
-              aux_params = aux_params,
-              cycles = cycles,
-              init = init,
-              inflow = inflow,
-              method = method,
-              strategy_name = strategy,
-              expand_limit = expand_limit
-            )
-          ) %>% 
-          dplyr::ungroup() %>% 
-          dplyr::bind_cols(
-            newdata
-          )
-      }, mc.cores = cores)
-    )
-    res <- dplyr::bind_rows(pieces)
-    rownames(res) <- NULL
-    
-  } else {
-    suppressMessages(
-      res <- newdata %>% 
+  message(paste("Using a cluster with", cores, "cores."))
+  
+  pnewdata <- split(newdata, seq_len(nrow(newdata)))
+  suppressMessages(
+    pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      newdata %>% 
         dplyr::rowwise() %>% 
         dplyr::do_(
           .mod = ~ eval_newdata(
@@ -99,8 +69,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             aux_params = aux_params,
             cycles = cycles,
             init = init,
-            method = method,
             inflow = inflow,
+            method = method,
             strategy_name = strategy,
             expand_limit = expand_limit
           )
@@ -109,8 +79,10 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         dplyr::bind_cols(
           newdata
         )
-    )
-  }
+    }, mc.cores = cores)
+  )
+  res <- dplyr::bind_rows(pieces)
+  rownames(res) <- NULL
   res
 }
 
