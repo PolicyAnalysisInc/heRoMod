@@ -1499,7 +1499,7 @@ run_hero_psa <- function(...) {
       dplyr::ungroup() %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
       reshape2::dcast(group+series~statistic, value.var = "value")
-    ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
+    #ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
     evpi <- hero_extract_psa_evpi(temp_model, dots$hsumms, dots$esumms, thresh_step, dots$psa$thresh_max)
@@ -1520,7 +1520,7 @@ run_hero_psa <- function(...) {
       outcomes_summary = outcomes_summary,
       costs = costs,
       costs_summary = costs_summary,
-      ceac = ceac,
+      #ceac = ceac,
       evpi = evpi#,
       #evppi = evppi
     )
