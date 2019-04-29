@@ -1161,7 +1161,7 @@ build_hero_model <- function(...) {
   
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2) , 0))
+    cores <- max(1, round((parallel::detectCores() - 2)/2, 0))
   }
   
   # Return model object
