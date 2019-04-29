@@ -1514,11 +1514,11 @@ run_hero_psa <- function(...) {
     #   reshape2::melt(id.vars = "wtp", value.name = "value")
     # 
     list(
-      #results = psa_res_df,
+      results = psa_res_df,
       scatter = scatter,
-      outcomes = outcomes,
+      #outcomes = outcomes,
       outcomes_summary = outcomes_summary,
-      costs = costs,
+      #costs = costs,
       costs_summary = costs_summary,
       #ceac = ceac,
       evpi = evpi#,
