@@ -60,7 +60,7 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
           x = model,
           strategy = n,
           newdata = newdata,
-          cores = 1
+          cores = cores
         ) %>% 
           dplyr::rowwise() %>% 
           dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
