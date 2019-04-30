@@ -555,7 +555,7 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
   )
 
   value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
-  value_res$.type <- rep(c("low", "high"), nrow(value_res)/3)
+  value_res$.type <- rep(c("low", "high"), nrow(value_res)/2)
   
   strategies <- unique(value_res$.strategy_names)
   n_strat <- length(strategies)
@@ -1161,7 +1161,7 @@ build_hero_model <- function(...) {
   
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2)/2, 0))
+    cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
   # Return model object
