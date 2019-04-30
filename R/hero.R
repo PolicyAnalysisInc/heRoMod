@@ -555,7 +555,7 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
   )
 
   value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
-  value_res$.type <- rep(c("low", "high"), nrow(value_res)/2)
+  value_res$.type <- rep(c("low", "high"), nrow(value_res)/3)
   
   strategies <- unique(value_res$.strategy_names)
   n_strat <- length(strategies)
