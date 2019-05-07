@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Probabilistic Uncertainty Analysis}
+  %\VignetteIndexEntry{xpected Value of Partial Perfect Information}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 
