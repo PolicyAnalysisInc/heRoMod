@@ -4,7 +4,7 @@
 \alias{run_dsa}
 \title{Run Sensitivity Analysis}
 \usage{
-run_dsa(model, dsa)
+run_dsa(model, dsa, cores = 1)
 }
 \arguments{
 \item{model}{An evaluated Markov model.}

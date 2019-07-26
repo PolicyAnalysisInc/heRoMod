@@ -524,7 +524,7 @@ hero_extract_trace <- function(res) {
       model_year
     )
   )
-  trace <- ldply(
+  trace <- plyr::ldply(
     res$eval_strategy_list,
     function(x) {
       x$counts_uncorrected
@@ -706,19 +706,7 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
 
 hero_extract_psa_summ <- function(res, summ) {
   
-  strategies <- unique(res$.strategy_names)
-  n_strat <- length(strategies)
-  
-  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
-    dplyr::filter(referent != comparator)
-  value_names <- setdiff(colnames(res), c(".strategy_names", ".index"))
-  
-  ref_res <- res[indices$referent, ]
-  comp_res <- res[indices$comparator, ]
-  delta_res <- ref_res
-  delta_res[value_names] <- ref_res[value_names] - comp_res[value_names]
-  delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
-  all_res <- rbind(res, delta_res) %>%
+  all_res <- rbind(res) %>%
     reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
     dplyr::mutate(variable = as.character(variable))
   
@@ -823,30 +811,13 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
         wtp = the_wtp,
         stringsAsFactors = F
       )
-    })
-  strategies <- unique(abs_res$series)
-  expand.grid(
-    referent = strategies,
-    comparator = strategies,
-    stringsAsFactors = F
-  ) %>%
-    dplyr::filter(referent != comparator) %>%
-    plyr::ddply(c("referent","comparator"), function(comparison) {
-      ref_df <- dplyr::filter(abs_res, series == comparison$referent) %>%
-        dplyr::arrange(hsumm, esumm, sim)
-      comp_df <- dplyr::filter(abs_res, series == comparison$comparator) %>%
-        dplyr::arrange(hsumm, esumm, sim)
-      
-      res_df <- ref_df
-      res_df$x <- ref_df$x - comp_df$x
-      res_df$y <- ref_df$y - comp_df$y
-      res_df$series <- paste0(ref_df$series, " vs. ", comp_df$series)
-      res_df
     }) %>%
     dplyr::rename(
       health_outcome = hsumm,
       econ_outcome = esumm
     )
+  
+  abs_res
 }
 
 compile_parameters <- function(x) {
@@ -1190,7 +1161,7 @@ build_hero_model <- function(...) {
   
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2) / 3 , 0))
+    cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
   # Return model object
@@ -1288,6 +1259,9 @@ run_hero_vbp <- function(...) {
       wtp_thresholds = c(0, 100000)
     )
     eq <- vbp_res$lin_eq
+    lin_df <- vbp_res$lin_df
+    lambdas <- vbp_res$lambdas
+    vbp_strat <- vbp_res$vbp_strat
     
   } else {
     # Heterogeneous model
@@ -1299,24 +1273,26 @@ run_hero_vbp <- function(...) {
       group_args$groups <- x
       group_model <- do.call(run_hero_vbp, group_args)
       
-      # Extract linear equation and apply weight
-      eq <- group_model$eq
-      eq$a <- eq$a * as.numeric(x$weight)
-      eq$b <- eq$b * as.numeric(x$weight)
-      eq
+      # Extract dataframes and apply weight
+      group_model$weight <- as.numeric(x$weight)
+      group_model
     })
     
     # Aggregate results over all groups
-    average_vbp <- vbps[[1]]
+    lambdas <- vbps[[1]]$lambdas
+    vbp_strat <- vbps[[1]]$vbp_strat
     weights <- as.numeric(dots$groups$weight)
-    average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
-    average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
-    eq <- average_vbp
+    lin_df <- vbps[[1]]$lin_df
+    lin_df[ ,-1] <- Reduce(`+`, purrr::map(vbps, ~.$lin_df[ ,-1] * .$weight)) / sum(weights)
+    eq <- calc_vbp(lin_df, lambdas, vbp_strat)$lin_eqs
   }
   
   # Return Result
   list(
-    eq = eq
+    eq = eq,
+    lin_df = lin_df,
+    vbp_strat = vbp_strat,
+    lambdas = lambdas
   )
   
 }
@@ -1545,9 +1521,9 @@ run_hero_psa <- function(...) {
     list(
       #results = psa_res_df,
       scatter = scatter,
-      outcomes = outcomes,
+      #outcomes = outcomes,
       outcomes_summary = outcomes_summary,
-      costs = costs,
+      #costs = costs,
       costs_summary = costs_summary,
       ceac = ceac,
       evpi = evpi#,

@@ -32,7 +32,7 @@
 #' 
 #' @example inst/examples/example_run_psa.R
 #'   
-run_psa <- function(model, psa, N, resample) {
+run_psa <- function(model, psa, N, resample, cores = 1) {
   if (! missing(resample)) {
     warning("Argument 'resample' is deprecated, use 'psa' instead.")
     psa <- resample
@@ -59,7 +59,8 @@ run_psa <- function(model, psa, N, resample) {
         eval_strategy_newdata(
           x = model,
           strategy = n,
-          newdata = newdata
+          newdata = newdata,
+          cores = cores
         ) %>% 
           dplyr::rowwise() %>% 
           dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
