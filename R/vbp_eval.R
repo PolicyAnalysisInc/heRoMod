@@ -31,29 +31,18 @@
 #' @example inst/examples/example_run_vbp.R
 run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   
-  if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
-    stop("No cost and effect defined, value-based pricing analysis unavailable.")
-  }
-  
+  # Run some checks
+  check_vbp(model, vbp, strategy_vbp)
+
+  # Get names of intervention & comparators
   strategy_names <- get_strategy_names(model)
+  strategy_comp <- strategy_names[strategy_names != strategy_vbp]
   
-  if (! (strategy_vbp %in% strategy_names)) {
-    stop("Strategy for VBP not defined")
-  }
-  
-  if(!param_in_strategy(model, strategy_vbp, vbp$variable))
-    stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
-  
-  strategy_comp <- strategy_names[strategy_names!=strategy_vbp]
-  
+  # Calculate threshold values
   lambda <- seq(wtp_thresholds[1], wtp_thresholds[2], length.out = 100)
   
-  init <- get_uneval_init(model)
-  cycles <- get_cycles(model)
-  method <- get_method(model)
-  
   n_par <- length(vbp$variable)
-  pos_par <- cumsum(c(1, rep(c(n_par, n_par+1), n_par)))
+  pos_par <- cumsum(c(1, rep(c(n_par, n_par + 1), n_par)))
   pos_par <- c(pos_par[-length(pos_par)], 3)
   
   list_res <- list()
@@ -63,102 +52,36 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     "Running VBP on strategy '%s'...", strategy_vbp
   ))
   
-  for (n in strategy_names) { # n <- strategy_names[2]
-    # if(param_in_strategy(model, n, vbp$variable)){
-      tab <- eval_strategy_newdata(
-        model,
-        strategy = n,
-        newdata = vbp$vbp
-      )
-      
-      vals <- purrr::map_dbl(tab[[vbp$variable]], ~lazyeval::lazy_eval(.))
-      
-      res <- tab
-      res[[vbp$variable]] <- vals
-      
-      list_res <- c(
-        list_res,
-        list(res)
-      )
-      
-      e_newdata <- c(
-        e_newdata,
-        list(unlist(lapply(
-          tab$.mod,
-          function(x) x$parameters[1, vbp$variable]))[pos_par]))
-      
-      names(e_newdata)[length(e_newdata)] <- n
-    # }
-  }
+  res <- purrr::map_dfr(strategy_names, function(n) {
+    eval_strategy_newdata(
+      model,
+      strategy = n,
+      newdata = vbp$vbp
+    ) %>%
+      dplyr::mutate(
+        .strategy_names = n,
+        .par_names = vbp$variable,
+        .par_value = purrr::map_dbl(.[[vbp$variable]], ~lazyeval::lazy_eval(.))
+      ) %>%
+      .[ ,colnames(.) != vbp$variable]
+  })
+    
+res_vbp <- res %>%
+  dplyr::rowwise() %>%
+  dplyr::do_(~ get_total_state_values(.$.mod)) %>%
+  dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(.par_value_eval = unlist(e_newdata)) %>%
+  dplyr::mutate_(.dots = get_ce(model)) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(.strategy_names, .par_value, .cost, .effect)
+
+  vbp_res_obj <- calc_vbp(res_vbp, lambda, strategy_vbp)
   
-  for (i in seq_along(strategy_names)) {
-    list_res[[i]]$.strategy_names <- strategy_names[i]
-  }
-  
-  res <- 
-    dplyr::bind_rows(list_res) %>%
-    reshape_long(
-      key_col = ".par_names", value_col = ".par_value",
-      gather_cols = vbp$variable, na.rm = TRUE) %>% 
-    dplyr::rowwise()
-  
-  res_vbp <- res %>% 
-    dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-    dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
-    dplyr::ungroup() %>% 
-    dplyr::mutate(
-      .par_value_eval = unlist(e_newdata)) %>% 
-    dplyr::mutate_(
-      .dots = get_ce(model))
-  
-  m.p_vs_wtp <- matrix(NA, 
-                       nrow = length(lambda), 
-                       ncol = (1+length(strategy_comp)))
-  colnames(m.p_vs_wtp) <- c("WTP", strategy_comp)
-  m.p_vs_wtp[, "WTP"]  <- lambda
-  
-  ### List to indicate if linear approximation is adopted
-  lin_approx <- vector("list", length = length(strategy_names))
-  names(lin_approx) <- strategy_names
-  
-  ### Linearization of VBP strategy
-  e.P     <- ce_strategy(model, strategy = strategy_vbp)$e.strategy
-  lin.params.P <- c_linear(res_vbp, strategy = strategy_vbp)
-  beta0.P <- lin.params.P$beta0
-  beta1.P <- lin.params.P$beta1
-  # if(beta1.P == 0)
-  #   stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
-  
-  lin_approx[[strategy_vbp]] <- lin.params.P$lin_approx
-  
-  lin_eq <- tibble::tibble(
-    strat = strategy_comp,
-    a = rep(0, length(strategy_comp)),
-    b = rep(0, length(strategy_comp))
-  )
-  
-  ### Linearization of comparison strategies
-  index <- 1
-  for (n in strategy_comp) {
-    ### Linearization
-    e.comp     <- ce_strategy(model, strategy = n)$e.strategy
-    lin.params.comp <- c_linear(res_vbp, strategy = n)
-    beta0.comp <- lin.params.comp$beta0
-    beta1.comp <- lin.params.comp$beta1
-    lin_approx[[n]] <- lin.params.comp$lin_approx
-    ### Linear comparison
-    m.p_vs_wtp[, n] <- p_comp(e.comp     = e.comp, 
-                              e.P        = e.P, 
-                              beta0.P    = beta0.P, 
-                              beta0.comp = beta0.comp,
-                              beta1.P    = beta1.P, 
-                              beta1.comp = beta1.comp, 
-                              lambda     = lambda)
-    lin_eq$a[index] <- (e.P - e.comp)/(beta1.P - beta1.comp)
-    lin_eq$b[index] <- -(beta0.P - beta0.comp)/(beta1.P - beta1.comp)
-    index <- index + 1
-  }
-  
+  df.p_vs_wtp <- vbp_res_obj$df.p_vs_wtp
+  lin_eq <- vbp_res_obj$lin_eqs
+  lin_approx <- vbp_res_obj$lin_approx
+  m.p_vs_wtp <- as.matrix(df.p_vs_wtp)
   df.p_vs_wtp <- as.data.frame(m.p_vs_wtp)
   m.p_vs_wtp <- m.p_vs_wtp[, -1, drop = F]
   index.str.vbp <- max.col(-m.p_vs_wtp)
@@ -176,14 +99,94 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
   structure(
     list(
       vbp        = df_vbp,
-      p_vs_wtp   = df_p_vs_wtp.lg,
+      lin_df = res_vbp,
+      lambdas = lambda,
+      vbp_strat = strategy_vbp,
+      p_vs_wtp   = sort_by_strat(df_p_vs_wtp.lg, strategy_names, 'Comparison'),
       variable   = vbp$variable,
-      lin_approx = lin_approx,
-      lin_eq = lin_eq,
+      lin_approx = lin_approx[match(strategy_names, names(lin_approx))],
+      lin_eq = sort_by_strat(lin_eq, strategy_names, 'strat'),
       model      = model
     ),
     class = c("vbp", "list")
   )
+}
+
+calc_vbp <- function(df, lambdas, vbp_strat) {
+  linear_cost <- df %>%
+    dplyr::group_by(.strategy_names) %>%
+    dplyr::group_split() %>%
+    purrr::map(function(x) {
+      linear <- c_linear(x, strategy = x$.strategy_names[1])
+      tibble(
+        .strategy_names = x$.strategy_names[1],
+        .effect = x$.effect[1],
+        beta0 = linear$beta0,
+        beta1 = linear$beta1,
+        lin_approx = linear$lin_approx
+      )
+    }) %>%
+    dplyr::bind_rows() %>%
+    ungroup()
+  
+  ref <- dplyr::filter(linear_cost, .strategy_names == vbp_strat)
+  comps <- dplyr::filter(linear_cost, .strategy_names != vbp_strat)
+  
+  lin_eqs <- comps %>%
+    dplyr::mutate(
+      strat = .strategy_names,
+      a = (ref$.effect - .effect) / (ref$beta1 - beta1),
+      b = -(ref$beta0 - beta0) / (ref$beta1 - beta1)
+    ) %>%
+    dplyr::select(strat, a, b)
+  df.p_vs_wtp = comps %>%
+    dplyr::rowwise() %>%
+    dplyr::group_split() %>%
+    purrr::map(function(comp) {
+      tibble(
+        .strategy_names = comp$.strategy_names,
+        WTP = lambdas,
+        value = p_comp(ref$.effect, comp$.effect, ref$beta0, comp$beta0, ref$beta1, comp$beta1, lambdas)
+      )
+    }) %>%
+    dplyr::bind_rows() %>%
+    reshape2::dcast(WTP~.strategy_names, value = 'value')
+  
+  lin_approx <- as.list(linear_cost$lin_approx)
+  names(lin_approx) <- linear_cost$.strategy_names
+  
+  list(
+    lin_eqs = lin_eqs,
+    lin_approx = lin_approx,
+    df.p_vs_wtp = df.p_vs_wtp
+  )
+  
+  
+}
+
+sort_by_strat <- function(df, strategy_names, colname) {
+  df$.sort <- factor(df[[colname]], levels = strategy_names)
+  sorted <- dplyr::arrange(df, .sort) %>%
+    dplyr::select(-.sort)
+  
+  sorted
+}
+
+check_vbp <- function(model, vbp, strategy_vbp) {
+  
+  if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
+    stop("No cost and effect defined, value-based pricing analysis unavailable.")
+  }
+  
+  strategy_names <- get_strategy_names(model)
+  
+  if (! (strategy_vbp %in% strategy_names)) {
+    stop("Strategy for VBP not defined")
+  }
+  
+  if(!param_in_strategy(model, strategy_vbp, vbp$variable))
+    stop(paste("Parameter", vbp$variable, "does not affect strategy", strategy_vbp))
+  
 }
 
 get_model.vbp <- function(x) {

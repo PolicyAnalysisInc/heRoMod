@@ -524,7 +524,7 @@ hero_extract_trace <- function(res) {
       model_year
     )
   )
-  trace <- ldply(
+  trace <- plyr::ldply(
     res$eval_strategy_list,
     function(x) {
       x$counts_uncorrected
@@ -1259,6 +1259,9 @@ run_hero_vbp <- function(...) {
       wtp_thresholds = c(0, 100000)
     )
     eq <- vbp_res$lin_eq
+    lin_df <- vbp_res$lin_df
+    lambdas <- vbp_res$lambdas
+    vbp_strat <- vbp_res$vbp_strat
     
   } else {
     # Heterogeneous model
@@ -1270,24 +1273,26 @@ run_hero_vbp <- function(...) {
       group_args$groups <- x
       group_model <- do.call(run_hero_vbp, group_args)
       
-      # Extract linear equation and apply weight
-      eq <- group_model$eq
-      eq$a <- eq$a * as.numeric(x$weight)
-      eq$b <- eq$b * as.numeric(x$weight)
-      eq
+      # Extract dataframes and apply weight
+      group_model$weight <- as.numeric(x$weight)
+      group_model
     })
     
     # Aggregate results over all groups
-    average_vbp <- vbps[[1]]
+    lambdas <- vbps[[1]]$lambdas
+    vbp_strat <- vbps[[1]]$vbp_strat
     weights <- as.numeric(dots$groups$weight)
-    average_vbp$a <- Reduce(`+`, purrr::map(vbps, ~ .$a)) / sum(weights)
-    average_vbp$b <- Reduce(`+`, purrr::map(vbps, ~ .$b)) / sum(weights)
-    eq <- average_vbp
+    lin_df <- vbps[[1]]$lin_df
+    lin_df[ ,-1] <- Reduce(`+`, purrr::map(vbps, ~.$lin_df[ ,-1] * .$weight)) / sum(weights)
+    eq <- calc_vbp(lin_df, lambdas, vbp_strat)$lin_eqs
   }
   
   # Return Result
   list(
-    eq = eq
+    eq = eq,
+    lin_df = lin_df,
+    vbp_strat = vbp_strat,
+    lambdas = lambdas
   )
   
 }
