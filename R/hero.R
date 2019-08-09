@@ -559,21 +559,9 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
   
   strategies <- unique(value_res$.strategy_names)
   n_strat <- length(strategies)
-  
-  indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
-    dplyr::filter(referent != comparator)
   value_names <- setdiff(colnames(value_res), c(".strategy_names", ".par_names", ".par_value", ".par_value_eval", ".type"))
   
-  delta_res <- plyr::ddply(indices, c("referent", "comparator"), function(x) {
-    comp_res <- dplyr::filter(value_res, .strategy_names == strategies[x$comparator])
-    ref_res <- dplyr::filter(value_res, .strategy_names == strategies[x$referent])
-    delta <- ref_res
-    delta[value_names] <- ref_res[value_names] - comp_res[value_names]
-    delta$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
-    delta
-  }) %>%
-    dplyr::select(-referent, -comparator)
-  all_res <- rbind(value_res, delta_res) %>%
+  all_res <- value_res %>%
     reshape2::melt(id.vars = c(".strategy_names", ".par_names", ".type", ".par_value", ".par_value_eval")) %>%
     dplyr::mutate(variable = as.character(variable))
   
