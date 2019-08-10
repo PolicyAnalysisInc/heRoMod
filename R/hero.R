@@ -1380,11 +1380,9 @@ run_hero_dsa <- function(...) {
     dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
-        props = data.frame(
-          health_outcome = x$health_outcome[1],
-          econ_outcome = x$econ_outcome[1],
-          series = x$series[1]
-        ),
+        health_outcome = x$health_outcome[1],
+        econ_outcome = x$econ_outcome[1],
+        series = x$series[1],
         data = dplyr::select(x, -health_outcome, -econ_outcome, -series)
       )
     }) 
@@ -1393,11 +1391,9 @@ run_hero_dsa <- function(...) {
     dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
-        props = data.frame(
-          outcome = x$outcome[1],
-          disc = x$disc[1],
-          series = x$series[1]
-        ),
+        outcome = x$outcome[1],
+        disc = x$disc[1],
+        series = x$series[1],
         data = dplyr::select(x, -outcome, -disc, -series)
       )
     }) 
@@ -1406,11 +1402,9 @@ run_hero_dsa <- function(...) {
     dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
-        props = data.frame(
-          outcome = x$outcome[1],
-          disc = x$disc[1],
-          series = x$series[1]
-        ),
+        outcome = x$outcome[1],
+        disc = x$disc[1],
+        series = x$series[1],
         data = dplyr::select(x, -outcome, -disc, -series)
       )
     }) 
@@ -1514,11 +1508,9 @@ run_hero_psa <- function(...) {
       group_split() %>%
       purrr::map(function(x) {
         list(
-          props = data.frame(
-            health_outcome = x$health_outcome[1],
-            econ_outcome = x$econ_outcome[1],
-            series = x$series[1]
-          ),
+          health_outcome = x$health_outcome[1],
+          econ_outcome = x$econ_outcome[1],
+          series = x$series[1],
           data = mutate(
             dplyr::select(x, -health_outcome, -econ_outcome, -series)
           )
