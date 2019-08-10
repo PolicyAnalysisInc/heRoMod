@@ -1286,7 +1286,7 @@ run_hero_vbp <- function(...) {
 }
 
 #' @export
-run_hero_dsa <- function(...) {
+run_hero_dsa_ <- function(...) {
   
   # Capture arguments
   dots <- list(...)
@@ -1314,10 +1314,8 @@ run_hero_dsa <- function(...) {
     nmb_res <- hero_extract_dsa_nmb(outcome_res, cost_res, bc_nmb_res, dots$hsumms, dots$esumms)
     
     ret <- list(
-      main = as.data.frame(heemod_res$dsa$dsa, stringsAsFactors=F),
       outcomes = outcome_res,
       cost = cost_res,
-      ce = ce_res,
       nmb = nmb_res
     )
     
@@ -1329,7 +1327,7 @@ run_hero_dsa <- function(...) {
       # Run model for given group
       group_args <- dots
       group_args$groups <- x
-      group_model <- do.call(run_hero_dsa, group_args)
+      group_model <- do.call(run_hero_dsa_, group_args)
       
       # Extract results and apply weights
       group_model$outcomes$base <- group_model$outcomes$base * as.numeric(x$weight)
@@ -1341,9 +1339,6 @@ run_hero_dsa <- function(...) {
       group_model$nmb$base <- group_model$nmb$base * as.numeric(x$weight)
       group_model$nmb$low <- group_model$nmb$low * as.numeric(x$weight)
       group_model$nmb$high <- group_model$nmb$high * as.numeric(x$weight)
-      group_model$ce$.cost <- group_model$ce$cost * as.numeric(x$weight)
-      group_model$ce$.effect <- group_model$ce$eff * as.numeric(x$weight)
-      
       group_model
     })
     
@@ -1365,40 +1360,10 @@ run_hero_dsa <- function(...) {
     cost_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$cost$high)) / sum(weights)
     cost_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$cost$base)) / sum(weights)
     
-    ce_res <- dsas[[1]]$ce
-    ce_res_keys <- dplyr::select(ce_res, param, type, health_outcome, econ_outcome, series)
-    ce_res$.cost <- Reduce(`+`, purrr::map(dsas, function(x) {
-      dplyr::left_join(ce_res_keys, x$ce, by = c('param', 'type', 'health_outcome', 'econ_outcome', 'series'))$.cost
-    })) / sum(weights)
-    ce_res$.effect <- Reduce(`+`, purrr::map(dsas, function(x) {
-      left_join(ce_res_keys, x$ce, by = c('param', 'type', 'health_outcome', 'econ_outcome', 'series'))$.effect
-    })) / sum(weights)
-    agg_ce_res <- ce_res %>%
-      plyr::ddply(c("health_outcome","econ_outcome", "param", "type"), function(x) {
-        thresh <- dots$hsumms %>% dplyr::filter(name == substring(x$health_outcome,7)[1]) %>% .$wtp %>% .[1]
-        dplyr::mutate(x, .strategy_names = series) %>%
-          compute_icer(threshold = thresh)
-      }) %>%
-      dplyr::transmute(
-        param = param,
-        type = type,
-        param_value = param_value,
-        health_outcome = health_outcome,
-        econ_outcome = econ_outcome,
-        series = .strategy_names,
-        cost = .cost,
-        eff = .effect,
-        dcost = .dcost,
-        deffect = .deffect,
-        dref = .dref,
-        icer = .icer,
-        nmb = .nmb
-      )
-    
     ret <- list(
+      api_ver = '2.0',
       outcomes = outcomes_res,
       cost = cost_res,
-      ce = agg_ce_res,
       nmb = nmb_res
     )
 
@@ -1406,13 +1371,54 @@ run_hero_dsa <- function(...) {
   ret
 }
 
+run_hero_dsa <- function(...) {
+  # Run the DSA
+  res <- run_hero_dsa_(...)
+  # Compress the results
+  res$nmb <- res$nmb  %>%
+    group_by(health_outcome, econ_outcome, series) %>%
+    group_split() %>%
+    purrr::map(function(x) {
+      list(
+        health_outcome = x$health_outcome[1],
+        econ_outcome = x$econ_outcome[1],
+        series = x$series[1],
+        data = select(x, -health_outcome, -econ_outcome, -series)
+      )
+    }) 
+  res$cost <- res$cost %>%
+    group_by(outcome, disc, series) %>%
+    group_split() %>%
+    purrr::map(function(x) {
+      list(
+        outcome = x$outcome[1],
+        disc = x$disc[1],
+        series = x$series[1],
+        data = select(x, -outcome, -disc, -series)
+      )
+    }) 
+  res$outcomes <- res$outcomes %>%
+    group_by(outcome, disc, series) %>%
+    group_split() %>%
+    purrr::map(function(x) {
+      list(
+        outcome = x$outcome[1],
+        disc = x$disc[1],
+        series = x$series[1],
+        data = select(x, -outcome, -disc, -series)
+      )
+    }) 
+  
+  res
+}
+
+
+
+
 #' @export
 run_hero_psa <- function(...) {
-  
-  
   # Capture arguments
   dots <- list(...)
-  
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1496,26 +1502,26 @@ run_hero_psa <- function(...) {
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
     evpi <- hero_extract_psa_evpi(temp_model, dots$hsumms, dots$esumms, thresh_step, dots$psa$thresh_max)
-    # evppi <- compute_evppi(
-    #   psa_model$psa,
-    #   define_evppi_(psa_model$psa$resamp_par),
-    #   max_wtp = dots$psa$thresh_max,
-    #   n = thresh_n_steps + 1,
-    #   verbose = F
-    # )$evppi_res %>%
-    #   dplyr::rename(wtp = WTP) %>%
-    #   reshape2::melt(id.vars = "wtp", value.name = "value")
-    # 
+    
+    scatter_compressed <- scatter %>%
+      group_by(health_outcome, econ_outcome, series) %>%
+      group_split() %>%
+      purrr::map(function(x) {
+        list(
+          health_outcome = x$health_outcome[1],
+          econ_outcome = x$econ_outcome[1],
+          series = x$series[1],
+          data = mutate(
+            select(x, -health_outcome, -econ_outcome, -series)
+          )
+        )
+      })
     list(
-      #results = psa_res_df,
-      scatter = scatter,
-      #outcomes = outcomes,
+      scatter = scatter_compressed,
       outcomes_summary = outcomes_summary,
-      #costs = costs,
       costs_summary = costs_summary,
       ceac = ceac,
-      evpi = evpi#,
-      #evppi = evppi
+      evpi = evpi
     )
   } else {
     
