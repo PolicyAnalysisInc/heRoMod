@@ -1394,8 +1394,8 @@ run_hero_dsa <- function(...) {
     purrr::map(function(x) {
       list(
         props = data.frame(
-          health_outcome = x$health_outcome[1],
-          econ_outcome = x$econ_outcome[1],
+          outcome = x$outcome[1],
+          disc = x$disc[1],
           series = x$series[1]
         ),
         data = dplyr::select(x, -outcome, -disc, -series)
