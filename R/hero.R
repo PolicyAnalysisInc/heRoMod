@@ -1376,8 +1376,8 @@ run_hero_dsa <- function(...) {
   res <- run_hero_dsa_(...)
   # Compress the results
   res$nmb <- res$nmb  %>%
-    group_by(health_outcome, econ_outcome, series) %>%
-    group_split() %>%
+    dplyr::group_by(health_outcome, econ_outcome, series) %>%
+    dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
         health_outcome = x$health_outcome[1],
@@ -1387,8 +1387,8 @@ run_hero_dsa <- function(...) {
       )
     }) 
   res$cost <- res$cost %>%
-    group_by(outcome, disc, series) %>%
-    group_split() %>%
+    dplyr::group_by(outcome, disc, series) %>%
+    dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
         outcome = x$outcome[1],
@@ -1398,8 +1398,8 @@ run_hero_dsa <- function(...) {
       )
     }) 
   res$outcomes <- res$outcomes %>%
-    group_by(outcome, disc, series) %>%
-    group_split() %>%
+    dplyr::group_by(outcome, disc, series) %>%
+    dplyr::group_split() %>%
     purrr::map(function(x) {
       list(
         outcome = x$outcome[1],
