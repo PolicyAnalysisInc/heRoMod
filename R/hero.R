@@ -1505,8 +1505,8 @@ run_hero_psa <- function(...) {
     evpi <- hero_extract_psa_evpi(temp_model, dots$hsumms, dots$esumms, thresh_step, dots$psa$thresh_max)
     
     scatter_compressed <- scatter %>%
-      group_by(health_outcome, econ_outcome, series) %>%
-      group_split() %>%
+      dplyr::group_by(health_outcome, econ_outcome, series) %>%
+      dplyr::group_split() %>%
       purrr::map(function(x) {
         list(
           health_outcome = substring(x$health_outcome[1], 7),
