@@ -1509,8 +1509,8 @@ run_hero_psa <- function(...) {
       group_split() %>%
       purrr::map(function(x) {
         list(
-          health_outcome = x$health_outcome[1],
-          econ_outcome = x$econ_outcome[1],
+          health_outcome = substring(x$health_outcome[1], 7),
+          econ_outcome = substring(x$econ_outcome[1], 7),
           series = x$series[1],
           data = mutate(
             dplyr::select(x, -health_outcome, -econ_outcome, -series)
