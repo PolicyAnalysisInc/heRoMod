@@ -1518,6 +1518,7 @@ run_hero_psa <- function(...) {
         )
       })
     list(
+      api_ver = '2.0',
       scatter = scatter_compressed,
       outcomes_summary = outcomes_summary,
       costs_summary = costs_summary,
