@@ -1361,7 +1361,6 @@ run_hero_dsa_ <- function(...) {
     cost_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$cost$base)) / sum(weights)
     
     ret <- list(
-      api_ver = '2.0',
       outcomes = outcomes_res,
       cost = cost_res,
       nmb = nmb_res
@@ -1408,6 +1407,8 @@ run_hero_dsa <- function(...) {
         data = dplyr::select(x, -outcome, -disc, -series)
       )
     }) 
+  
+  res$api_ver <- '2.0'
   
   res
 }
