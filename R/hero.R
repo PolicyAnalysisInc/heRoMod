@@ -1512,7 +1512,7 @@ run_hero_psa <- function(...) {
           health_outcome = substring(x$health_outcome[1], 7),
           econ_outcome = substring(x$econ_outcome[1], 7),
           series = x$series[1],
-          data = mutate(
+          data = dplyr::mutate(
             dplyr::select(x, -health_outcome, -econ_outcome, -series)
           )
         )
