@@ -1285,7 +1285,6 @@ run_hero_vbp <- function(...) {
   
 }
 
-#' @export
 run_hero_dsa_ <- function(...) {
   
   # Capture arguments
@@ -1370,6 +1369,7 @@ run_hero_dsa_ <- function(...) {
   ret
 }
 
+#' @export
 run_hero_dsa <- function(...) {
   # Run the DSA
   res <- run_hero_dsa_(...)
