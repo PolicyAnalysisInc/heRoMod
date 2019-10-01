@@ -1,4 +1,19 @@
 
+#' @export
+run_analysis <- function(...) {
+  data <- list(...)
+  if (data$analysis == 'psa') {
+    res <- do.call(run_hero_psa, data)
+  } else if (data$analysis == 'dsa') {
+    res <- do.call(run_hero_dsa, data)
+  } else if (data$analysis == 'vbp') {
+    res <- do.call(run_hero_vbp, data)
+  } else if (data$analysis == 'bc') {
+    res <- do.call(run_hero_bc, data)
+  }
+  res
+}
+
 parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
   edisc_adj <- rescale_discount_rate(edisc, 365, clength)
@@ -1148,8 +1163,8 @@ build_hero_model <- function(...) {
   }
   
   cores <- 1
-  if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
+  if (!is.null(dots$cores)) {
+    cores <- dots$cores
   }
   
   # Return model object
