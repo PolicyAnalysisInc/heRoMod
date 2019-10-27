@@ -168,6 +168,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     names(renamer) <- matrix_pos_names
     eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
       rename(!!!syms(renamer))
+    names(x) <- matrix_pos_names
     
     trans_table <- tibble::tibble(
       model_time = rep.int(parameters$model_time, times = n_state^2),
@@ -208,8 +209,18 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   } else {
     parameters <- filter(parameters, state_time == 1)
     nrow_param = nrow(parameters)
-    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition")
-    
+    matrix_pos_names <- names(x)
+    state_trans_names <- paste0(
+      rep(state_names, each = 3),
+      ' → ',
+      rep(state_names, 3)
+    )
+    names(x) <- state_trans_names
+    renamer <- state_trans_names
+    names(renamer) <- matrix_pos_names
+    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
+      rename(!!!syms(renamer))
+    names(x) <- matrix_pos_names
     trans_table <- tibble::tibble(
       model_time = rep(parameters$model_time, times = n_state^2),
       state_time = rep(parameters$state_time, times = n_state^2),
