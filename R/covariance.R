@@ -24,22 +24,22 @@ compute_cov <- function(psa, diff = FALSE, k, k_default = 10, threshold) {
   
   if (diff) {
     tab_psa <- psa$psa %>%
-      dplyr::group_by_(~ .index) %>%
-      dplyr::do_(~ compute_icer(
+      group_by(.index) %>%
+      do(compute_icer(
         ., strategy_order = order(get_effect(get_model(psa))),
         threshold = threshold)) %>%
-      dplyr::filter_(~ ! is.na(.dref)) %>% 
-      dplyr::ungroup()
+      filter(! is.na(.dref)) %>% 
+      ungroup()
   } else {
     tab_psa <- psa$psa
   }
   
   max_k <- tab_psa %>% 
-    dplyr::select_(.dots = c(psa$resamp_par), ".strategy_names") %>% 
-    dplyr::group_by_(".strategy_names") %>% 
-    dplyr::summarise_all(dplyr::funs(dplyr::n_distinct)) %>% 
-    dplyr::summarise_all(min) %>% 
-    dplyr::select_(~ - .strategy_names) %>% 
+    select(!!!syms(c(psa$resamp_par, ".strategy_names"))) %>% 
+    group_by(.strategy_names) %>% 
+    summarise_all(list(n_distinct)) %>% 
+    summarise_all(min) %>% 
+    select(- .strategy_names) %>% 
     unlist()
   
   default_k <- ifelse(
@@ -90,40 +90,40 @@ compute_cov <- function(psa, diff = FALSE, k, k_default = 10, threshold) {
   }
   
   res <- tab_psa %>% 
-    dplyr::group_by_(".strategy_names") %>% 
-    dplyr::do_(
-      ~ compute_prop_var(mgcv::gam(formula = form_cost, data = .))
+    group_by(.strategy_names) %>% 
+    do(
+      compute_prop_var(mgcv::gam(formula = form_cost, data = .))
     ) %>% 
-    dplyr::mutate(
+    mutate(
       .result = "Cost"
     ) %>% 
-    dplyr::bind_rows(
+    bind_rows(
       tab_psa %>% 
-        dplyr::group_by_(".strategy_names") %>% 
-        dplyr::do_(
-          ~ compute_prop_var(mgcv::gam(formula = form_effect, data = .))
+        group_by(.strategy_names) %>% 
+        do(
+          compute_prop_var(mgcv::gam(formula = form_effect, data = .))
         ) %>% 
-        dplyr::mutate(
+        mutate(
           .result = "Effect"
         )
     )
   
   if (diff) {
     res <- res %>% 
-      dplyr::bind_rows(
+      bind_rows(
         tab_psa %>% 
-          dplyr::group_by_(".strategy_names") %>% 
-          dplyr::do_(
-            ~ compute_prop_var(mgcv::gam(formula = form_nmb, data = .))
+          group_by(.strategy_names) %>% 
+          do(
+            compute_prop_var(mgcv::gam(formula = form_nmb, data = .))
           ) %>% 
-          dplyr::mutate(
+          mutate(
             .result = "NMB"
           )
       )
   }
   
   res %>% 
-    dplyr::ungroup() %>% 
+    ungroup() %>% 
     reshape_long(
       key_col = ".par_names",
       value_col = ".prop",

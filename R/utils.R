@@ -435,7 +435,7 @@ pretty_names <- function(x) {
            "ICER", "Ref.",
            "Strategy")
   ) %>% 
-    dplyr::filter_(~ from %in% n)
+    filter(from %in% n)
   
   n[ref$from] <- ref$to
   
@@ -653,7 +653,7 @@ reshape_wide <- function(data, key_col, value_col, fill = NA) {
   res <- data[! duplicated(ids), idvar, drop = FALSE]
   
   cbind(
-    dplyr::ungroup(res),
+    ungroup(res),
     do.call(
       cbind,
       stats::setNames(
@@ -674,4 +674,12 @@ reshape_wide <- function(data, key_col, value_col, fill = NA) {
       )
     )
   )
+}
+
+clean_err_msg <- function(x) {
+  if (startsWith(x, "Error : ")) {
+    substring(x, 9)
+  } else {
+    x
+  }
 }

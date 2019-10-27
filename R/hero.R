@@ -21,8 +21,8 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   )
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
-      dplyr::mutate(group = name) %>%
-      dplyr::rename_(.dots = c(".group" = "name"))
+      mutate(group = name) %>%
+      rename(!!!syms(c(".group" = "name")))
     group_vars <- groups %>%
       colnames() %>%
       setdiff(".weights") %>%
@@ -32,7 +32,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
   }
   if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
     if(is.null(data$psa)) data$psa <- ""
-    user_pars <- dplyr::transmute(
+    user_pars <- transmute(
       data,
       parameter = name,
       value = value,
@@ -51,7 +51,7 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
 }
 parse_hero_obj_vars <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
-    dplyr::transmute(
+    transmute(
       data,
       parameter = name,
       value = value
@@ -62,8 +62,8 @@ parse_hero_obj_vars <- function(data) {
 }
 parse_hero_groups <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
-    dplyr::rename_(data, .dots = c(".group" = "name", ".weights" = "weight")) %>%
-    dplyr::mutate(group = .group, .weights = as.numeric(.weights))
+    rename(data, !!!syms(c(".group" = "name", ".weights" = "weight"))) %>%
+    mutate(group = .group, .weights = as.numeric(.weights))
   } else {
     NULL
   }
@@ -79,11 +79,11 @@ parse_hero_values <- function(data, health, strategies, states, clength) {
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
   state_vals <- data %>%
-    dplyr::filter(!grepl(trans_string, state, fixed = T))
+    filter(!grepl(trans_string, state, fixed = T))
   
   states_undisc <- state_vals %>%
-    dplyr::rowwise() %>%
-    dplyr::do({
+    rowwise() %>%
+    do({
       if(.$strategy == "All") {
         if(.$state == "All") {
           data.frame(
@@ -122,11 +122,11 @@ parse_hero_values <- function(data, health, strategies, states, clength) {
         }
       }
     }) %>%
-    dplyr::ungroup()
+    ungroup()
   
   if(nrow(states_undisc) > 0) {
     states_disc <- states_undisc %>%
-      dplyr::mutate(
+      mutate(
         value = disc_fun(name),
         name = paste0(".disc_", name)
       )
@@ -147,11 +147,11 @@ parse_hero_values_st <- function(data, health, strategies, clength) {
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
   state_trans <- data %>%
-    dplyr::filter(grepl(trans_string, state, fixed = T))
+    filter(grepl(trans_string, state, fixed = T))
   
   states_undisc <- state_trans %>%
-    dplyr::rowwise() %>%
-    dplyr::do({
+    rowwise() %>%
+    do({
       if(.$strategy == "All") {
         data.frame(
           name = .$name,
@@ -170,11 +170,11 @@ parse_hero_values_st <- function(data, health, strategies, clength) {
         )
       }
     }) %>%
-    dplyr::ungroup()
+    ungroup()
 
   if (nrow(states_undisc) > 0) {
     states_disc <- states_undisc %>%
-      dplyr::mutate(
+      mutate(
         value = disc_fun(name),
         name = paste0(".disc_", name)
       )
@@ -192,7 +192,7 @@ parse_hero_summaries <- function(data, values, health, strategies, states, cleng
   }
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
-  state_summs <- dplyr::filter(data, value %in% values$name)
+  state_summs <- filter(data, value %in% values$name)
   
   sum_undisc <- plyr::ddply(state_summs, "name", function(x) {
     data.frame(
@@ -205,7 +205,7 @@ parse_hero_summaries <- function(data, values, health, strategies, states, cleng
   
   if(nrow(sum_undisc) > 0) {
     sum_disc <- sum_undisc %>%
-      dplyr::mutate(
+      mutate(
         value = disc_fun(name),
         name = paste0(".disc_", name)
       )
@@ -223,10 +223,10 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   }
   disc_fun <- function(x) paste0(x, " * ", disc_var)
   
-  st_summs <- dplyr::filter(data, value %in% values$name)
+  st_summs <- filter(data, value %in% values$name)
   
   sum_undisc <- plyr::ddply(st_summs, "name", function(x) {
-    the_values <- dplyr::filter(
+    the_values <- filter(
       values,
       name %in% x$value
     )
@@ -245,7 +245,7 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
   
   if(nrow(sum_undisc) > 0) {
     sum_disc <- sum_undisc %>%
-      dplyr::mutate(
+      mutate(
         value = disc_fun(name),
         name = paste0(".disc_", name)
       )
@@ -258,8 +258,8 @@ parse_hero_trans <- function(data, strategies, states) {
   if ("from" %in% colnames(data)) {
     # Markov
     data %>%
-      dplyr::rowwise() %>%
-      dplyr::do({
+      rowwise() %>%
+      do({
         if(.$strategy == "All") {
           data.frame(
             .model = strategies,
@@ -278,16 +278,16 @@ parse_hero_trans <- function(data, strategies, states) {
           )
         }
       }) %>%
-      dplyr::ungroup() %>%
+      ungroup() %>%
       reshape2::dcast(.model + from ~ to, value.var = "prob", fill = 0) %>%
       reshape2::melt(id.vars = c(".model", "from"), value.name = "prob", variable.name = "to") %>%
-      dplyr::mutate(to = as.character(to))
+      mutate(to = as.character(to))
   } else {
     if ("state" %in% colnames(data)) {
       # Custom PSM
       trans <- data %>%
-        dplyr::rowwise() %>%
-        dplyr::do({
+        rowwise() %>%
+        do({
           if(.$strategy == "All") {
             data.frame(
               .model = strategies,
@@ -304,14 +304,14 @@ parse_hero_trans <- function(data, strategies, states) {
             )
           }
         }) %>%
-        dplyr::ungroup() %>%
-        dplyr::mutate(state = factor(state, levels = states)) %>%
+        ungroup() %>%
+        mutate(state = factor(state, levels = states)) %>%
         reshape2::dcast(.model ~ state, value.var = "prob", fill = 0) %>%
         reshape2::melt(id.vars = ".model", value.name = "prob", variable.name = "state") %>%
-        dplyr::mutate(state = as.character(state))
+        mutate(state = as.character(state))
     } else {
       # Regular PSM
-      dplyr::rename(data, .model = strategy)
+      rename(data, .model = strategy)
     }
   }
 }
@@ -338,13 +338,13 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
     values,
     summaries
   ) %>%
-    dplyr::mutate(
+    mutate(
       .model = factor(.model, levels = strategies),
       .state = factor(.state, levels = states),
       name = factor(name, levels = all_value_names)
     ) %>%
     reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F) %>%
-    dplyr::mutate(.model = as.character(.model), .state = as.character(.state))
+    mutate(.model = as.character(.model), .state = as.character(.state))
   
   states_df
 }
@@ -377,18 +377,18 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
       values,
       summaries
     ) %>%
-      dplyr::mutate(
+      mutate(
         .model = factor(.model, levels = strategies),
         .transition = factor(.transition, levels = unique(values$.transition)),
         name = factor(name, levels = all_value_names)
       ) %>%
       reshape2::dcast(.model+.transition~name, value.var = "value", fill = 0, drop=F) %>%
-      dplyr::mutate(
+      mutate(
         .model = as.character(.model),
         .transition = as.character(.transition)
       )
     split_trans <- strsplit(as.character(st_df$.transition), trans_string)
-    st_df <- dplyr::mutate(
+    st_df <- mutate(
       st_df,
       from = purrr::map_chr(split_trans, ~.[1]),
       to = purrr::map_chr(split_trans, ~.[2])
@@ -409,7 +409,7 @@ hero_extract_summ <- function(res, summ) {
   n_strat <- length(strategies)
   
   indices <- expand.grid(referent = seq_len(n_strat), comparator = seq_len(n_strat)) %>%
-    dplyr::filter(referent != comparator)
+    filter(referent != comparator)
   value_names <- setdiff(colnames(value_res), ".strategy_names")
   
   ref_res <- value_res[indices$referent, ]
@@ -419,56 +419,56 @@ hero_extract_summ <- function(res, summ) {
   delta_res$.strategy_names <- paste0(ref_res$.strategy_names, " vs. ", comp_res$.strategy_names)
   all_res <- rbind(value_res, delta_res) %>%
     reshape2::melt(id.vars = ".strategy_names") %>%
-    dplyr::mutate(variable = as.character(variable))
+    mutate(variable = as.character(variable))
   
-  summ_unique <- dplyr::distinct(summ, name, value)
+  summ_unique <- distinct(summ, name, value)
  
-  undisc <- dplyr::inner_join(
-    dplyr::rename(summ_unique,variable = value),
+  undisc <- inner_join(
+    rename(summ_unique,variable = value),
     all_res,
     by = "variable"
   ) %>%
-    dplyr::mutate(
+    mutate(
       outcome = name,
       series = .strategy_names,
       group = variable,
       disc = F
     ) %>%
-    dplyr::select(outcome, series, group, disc, value)
+    select(outcome, series, group, disc, value)
   
-  disc <- dplyr::inner_join(
-    dplyr::mutate(
+  disc <- inner_join(
+    mutate(
       summ_unique,
       variable1 = paste0(".disc_", value),
       variable = value
     ) %>%
-      dplyr::select(-value),
+      select(-value),
     all_res,
     by = c("variable1" = "variable")
   ) %>%
-    dplyr::mutate(
+    mutate(
       outcome = name,
       series = .strategy_names,
       group = variable,
       disc = T
     ) %>%
-    dplyr::select(outcome, series, group, disc, value)
+    select(outcome, series, group, disc, value)
   rbind(disc, undisc)
 }
 hero_extract_nmb <- function(hsumm_res, esumm_res, hsumms) {
   
-  unique_hsumms <- dplyr::distinct(hsumms, name, .keep_all = T) %>%
-    dplyr::select(name, wtp)
+  unique_hsumms <- distinct(hsumms, name, .keep_all = T) %>%
+    select(name, wtp)
   
-  nmb_hsumm_res <- dplyr::filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
-    dplyr::left_join(unique_hsumms, by = c("outcome" = "name")) %>%
-    dplyr::mutate(nmb = value * as.numeric(wtp), type = "health") %>%
-    dplyr::mutate(value = nmb) %>%
-    dplyr::select(outcome, series, group, disc, type, value)
+  nmb_hsumm_res <- filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    left_join(unique_hsumms, by = c("outcome" = "name")) %>%
+    mutate(nmb = value * as.numeric(wtp), type = "health") %>%
+    mutate(value = nmb) %>%
+    select(outcome, series, group, disc, type, value)
   
-  nmb_esumm_res <- dplyr::filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
-    dplyr::mutate(value = -value, type = "economic") %>%
-    dplyr::select(outcome, series, group, disc, type, value)
+  nmb_esumm_res <- filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    mutate(value = -value, type = "economic") %>%
+    select(outcome, series, group, disc, type, value)
   
   rbind(nmb_hsumm_res, nmb_esumm_res)
 }
@@ -486,15 +486,16 @@ hero_extract_ce <- function(res, hsumms, esumms) {
       temp_res <- res
       class(temp_res) <- "list"
       ce <- list(
-        .effect = lazyeval::as.lazy(x$hsumm,  res$ce$.effect$env),
-        .cost = lazyeval::as.lazy(x$esumm,  res$ce$.cost$env)
+        .effect = as.lazy(x$hsumm,  res$ce$.effect$env),
+        .cost = as.lazy(x$esumm,  res$ce$.cost$env)
       )
-      temp_res$run_model <- dplyr::mutate_(temp_res$run_model, .dots = ce) %>%
-        dplyr::arrange_(~ .cost, ~ desc(.effect))
+      temp_res$run_model <- temp_res$run_model %>%
+        mutate(!!!lazy_eval(as.lazy_dots(ce), data = .)) %>%
+        arrange(.cost, desc(.effect))
       ordering <- order(temp_res$run_model$.cost, temp_res$run_model$.effect)
       class(temp_res) <- c("run_model", "data.frame")
       summary(temp_res, strategy_order = ordering)$res_comp %>%
-        dplyr::transmute(
+        transmute(
           health_outcome = x$hsumm,
           econ_outcome = x$esumm,
           series = .strategy_names,
@@ -516,7 +517,7 @@ hero_extract_trace <- function(res) {
   
   time <- rbind(
     data.frame(model_day=0,model_week=0,model_month=0,model_year=0),
-    dplyr::distinct(
+    distinct(
       params,
       model_day,
       model_week,
@@ -530,7 +531,7 @@ hero_extract_trace <- function(res) {
       x$counts_uncorrected
     }
   ) %>%
-    dplyr::rename(
+    rename(
       series = .id
     )
   cbind(time, trace)
@@ -539,15 +540,15 @@ hero_extract_trace <- function(res) {
 hero_extract_dsa_summ <- function(res, bc_res, summ) {
   
   bc_res_summs <- bc_res %>%
-    dplyr::group_by(outcome,series, disc) %>%
-    dplyr::summarise(value = sum(value)) %>%
-    dplyr::ungroup()
+    group_by(outcome,series, disc) %>%
+    summarise(value = sum(value)) %>%
+    ungroup()
     
   bc_res_all <- plyr::rbind.fill(
-    bc_res %>% dplyr::mutate(outcome=group),
+    bc_res %>% mutate(outcome=group),
     bc_res_summs
   ) %>%
-  dplyr::transmute(
+  transmute(
     outcome,
     series,
     disc,
@@ -563,16 +564,16 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
   
   all_res <- value_res %>%
     reshape2::melt(id.vars = c(".strategy_names", ".par_names", ".type", ".par_value", ".par_value_eval")) %>%
-    dplyr::mutate(variable = as.character(variable))
+    mutate(variable = as.character(variable))
   
   summ_unique <- tibble::tibble(outcome = unique(c(summ$value, summ$name)))
   
-  undisc <- dplyr::inner_join(
-    dplyr::rename(summ_unique,variable = outcome),
+  undisc <- inner_join(
+    rename(summ_unique,variable = outcome),
     all_res,
     by = "variable"
   ) %>%
-    dplyr::mutate(
+    mutate(
       param = .par_names,
       type = .type,
       param_value = .par_value,
@@ -580,19 +581,19 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
       series = .strategy_names,
       disc = F
     ) %>%
-    dplyr::select(param, type, param_value, outcome, series, disc, value)
+    select(param, type, param_value, outcome, series, disc, value)
   
-  disc <- dplyr::inner_join(
-    dplyr::mutate(
+  disc <- inner_join(
+    mutate(
       summ_unique,
       variable1 = paste0(".disc_", outcome),
       variable = outcome
     ) %>%
-      dplyr::select(-outcome),
+      select(-outcome),
     all_res,
     by = c("variable1" = "variable")
   ) %>%
-    dplyr::mutate(
+    mutate(
       param = .par_names,
       type = .type,
       param_value = .par_value,
@@ -601,10 +602,10 @@ hero_extract_dsa_summ <- function(res, bc_res, summ) {
       group = variable,
       disc = T
     ) %>%
-    dplyr::select(param, type, param_value, outcome, series, disc, value)
+    select(param, type, param_value, outcome, series, disc, value)
   rbind(disc, undisc) %>%
     reshape2::dcast(param+outcome+series+disc~type, value.var = "value") %>%
-    dplyr::left_join(bc_res_all, by = c("outcome", "series", "disc"))
+    left_join(bc_res_all, by = c("outcome", "series", "disc"))
 }
 hero_extract_dsa_ce <- function(res, hsumms, esumms) {
   
@@ -623,12 +624,12 @@ hero_extract_dsa_ce <- function(res, hsumms, esumms) {
       temp_res <- value_res
       temp_res$.cost <- value_res[[x$esumm]]
       temp_res$.effect <- value_res[[x$hsumm]]
-      thresh <- hsumms %>% dplyr::filter(name == substring(x$hsumm, 7)) %>% .$wtp %>% .[1]
+      thresh <- hsumms %>% filter(name == substring(x$hsumm, 7)) %>% .$wtp %>% .[1]
       plyr::ddply(temp_res, c(".par_names", ".type"), function(x) {
         compute_icer(x, threshold = thresh)
       })
     }) %>%
-    dplyr::transmute(
+    transmute(
       param = .par_names,
       type = .type,
       param_value = .par_value,
@@ -647,14 +648,14 @@ hero_extract_dsa_ce <- function(res, hsumms, esumms) {
 }
 hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
   
-  distinct_hsumms <- dplyr::distinct(hsumms, name, wtp)
-  distinct_esumms <- dplyr::distinct(esumms, name)
+  distinct_hsumms <- distinct(hsumms, name, wtp)
+  distinct_esumms <- distinct(esumms, name)
   
   # Get NMBs for each DSA scenario
   h_nmb <- hsumm_res %>%
-    dplyr::filter(disc) %>%
-    dplyr::inner_join(distinct_hsumms, by = c("outcome" = "name")) %>%
-    dplyr::transmute(
+    filter(disc) %>%
+    inner_join(distinct_hsumms, by = c("outcome" = "name")) %>%
+    transmute(
       param,
       outcome,
       series,
@@ -664,9 +665,9 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
     )
   
   e_nmb <- esumm_res %>%
-    dplyr::filter(disc) %>%
-    dplyr::inner_join(distinct_esumms, by = c("outcome" = "name")) %>%
-    dplyr::transmute(
+    filter(disc) %>%
+    inner_join(distinct_esumms, by = c("outcome" = "name")) %>%
+    transmute(
       param,
       outcome,
       series,
@@ -682,12 +683,12 @@ hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
   ) %>%
     plyr::ddply(c("health_outcome", "econ_outcome"), function(x) {
       rbind(
-        h_nmb %>% dplyr::filter(outcome == x$health_outcome),
-        e_nmb %>% dplyr::filter(outcome == x$econ_outcome)
+        h_nmb %>% filter(outcome == x$health_outcome),
+        e_nmb %>% filter(outcome == x$econ_outcome)
       )
     }) %>%
-    dplyr::group_by(param, series, health_outcome, econ_outcome) %>%
-    dplyr::summarise(low = sum(low), high = sum(high), base = sum(base))
+    group_by(param, series, health_outcome, econ_outcome) %>%
+    summarise(low = sum(low), high = sum(high), base = sum(base))
   
 }
 
@@ -696,42 +697,42 @@ hero_extract_psa_summ <- function(res, summ) {
   
   all_res <- rbind(res) %>%
     reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
-    dplyr::mutate(variable = as.character(variable))
+    mutate(variable = as.character(variable))
   
-  summ_unique <- dplyr::distinct(summ, name, value)
+  summ_unique <- distinct(summ, name, value)
   
-  undisc <- dplyr::inner_join(
-    dplyr::rename(summ_unique,variable = value),
+  undisc <- inner_join(
+    rename(summ_unique,variable = value),
     all_res,
     by = "variable"
   ) %>%
-    dplyr::mutate(
+    mutate(
       sim = .index,
       outcome = name,
       series = .strategy_names,
       group = variable,
       disc = F
     ) %>%
-    dplyr::select(outcome, series, sim, group, disc, value)
+    select(outcome, series, sim, group, disc, value)
   
-  disc <- dplyr::inner_join(
-    dplyr::mutate(
+  disc <- inner_join(
+    mutate(
       summ_unique,
       variable1 = paste0(".disc_", value),
       variable = value
     ) %>%
-      dplyr::select(-value),
+      select(-value),
     all_res,
     by = c("variable1" = "variable")
   ) %>%
-    dplyr::mutate(
+    mutate(
       sim = .index,
       outcome = name,
       series = .strategy_names,
       group = variable,
       disc = T
     ) %>%
-    dplyr::select(outcome, series, sim, group, disc, value)
+    select(outcome, series, sim, group, disc, value)
   rbind(disc, undisc)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
@@ -760,7 +761,7 @@ hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   ) %>%
     do_ceacs() %>%
     reshape2::dcast(hsumm+esumm+.ceac~.strategy_names, value.var = ".p") %>%
-    dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
+    rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac)
 }
 hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
@@ -775,12 +776,12 @@ hero_extract_psa_evpi <- function(res, hsumms, esumms, step, max) {
       res$psa$.cost <- res$psa[[x$esumm]]
       compute_evpi(res, seq(from = 0, to = max, by = step))
     }) %>%
-    dplyr::rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac, value = .evpi)
+    rename(health_outcome = hsumm, econ_outcome = esumm, wtp = .ceac, value = .evpi)
 }
 hero_extract_psa_scatter <- function(res, hsumms, esumms) {
-  hsumms_df <- dplyr::distinct(hsumms, name, .keep_all = T) %>%
-    dplyr::select(name, wtp) %>%
-    dplyr::mutate(name = paste0(".disc_", name))
+  hsumms_df <- distinct(hsumms, name, .keep_all = T) %>%
+    select(name, wtp) %>%
+    mutate(name = paste0(".disc_", name))
   unique_hsumms <- hsumms_df$name
   unique_esumms <- paste0(".disc_", unique(esumms$name))
   abs_res <- expand.grid(
@@ -788,7 +789,7 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
     esumm = unique_esumms,
     stringsAsFactors = F
   ) %>%
-    dplyr::left_join(hsumms_df, by = c("hsumm" = "name")) %>%
+    left_join(hsumms_df, by = c("hsumm" = "name")) %>%
     plyr::ddply(c("hsumm","esumm"), function(x) {
       the_wtp <- x$wtp
       data.frame(
@@ -800,7 +801,7 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
         stringsAsFactors = F
       )
     }) %>%
-    dplyr::rename(
+    rename(
       health_outcome = hsumm,
       econ_outcome = esumm
     )
@@ -863,15 +864,15 @@ compile_unit_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        dplyr::mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
+        mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+state+markov_cycle~variable, value.var = "value")
     } else {
       trans_df <- NULL
     }
     out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
-      dplyr::arrange(strategy, state, markov_cycle) %>%
-      dplyr::rename(cycle = markov_cycle)
+      arrange(strategy, state, markov_cycle) %>%
+      rename(cycle = markov_cycle)
     
     out_df[ ,c("strategy", "state", "cycle", value_names), drop = F]
   } else {
@@ -918,15 +919,15 @@ compile_unit_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        dplyr::mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
+        mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+group+state+markov_cycle~variable, value.var = "value")
     } else {
       trans_df <- NULL
     }
     out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
-      dplyr::arrange(strategy, group, state, markov_cycle) %>%
-      dplyr::rename(cycle = markov_cycle)
+      arrange(strategy, group, state, markov_cycle) %>%
+      rename(cycle = markov_cycle)
     
       out_df[ ,c("strategy", "group", "state", "cycle", value_names), drop = F]
   }
@@ -956,9 +957,9 @@ compile_values <- function(x) {
       the_df
     })
     
-    ret <- dplyr::bind_rows(value_list) %>%
-      dplyr::arrange(strategy, markov_cycle) %>%
-      dplyr::rename(cycle = markov_cycle)
+    ret <- bind_rows(value_list) %>%
+      arrange(strategy, markov_cycle) %>%
+      rename(cycle = markov_cycle)
     
     ret[ ,c("strategy", "cycle", value_names), drop = F]
   } else {
@@ -993,9 +994,9 @@ compile_values <- function(x) {
     ret <- value_list %>%
       unlist(recursive=F) %>%
       unname() %>%
-      dplyr::bind_rows() %>%
-      dplyr::arrange(strategy, group, markov_cycle) %>%
-      dplyr::rename(cycle = markov_cycle)
+      bind_rows() %>%
+      arrange(strategy, group, markov_cycle) %>%
+      rename(cycle = markov_cycle)
     
     ret[ ,c("strategy", "group", "cycle", value_names), drop = F]
   }
@@ -1013,7 +1014,7 @@ compile_transitions <- function(x) {
           os = y$transition$os_surv
         )
       }, .id = "strategy") %>%
-        dplyr::select_(.dots = c("strategy", "cycle", "pfs", "os")) %>%
+        select(!!!syms(c("strategy", "cycle", "pfs", "os"))) %>%
         as.tbl()
     } else {
       if("eval_part_surv_custom" %in% the_class) {
@@ -1025,12 +1026,12 @@ compile_transitions <- function(x) {
         plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
           do.call(rbind, y$transition) %>%
             as.data.frame(stringsAsFactors=F) %>%
-            dplyr::mutate(
+            mutate(
               from = rep(state_names, n_cycles),
               cycle = rep(seq_len(n_cycles), each = n_states)
             )
         }, .id = "strategy") %>%
-          dplyr::select_(.dots = c("strategy", "cycle", "from", state_names)) %>%
+          select(!!!syms(c("strategy", "cycle", "from", state_names))) %>%
           as.tbl()
       }
     }
@@ -1053,7 +1054,7 @@ compile_transitions <- function(x) {
           )
         }, .id = "group")
       }, .id = "strategy") %>%
-        dplyr::select_(.dots = c("strategy", "group", "cycle", "pfs", "os")) %>%
+        select(!!!syms(c("strategy", "group", "cycle", "pfs", "os"))) %>%
         as.tbl()
       
     } else {
@@ -1070,13 +1071,13 @@ compile_transitions <- function(x) {
           plyr::ldply(group_list, function(y) {
             do.call(rbind, y$transition) %>%
               as.data.frame(stringsAsFactors=F) %>%
-              dplyr::mutate(
+              mutate(
                 from = rep(state_names, n_cycles),
                 cycle = rep(seq_len(n_cycles), each = n_states)
               )
           }, .id = "group")
         }, .id = "strategy") %>%
-          dplyr::select_(.dots = c("strategy", "group", "cycle", "from", state_names)) %>%
+          select(!!!syms(c("strategy", "group", "cycle", "from", state_names))) %>%
           as.tbl()
       }
     }
@@ -1173,7 +1174,8 @@ build_hero_model <- function(...) {
     state_time_limit = limits,
     source = dots$scripts,
     aux_params = surv,
-    psa = dots$psa
+    psa = dots$psa,
+    scen = dots$scenario
   )
 }
 
@@ -1236,9 +1238,9 @@ run_hero_vbp <- function(...) {
     main_res <- heemod_res$model_runs
     
     # Run VBP
-    vbp_low <-  lazyeval::as.lazy_dots(setNames(list(0), dots$vbp$par_name), environment())
-    vbp_med <-  lazyeval::as.lazy_dots(setNames(list(dots$vbp$wtp/2), dots$vbp$par_name), environment())
-    vbp_high <-  lazyeval::as.lazy_dots(setNames(list(dots$vbp$wtp), dots$vbp$par_name), environment())
+    vbp_low <-  as.lazy_dots(setNames(list(0), dots$vbp$par_name), environment())
+    vbp_med <-  as.lazy_dots(setNames(list(dots$vbp$wtp/2), dots$vbp$par_name), environment())
+    vbp_high <-  as.lazy_dots(setNames(list(dots$vbp$wtp), dots$vbp$par_name), environment())
     vbp_settings <- define_vbp_(dots$vbp$par_name, vbp_low, vbp_med, vbp_high)
     vbp_res <- run_vbp(
       model = main_res,
@@ -1375,36 +1377,36 @@ run_hero_dsa <- function(...) {
   res <- run_hero_dsa_(...)
   # Compress the results
   res$nmb <- res$nmb  %>%
-    dplyr::group_by(health_outcome, econ_outcome, series) %>%
-    dplyr::group_split() %>%
+    group_by(health_outcome, econ_outcome, series) %>%
+    group_split() %>%
     purrr::map(function(x) {
       list(
         health_outcome = x$health_outcome[1],
         econ_outcome = x$econ_outcome[1],
         series = x$series[1],
-        data = dplyr::select(x, -health_outcome, -econ_outcome, -series)
+        data = select(x, -health_outcome, -econ_outcome, -series)
       )
     }) 
   res$cost <- res$cost %>%
-    dplyr::group_by(outcome, disc, series) %>%
-    dplyr::group_split() %>%
+    group_by(outcome, disc, series) %>%
+    group_split() %>%
     purrr::map(function(x) {
       list(
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = dplyr::select(x, -outcome, -disc, -series)
+        data = select(x, -outcome, -disc, -series)
       )
     }) 
   res$outcomes <- res$outcomes %>%
-    dplyr::group_by(outcome, disc, series) %>%
-    dplyr::group_split() %>%
+    group_by(outcome, disc, series) %>%
+    group_split() %>%
     purrr::map(function(x) {
       list(
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = dplyr::select(x, -outcome, -disc, -series)
+        data = select(x, -outcome, -disc, -series)
       )
     }) 
   
@@ -1451,10 +1453,10 @@ run_hero_psa <- function(...) {
     psa_res_df$weight <- as.numeric(psa_res_df$weight)
     psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
     psa_res_df <- psa_res_df %>%
-      dplyr::select(-name) %>%
-      dplyr::group_by(.strategy_names, .index) %>%
-      dplyr::summarize_all(sum) %>%
-      dplyr::ungroup()
+      select(-name) %>%
+      group_by(.strategy_names, .index) %>%
+      summarize_all(sum) %>%
+      ungroup()
   }
   
   thresh_max <- dots$psa$thresh_max
@@ -1471,8 +1473,8 @@ run_hero_psa <- function(...) {
     scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     outcomes_summary <- outcomes %>%
-      dplyr::group_by(series, group) %>%
-      dplyr::summarize(
+      group_by(series, group) %>%
+      summarize(
         mean = mean(value),
         sd = sd(value),
         min = min(value),
@@ -1481,13 +1483,13 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
-      dplyr::ungroup() %>%
+      ungroup() %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
       reshape2::dcast(group+series~statistic, value.var = "value")
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
     costs_summary <- costs %>%
-      dplyr::group_by(series, group) %>%
-      dplyr::summarize(
+      group_by(series, group) %>%
+      summarize(
         mean = mean(value),
         sd = sd(value),
         min = min(value),
@@ -1496,7 +1498,7 @@ run_hero_psa <- function(...) {
         upperq = quantile(value, 0.75),
         max = max(value)
       ) %>%
-      dplyr::ungroup() %>%
+      ungroup() %>%
       reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
       reshape2::dcast(group+series~statistic, value.var = "value")
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
@@ -1505,15 +1507,15 @@ run_hero_psa <- function(...) {
     evpi <- hero_extract_psa_evpi(temp_model, dots$hsumms, dots$esumms, thresh_step, dots$psa$thresh_max)
     
     scatter_compressed <- scatter %>%
-      dplyr::group_by(health_outcome, econ_outcome, series) %>%
-      dplyr::group_split() %>%
+      group_by(health_outcome, econ_outcome, series) %>%
+      group_split() %>%
       purrr::map(function(x) {
         list(
           health_outcome = substring(x$health_outcome[1], 7),
           econ_outcome = substring(x$econ_outcome[1], 7),
           series = x$series[1],
-          data = dplyr::mutate(
-            dplyr::select(x, -health_outcome, -econ_outcome, -series)
+          data = mutate(
+            select(x, -health_outcome, -econ_outcome, -series)
           )
         )
       })
@@ -1555,16 +1557,16 @@ export_hero_xlsx <- function(...) {
   health_res <- hero_extract_summ(main_res, dots$hsumms)
   econ_res <- hero_extract_summ(main_res, dots$esumms)
   nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms) %>%
-    dplyr::rename(
+    rename(
       "Outcome" = outcome,
       "Strategy" = series,
       "Component" = group,
       "Type" = type,
       "Value" = value
     ) %>%
-    dplyr::select(-disc)
+    select(-disc)
   health_res <- health_res %>%
-    dplyr::rename(
+    rename(
       "Outcome" = outcome,
       "Strategy" = series,
       "Component" = group,
@@ -1572,7 +1574,7 @@ export_hero_xlsx <- function(...) {
       "Value" = value
     )
   econ_res <- econ_res %>%
-    dplyr::rename(
+    rename(
       "Outcome" = outcome,
       "Strategy" = series,
       "Component" = group,
@@ -1580,11 +1582,11 @@ export_hero_xlsx <- function(...) {
       "Value" = value
     )
   ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms) %>%
-    dplyr::mutate(
+    mutate(
       health_outcome = substring(health_outcome, 7),
       econ_outcome = substring(econ_outcome, 7)
     ) %>%
-    dplyr::rename(
+    rename(
       "Health Outcome" = health_outcome,
       "Economic Outcome" = econ_outcome,
       "Strategy" = series,
@@ -1595,9 +1597,9 @@ export_hero_xlsx <- function(...) {
       "Reference" = dref,
       "ICER" = icer
     ) %>%
-    dplyr::select(-hsumm, esumm)
+    select(-hsumm, esumm)
   trace_res <- hero_extract_trace(main_res) %>%
-    dplyr::rename(
+    rename(
       "Day" = model_day,
       "Week" = model_week,
       "Month" = model_month,

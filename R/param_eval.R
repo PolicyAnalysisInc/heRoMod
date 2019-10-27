@@ -97,7 +97,7 @@ eval_init <- function(x, parameters, expand) {
   
   if(expanding) {
     init_df <- parameters %>%
-      dplyr::filter(model_time == 1) %>%
+      filter(model_time == 1) %>%
       safe_eval(.dots = x, .vartype = "init") %>%
       .[c("state_time", to_keep)] %>%
       reshape2::melt(
@@ -105,15 +105,15 @@ eval_init <- function(x, parameters, expand) {
         variable.name = ".state",
         value.name = ".value"
       ) %>%
-      dplyr::mutate(.state = as.character(.state)) %>%
-      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
-      dplyr::filter(state_time <= .limit) %>%
-      dplyr::mutate(
+      mutate(.state = as.character(.state)) %>%
+      left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      filter(state_time <= .limit) %>%
+      mutate(
         .value = ifelse(state_time > 1, 0, .value)
       )
   } else {
     init_df <- parameters %>%
-      dplyr::filter(model_time == 1) %>%
+      filter(model_time == 1) %>%
       safe_eval(.dots = x, .vartype = "init") %>%
       .[c("state_time", to_keep)] %>%
       reshape2::melt(
@@ -121,7 +121,7 @@ eval_init <- function(x, parameters, expand) {
         variable.name = ".state",
         value.name = ".value"
       ) %>%
-      dplyr::mutate(
+      mutate(
         .full_state = as.character(.state),
         .state = as.character(.state)
       )
@@ -197,10 +197,8 @@ eval_starting_values <- function(x, parameters) {
   to_keep <- names(x)
   
   start_df <- parameters %>%
-    dplyr::filter(state_time == 1) %>%
-    dplyr::mutate_(
-      .dots = x
-    ) %>%
+    filter(state_time == 1) %>%
+    mutate(!!!lazy_eval(x, data = .)) %>%
     .[to_keep]
   
   start_df[nrow(start_df), ] <- 0
@@ -219,28 +217,28 @@ eval_inflow <- function(x, parameters, expand) {
   to_keep <- names(x)
   if(expanding) {
     inflow_df <- parameters %>%
-      dplyr::mutate_(.dots = x) %>%
+      mutate(!!!lazy_eval(x, data = .)) %>%
       .[c("model_time", "state_time", to_keep)] %>%
       reshape2::melt(
         id.vars = c("model_time", "state_time"),
         variable.name = ".state",
         value.name = ".value"
       ) %>%
-      dplyr::mutate(.state = as.character(.state)) %>%
-      dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
-      dplyr::filter(state_time <= .limit) %>%
-      dplyr::mutate(.value = ifelse(state_time > 1, 0, .value)) %>%
-      dplyr::ungroup()
+      mutate(.state = as.character(.state)) %>%
+      left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+      filter(state_time <= .limit) %>%
+      mutate(.value = ifelse(state_time > 1, 0, .value)) %>%
+      ungroup()
   } else {
     inflow_df <- parameters %>%
-      dplyr::mutate_(.dots = x) %>%
+      mutate(!!!lazy_eval(x, data = .)) %>%
       .[c("model_time", "state_time", to_keep)] %>%
       reshape2::melt(
         id.vars = c("model_time", "state_time"),
         variable.name = ".state",
         value.name = ".value"
       ) %>%
-      dplyr::mutate(
+      mutate(
         .full_state = as.character(.state),
         .state = as.character(.state)
       )
@@ -260,13 +258,59 @@ eval_inflow <- function(x, parameters, expand) {
       fill = 0
     )
   
-  tibble::as.tibble(inflow_mat)
+  tibble::as_tibble(inflow_mat)
   
 }
 
 
 safe_eval <- function(x, .dots, .vartype = "parameter") {
-  res <- try(dplyr::mutate_(x, .dots = .dots), silent = TRUE)
+  
+  if (.vartype == "parameter") {
+    expresion_text = "parameter"
+  } else if (.vartype == "init") {
+    expresion_text = "initial probability for state"
+  } else if (.vartype == "value") {
+    expresion_text = "value"
+  } else {
+    expression_text = .vartype
+  }
+  n_par <- length(.dots)
+  par_names <- names(.dots)
+  res <- x
+  for(i in seq_len(n_par)) {
+    par_res <- try(lazy_eval(.dots[[i]], data = res), silent = T)
+    par_name <- par_names[i]
+    if (inherits(par_res, "try-error")) {
+      
+      # Pull of the lazyeval part of error call
+      if (startsWith(par_res, "Error in eval(x$expr, data, x$env) : ")) {
+        par_res <- sub(
+          "Error in eval(x$expr, data, x$env) : ",
+          "",
+          par_res,
+          fixed = T
+        )
+      }
+      
+      # Check if binding not found
+      if (startsWith(par_res, "Binding not found: ")) {
+        par_res <- paste0(
+          sub(
+            "Binding not found: ",
+            "reference to undefined variable '",
+            substr(par_res, 0, stop = nchar(par_res) - 2),
+            fixed = T
+          ),
+          "'."
+        )
+      }
+      
+      stop(sprintf(
+        "Error in %s '%s', %s", expresion_text, par_name, par_res),
+        call. = FALSE)
+    }
+    res[[par_name]] <- par_res
+  }
   
   if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
     
@@ -285,16 +329,6 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     }
   }
   
-  if (.vartype == "parameter") {
-    expresion_text = "parameter"
-  } else if (.vartype == "init") {
-    expresion_text = "initial probability for state"
-  } else if (.vartype == "value") {
-    expresion_text = "value"
-  } else {
-    expression_text = .vartype
-  }
-  
   # Check for missing values
   if (any(is.na(res))) {
     index <- which(apply(res, 2, function(x) any(is.na(x)))==T)[1]
@@ -303,56 +337,6 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     stop(sprintf(
         "Error in %s '%s', %s", expresion_text, param_name, text_error),
         call. = FALSE)
-  }
-  
-  ## if we run into an error, figure out which parameter caused it -
-  ##    this is efficient enough unless we have a parameter that's
-  ##    very expensive to calculate.
-  if (inherits(res, "try-error")) {
-    long_res <- lapply(
-      seq_along(.dots),
-      function(i) {
-        try(dplyr::mutate_(
-          x,
-          .dots = .dots[seq_len(i)])
-          , silent = T)
-      }
-    )
-    which_errors <- sapply(
-      long_res,
-      function(this_res) {
-        inherits(this_res, "try-error")
-      })
-    param_num <- min(which(which_errors))
-    param_name <- names(.dots)[param_num]
-    text_error <- long_res[[param_num]]
-    
-    # Pull of the mutate part of error call
-    if (startsWith(text_error, "Error in mutate_impl(.data, dots) : ")) {
-      text_error <- sub(
-        "Error in mutate_impl(.data, dots) : ",
-        "",
-        text_error,
-        fixed = T
-      )
-    }
-    
-    # Check if binding not found
-    if (startsWith(text_error, "Binding not found: ")) {
-      text_error <- paste0(
-        sub(
-          "Binding not found: ",
-          "reference to undefined variable '",
-          substr(text_error, 0, stop = nchar(text_error) - 2),
-          fixed = T
-        ),
-        "'."
-      )
-    }
-    
-    stop(sprintf(
-      "Error in %s '%s', %s", expresion_text, param_name, text_error),
-      call. = FALSE)
   }
   
   res

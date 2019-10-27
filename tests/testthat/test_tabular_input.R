@@ -781,7 +781,7 @@ test_that(
     
     expect_identical(
       names(result),
-      c("models", "model_runs", "dsa",      
+      c("models", "model_runs", "dsa", "scen",      
         "psa","demographics")
     )
     
@@ -821,7 +821,7 @@ test_that(
     
     expect_identical(
       names(result),
-      c("models", "model_runs", "dsa",      
+      c("models", "model_runs", "dsa", "scen",    
         "psa","demographics")
     )
     

@@ -58,23 +58,23 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
       strategy = n,
       newdata = vbp$vbp
     ) %>%
-      dplyr::mutate(
+      mutate(
         .strategy_names = n,
         .par_names = vbp$variable,
-        .par_value = purrr::map_dbl(.[[vbp$variable]], ~lazyeval::lazy_eval(.))
+        .par_value = purrr::map_dbl(.[[vbp$variable]], ~lazy_eval(.))
       ) %>%
       .[ ,colnames(.) != vbp$variable]
   })
     
 res_vbp <- res %>%
-  dplyr::rowwise() %>%
-  dplyr::do_(~ get_total_state_values(.$.mod)) %>%
-  dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(.par_value_eval = unlist(e_newdata)) %>%
-  dplyr::mutate_(.dots = get_ce(model)) %>%
-  dplyr::ungroup() %>%
-  dplyr::select(.strategy_names, .par_value, .cost, .effect)
+  rowwise() %>%
+  do(get_total_state_values(.$.mod)) %>%
+  bind_cols(res %>% select(- .mod)) %>%
+  ungroup() %>%
+  mutate(.par_value_eval = unlist(e_newdata)) %>%
+  mutate(!!!lazy_eval(get_ce(model), data = .)) %>%
+  ungroup() %>%
+  select(.strategy_names, .par_value, .cost, .effect)
 
   vbp_res_obj <- calc_vbp(res_vbp, lambda, strategy_vbp)
   
@@ -114,8 +114,8 @@ res_vbp <- res %>%
 
 calc_vbp <- function(df, lambdas, vbp_strat) {
   linear_cost <- df %>%
-    dplyr::group_by(.strategy_names) %>%
-    dplyr::group_split() %>%
+    group_by(.strategy_names) %>%
+    group_split() %>%
     purrr::map(function(x) {
       linear <- c_linear(x, strategy = x$.strategy_names[1])
       tibble(
@@ -126,22 +126,22 @@ calc_vbp <- function(df, lambdas, vbp_strat) {
         lin_approx = linear$lin_approx
       )
     }) %>%
-    dplyr::bind_rows() %>%
+    bind_rows() %>%
     ungroup()
   
-  ref <- dplyr::filter(linear_cost, .strategy_names == vbp_strat)
-  comps <- dplyr::filter(linear_cost, .strategy_names != vbp_strat)
+  ref <- filter(linear_cost, .strategy_names == vbp_strat)
+  comps <- filter(linear_cost, .strategy_names != vbp_strat)
   
   lin_eqs <- comps %>%
-    dplyr::mutate(
+    mutate(
       strat = .strategy_names,
       a = (ref$.effect - .effect) / (ref$beta1 - beta1),
       b = -(ref$beta0 - beta0) / (ref$beta1 - beta1)
     ) %>%
-    dplyr::select(strat, a, b)
+    select(strat, a, b)
   df.p_vs_wtp = comps %>%
-    dplyr::rowwise() %>%
-    dplyr::group_split() %>%
+    rowwise() %>%
+    group_split() %>%
     purrr::map(function(comp) {
       tibble(
         .strategy_names = comp$.strategy_names,
@@ -149,7 +149,7 @@ calc_vbp <- function(df, lambdas, vbp_strat) {
         value = p_comp(ref$.effect, comp$.effect, ref$beta0, comp$beta0, ref$beta1, comp$beta1, lambdas)
       )
     }) %>%
-    dplyr::bind_rows() %>%
+    bind_rows() %>%
     reshape2::dcast(WTP~.strategy_names, value = 'value')
   
   lin_approx <- as.list(linear_cost$lin_approx)
@@ -166,8 +166,8 @@ calc_vbp <- function(df, lambdas, vbp_strat) {
 
 sort_by_strat <- function(df, strategy_names, colname) {
   df$.sort <- factor(df[[colname]], levels = strategy_names)
-  sorted <- dplyr::arrange(df, .sort) %>%
-    dplyr::select(-.sort)
+  sorted <- arrange(df, .sort) %>%
+    select(-.sort)
   
   sorted
 }
@@ -208,16 +208,16 @@ c_linear <- function(res_vbp, strategy){
     "Running linearization of cost on strategy '%s'...", strategy
   ))
   C_linear <- res_vbp %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.par_value,
+    filter(.strategy_names == strategy) %>%
+    select(.par_value,
                   .cost) %>%
-    dplyr::mutate(price = as.numeric(.par_value)) %>%
-    dplyr::summarise(beta1 = diff(.cost[1:2])/diff(price[1:2]), # New
+    mutate(price = as.numeric(.par_value)) %>%
+    summarise(beta1 = diff(.cost[1:2])/diff(price[1:2]), # New
                      beta0 = .cost[1]-beta1*price[1])
   ### Linearization test
   lin_test <- res_vbp %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.par_value,
+    filter(.strategy_names == strategy) %>%
+    select(.par_value,
                   .cost)
   p_vals <- as.numeric(lin_test$.par_value)
   c_test <- lin_test$.cost
@@ -261,8 +261,8 @@ c_linear <- function(res_vbp, strategy){
 #' 
 ce_strategy <- function(model, strategy){
   CE_vbp <- get_model_results(model) %>% 
-    dplyr::filter(.strategy_names == strategy) %>%
-    dplyr::select(.strategy_names,
+    filter(.strategy_names == strategy) %>%
+    select(.strategy_names,
                   .cost,
                   .effect)
   return(list(
@@ -305,7 +305,7 @@ param_in_strategy <- function(mod,  strategy, parameter){
   # Obtain parameter list
   param_list <- mod$parameters
   # Obtian lazyeval of parameter of interest
-  param_list[[parameter]] <- lazyeval::lazy(.._my_param)
+  param_list[[parameter]] <- lazy(.._my_param)
   # Interpolate paramater list with lazyeval of parameter of interest
   i_params <- interpolate(param_list) # interpolate(params)
   

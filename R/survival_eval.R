@@ -72,7 +72,7 @@ extract_params <- function(obj, data = NULL) {
   # Use data from object if not given
   if (is.null(data)) {
     data <- obj$data$m %>%
-      dplyr::select(-1, - ncol(obj$data$m))
+      select(-1, - ncol(obj$data$m))
   } else {
     # Apply factor levels of original data
     for(i in colnames(data)) {
@@ -193,7 +193,7 @@ extract_stratum <- function(sf, index) {
     )
   )
   
-  return(do.call(data_frame, arg_list))
+  return(do.call(tibble, arg_list))
 }
 
 #' Extract Product-Limit Tables
@@ -392,7 +392,7 @@ eval_surv.survfit <- function(x, time,  ...) {
       value <- stats::stepfun(d$time[-1], d$surv)(time)
       # Use NA when time > max time
       value[selector] <- as.numeric(NA)
-      tibble::data_frame(
+      tibble(
         t = time, 
         value = value,
         n = d$n[1])
@@ -406,17 +406,17 @@ eval_surv.survfit <- function(x, time,  ...) {
     # If covariates are not provided, do weighted average for each time.
     agg_df <- surv_df %>%
       tibble::as_tibble() %>% 
-      dplyr::group_by_(~ t) %>%
-      dplyr::summarize_(value = ~ sum(value * n) / sum(n))
+      group_by(t) %>%
+      summarize(value = sum(value * n) / sum(n))
   } else {
     
     # If covariates are provided, join the predictions to them and then
     # do simple average for each time.
     
     agg_df <- clean_factors(dots$covar) %>% 
-      dplyr::left_join(surv_df, by = terms) %>%
-      dplyr::group_by_(~ t) %>%
-      dplyr::summarize_(value = ~ mean(value))
+      left_join(surv_df, by = terms) %>%
+      group_by(t) %>%
+      summarize(value = mean(value))
   }
   
   # Get the vector of predictions
@@ -448,12 +448,12 @@ eval_surv.flexsurvreg <- function(x, time,  ...) {
     # if covar is not provided, use the
     # original model.frame
     data_full <- x$data$m %>%
-      dplyr::select(-1, -ncol(x$data$m))
-    data <- dplyr::distinct(data_full)
+      select(-1, -ncol(x$data$m))
+    data <- distinct(data_full)
   } else {
     # Use covar if provided
     data_full <- dots$covar
-    data <- dplyr::distinct(dots$covar)
+    data <- distinct(dots$covar)
   }
   
   # If there is no data, make an empty df
@@ -467,7 +467,7 @@ eval_surv.flexsurvreg <- function(x, time,  ...) {
   
   # Repeat rows of parameter df to match number of time points
   param_df <- param_df %>%
-    dplyr::slice(rep(seq_len(n_obs), each = n_time))
+    slice(rep(seq_len(n_obs), each = n_time))
   
   # Assumble arguments to p<dist> function
   fncall <- list(rep(time_surv, n_obs), lower.tail = FALSE) %>%
@@ -476,16 +476,16 @@ eval_surv.flexsurvreg <- function(x, time,  ...) {
   
   # Calculate survival probabilities for each distinct level/time,
   surv_df <- data %>%
-    dplyr::slice(rep(seq_len(n_obs), each = n_time))
+    slice(rep(seq_len(n_obs), each = n_time))
   surv_df$t <- rep(time_surv, n_obs)
   surv_df$value <- do.call(x$dfns$p, fncall)
   
   # Join to the full data, then summarize over times.
   if(x$ncovs > 0) {
     surv_df <- surv_df %>%
-      dplyr::left_join(data_full, by = colnames(data)) %>%
-      dplyr::group_by_(~ t) %>%
-      dplyr::summarize_(value = ~ mean(value))
+      left_join(data_full, by = colnames(data)) %>%
+      group_by(t) %>%
+      summarize(value = mean(value))
   }
   
   

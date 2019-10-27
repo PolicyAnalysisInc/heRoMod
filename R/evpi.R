@@ -19,8 +19,8 @@
 
 compute_evpi <- function(x, wtp_thresholds) {
   x$psa %>% 
-    dplyr::mutate(.key = 1) %>% 
-    dplyr::left_join(
+    mutate(.key = 1) %>% 
+    left_join(
       tibble::tibble(
         .ceac = wtp_thresholds,
         .key = 1,
@@ -29,19 +29,19 @@ compute_evpi <- function(x, wtp_thresholds) {
       ),
       by = ".key"
     ) %>% 
-    dplyr::group_by_(~ .ceac, ~ .index) %>% 
-    dplyr::mutate_(
-      .nmb = ~ .effect * .ceac - .cost,
-      .top_strategy = ~ .nmb == max(.nmb),
-      .top_strategy = ~ .top_strategy & cumsum(.top_strategy) == 1,
-      .top_choice = ~ .strategy_names == .strategy_choice
+    group_by(.ceac, .index) %>% 
+    mutate(
+      .nmb = .effect * .ceac - .cost,
+      .top_strategy = .nmb == max(.nmb),
+      .top_strategy = .top_strategy & cumsum(.top_strategy) == 1,
+      .top_choice = .strategy_names == .strategy_choice
       # in case 2 nmb are identical, pick first
     ) %>% 
-    dplyr::summarise_(
-      .evpi = ~ .nmb[.top_strategy] - .nmb[.top_choice]
+    summarise(
+      .evpi = .nmb[.top_strategy] - .nmb[.top_choice]
     ) %>% 
-    dplyr::summarise_(
-      .evpi = ~ mean(.evpi)
+    summarise(
+      .evpi = mean(.evpi)
     )
 }
 
@@ -90,13 +90,13 @@ export_psa <- function(x) {
   list(
     par = x$psa[x$psa$.strategy_names == strats[1],x$resamp_par],
     c = x$psa %>%
-      dplyr::select_(~.strategy_names, ~.cost, ~.index) %>%
+      select(.strategy_names, .cost, .index) %>%
       reshape2::dcast(.index~.strategy_names, value.var = ".cost") %>%
-      dplyr::select_(~-.index),
+      select(-.index),
     e = x$psa %>%
-      dplyr::select_(~.strategy_names, ~.effect, ~.index) %>%
+      select(.strategy_names, .effect, .index) %>%
       reshape2::dcast(.index~.strategy_names, value.var = ".effect") %>%
-      dplyr::select_(~-.index)
+      select(-.index)
   )
 }
 

@@ -94,7 +94,7 @@ get_who_mr_memo <- function(age, sex = NULL, region = NULL, country = NULL,
     )
   }
   
-  ref_data <- dplyr::data_frame(
+  ref_data <- tibble(
     AGEGROUP =  trans_age_gho(age)
   )
   
@@ -106,7 +106,7 @@ get_who_mr_memo <- function(age, sex = NULL, region = NULL, country = NULL,
   }
 
   suppressMessages({
-    dplyr::left_join(
+    left_join(
       ref_data,
       mr_data
     )$Numeric
@@ -194,29 +194,27 @@ pool_data <- function(mr_data, sex, region, country, year) {
 
   suppressMessages({
     pop_weight <- pop_data %>% 
-      dplyr::select_(
-        .dots = c(cols, weight = "Numeric")
-      ) %>% 
-      dplyr::left_join(mr_data)
+      select(!!!syms(c(cols, weight = "Numeric"))) %>% 
+      left_join(mr_data)
     
     if (exists_col_country && length(unique(pop_weight$COUNTRY)) > 1){
-      pop_weight <- dplyr::filter_(pop_weight, ~ !is.na(COUNTRY))
+      pop_weight <- filter(pop_weight, !is.na(COUNTRY))
     }
     
     
     pop_group <- if ((is.null(country) || !exists_col_country) && is.null(sex)) {
-      dplyr::group_by_(pop_weight, "AGEGROUP")
+      group_by(pop_weight, AGEGROUP)
       
     } else if (is.null(sex)){
-      dplyr::group_by_(pop_weight, "AGEGROUP", "COUNTRY")
+      group_by(pop_weight, AGEGROUP, COUNTRY)
       
     } else if (is.null(country) | !exists_col_country){
-      dplyr::group_by_(pop_weight, "AGEGROUP", "SEX")
+      group_by(pop_weight, AGEGROUP, SEX)
     }
     
-    dplyr::summarise_(
+    summarise(
         pop_group,
-        Numeric = ~ sum(Numeric * weight) / sum(weight)
+        Numeric = sum(Numeric * weight) / sum(weight)
       )
   })
 }

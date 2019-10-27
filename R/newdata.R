@@ -60,9 +60,9 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   suppressMessages(
     pieces <- parallel::mclapply(pnewdata, function(newdata) {
       newdata %>% 
-        dplyr::rowwise() %>% 
-        dplyr::do_(
-          .mod = ~ eval_newdata(
+        rowwise() %>% 
+        do(tibble(
+          .mod = list(eval_newdata(
             .,
             strategy = uneval_strategy,
             old_parameters = old_parameters,
@@ -74,14 +74,14 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             strategy_name = strategy,
             expand_limit = expand_limit
           )
-        ) %>% 
-        dplyr::ungroup() %>% 
-        dplyr::bind_cols(
+        ))) %>% 
+        ungroup() %>% 
+        bind_cols(
           newdata
         )
     }, mc.cores = cores)
   )
-  res <- dplyr::bind_rows(pieces)
+  res <- bind_rows(pieces)
   rownames(res) <- NULL
   res
 }
