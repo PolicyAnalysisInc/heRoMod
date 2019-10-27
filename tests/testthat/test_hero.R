@@ -52,44 +52,36 @@ test_that(
     dsa_res <- readRDS(system.file("hero","example_simple_psm", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa, model)
 
-    print(
-      as_tibble(
-        dsa_res$outcomes[ ,c('low', 'bc', 'high')] - 
-          dsa_res_test$outcomes[ ,c('low', 'bc', 'high')]
-      )
-    )
-    expect_equal(
-      dsa_res$outcomes,
-      dsa_res_test$outcomes
-    )
-    
-    print(
-      as_tibble(
-        dsa_res$cost[ ,c('low', 'bc', 'high')]
-      )
-    )
-    
-    print(
-      as_tibble(
-        dsa_res_test$cost[ ,c('low', 'bc', 'high')]
-      )
-    )
-    
-    print(
-      as_tibble(
-        dsa_res$cost[ ,c('low', 'bc', 'high')] - 
-          dsa_res_test$cost[ ,c('low', 'bc', 'high')]
-      )
-    )
 
     expect_equal(
-      dsa_res$cost,
-      dsa_res_test$cost
+      plyr::ldply(dsa_res$outcomes, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome)),
+      plyr::ldply(dsa_res_test$outcomes, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome))
     )
     
+    
     expect_equal(
-      dsa_res$nmb,
-      dsa_res_test$nmb
+      plyr::ldply(dsa_res$cost, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome)),
+      plyr::ldply(dsa_res_test$cost, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome))
+    )
+    
+    
+    expect_equal(
+      plyr::ldply(
+        dsa_res$nmb, function(x) mutate(
+          x$data,
+          series = x$series,
+          health_outcome = x$health_outcome,
+          econ_outcome = x$econ_outcome
+        )
+      ),
+      plyr::ldply(
+        dsa_res_test$nmb, function(x) mutate(
+          x$data,
+          series = x$series,
+          health_outcome = x$health_outcome,
+          econ_outcome = x$econ_outcome
+        )
+      )
     )
     
     scen_res <- readRDS(system.file("hero","example_simple_psm", "scen_res.rds", package="heRomod"))
