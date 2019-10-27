@@ -52,9 +52,22 @@ test_that(
     dsa_res <- readRDS(system.file("hero","example_simple_psm", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa, model)
 
+    print(
+      as_tibble(
+        dsa_res$outcomes[ ,c('low', 'bc', 'high')] - 
+          dsa_res_test$outcomes[ ,c('low', 'bc', 'high')]
+      )
+    )
     expect_equal(
       dsa_res$outcomes,
       dsa_res_test$outcomes
+    )
+    
+    print(
+      as_tibble(
+        dsa_res$cost[ ,c('low', 'bc', 'high')] - 
+          dsa_res_test$cost[ ,c('low', 'bc', 'high')]
+      )
     )
 
     expect_equal(
