@@ -69,6 +69,8 @@ run_hero_scen_ <- function(...) {
   }
   ret
 }
+
+#' @export
 run_hero_scen <- function(...) {
   # Run the DSA
   res <- run_hero_scen_(...)
