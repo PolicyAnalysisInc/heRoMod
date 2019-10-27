@@ -159,9 +159,9 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     nrow_param = nrow(parameters)
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
-      rep(state_names, each = 3),
+      rep(state_names, each = length(state_names)),
       ' → ',
-      rep(state_names, 3)
+      rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
     renamer <- state_trans_names
@@ -211,9 +211,9 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     nrow_param = nrow(parameters)
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
-      rep(state_names, each = 3),
+      rep(state_names, each = length(state_names)),
       ' → ',
-      rep(state_names, 3)
+      rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
     renamer <- state_trans_names
