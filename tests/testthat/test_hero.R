@@ -65,6 +65,18 @@ test_that(
     
     print(
       as_tibble(
+        dsa_res$cost[ ,c('low', 'bc', 'high')]
+      )
+    )
+    
+    print(
+      as_tibble(
+        dsa_res_test$cost[ ,c('low', 'bc', 'high')]
+      )
+    )
+    
+    print(
+      as_tibble(
         dsa_res$cost[ ,c('low', 'bc', 'high')] - 
           dsa_res_test$cost[ ,c('low', 'bc', 'high')]
       )
