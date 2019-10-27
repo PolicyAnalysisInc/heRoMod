@@ -266,11 +266,11 @@ eval_inflow <- function(x, parameters, expand) {
 safe_eval <- function(x, .dots, .vartype = "parameter") {
   
   if (.vartype == "parameter") {
-    expresion_text = "parameter"
+    expression_text = "parameter"
   } else if (.vartype == "init") {
-    expresion_text = "initial probability for state"
+    expression_text = "initial probability for state"
   } else if (.vartype == "value") {
-    expresion_text = "value"
+    expression_text = "value"
   } else {
     expression_text = .vartype
   }
@@ -306,7 +306,7 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
       }
       
       stop(sprintf(
-        "Error in %s '%s', %s", expresion_text, par_name, par_res),
+        "Error in %s '%s', %s", expression_text, par_name, par_res),
         call. = FALSE)
     }
     res[[par_name]] <- par_res
@@ -335,7 +335,7 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     param_name <- colnames(res)[index]
     text_error <- 'Caclulation resulted in missing values.'
     stop(sprintf(
-        "Error in %s '%s', %s", expresion_text, param_name, text_error),
+        "Error in %s '%s', %s", expression_text, param_name, text_error),
         call. = FALSE)
   }
   

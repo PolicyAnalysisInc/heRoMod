@@ -257,7 +257,7 @@ parse_hero_summaries_st <- function(data, values, health, strategies, states, cl
 parse_hero_trans <- function(data, strategies, states) {
   if ("from" %in% colnames(data)) {
     # Markov
-    data %>%
+    trans_table_lf <- data %>%
       rowwise() %>%
       do({
         if(.$strategy == "All") {
@@ -278,14 +278,22 @@ parse_hero_trans <- function(data, strategies, states) {
           )
         }
       }) %>%
-      ungroup() %>%
-      reshape2::dcast(.model + from ~ to, value.var = "prob", fill = 0) %>%
+      ungroup()
+    
+    dupe_trans <- group_by(trans_table_lf, .model, from, to) %>%
+      summarise(n = n()) %>%
+      filter(n > 1)
+    if (nrow(dupe_trans) > 0) {
+      dupe_str <- paste(unique(paste0(dupe_trans$from, ' → ', dupe_trans$to)), collapse = ', ')
+      stop(paste0('Error in transitions, duplicate entries for: ', dupe_str), call. = F)
+    }
+    trans_table <- reshape2::dcast(trans_table_lf, .model + from ~ to, value.var = "prob", fill = 0) %>%
       reshape2::melt(id.vars = c(".model", "from"), value.name = "prob", variable.name = "to") %>%
       mutate(to = as.character(to))
   } else {
     if ("state" %in% colnames(data)) {
       # Custom PSM
-      trans <- data %>%
+      trans_table_lf <- data %>%
         rowwise() %>%
         do({
           if(.$strategy == "All") {
@@ -305,17 +313,40 @@ parse_hero_trans <- function(data, strategies, states) {
           }
         }) %>%
         ungroup() %>%
-        mutate(state = factor(state, levels = states)) %>%
+        mutate(state = factor(state, levels = states))
+      
+      dupe_trans <- group_by(trans_table_lf, .model, state) %>%
+        summarise(n = n()) %>%
+        filter(n > 1)
+      if (nrow(dupe_trans) > 0) {
+        dupe_str <- paste(unique(dupe_trans$state), collapse = ', ')
+        stop(paste0('Error in transitions, duplicate entries for: ', dupe_str), call. = F)
+      }
+
+      trans_table <- trans_table_lf %>%
         reshape2::dcast(.model ~ state, value.var = "prob", fill = 0) %>%
         reshape2::melt(id.vars = ".model", value.name = "prob", variable.name = "state") %>%
         mutate(state = as.character(state))
     } else {
       # Regular PSM
-      rename(data, .model = strategy)
+      trans_table <- rename(data, .model = strategy)
     }
   }
+  trans_table
 }
 parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
+  bad_names <- lapply(states, function(x) !grepl('^[[:alpha:]]+[[:alnum:]\\_]*$', x)) %>%
+    as.logical()
+  
+  if (any(bad_names)) {
+    stop(
+      paste0(
+        'Invalid state names: ',
+        paste(states[bad_names], collapse = ', '),
+        '. State names must start with letter and contain only letters, numbers, and underscores.'
+    ), call. = F)
+  }
+  
   all_value_names <- unique(c(
     hvalues$name,
     hsumms$name,
@@ -1144,10 +1175,34 @@ build_hero_model <- function(...) {
   
   # Determine half-cycle method
   method <- "life-table"
-  if(!is.null(dots$settings$method)) {
+  if (!is.null(dots$settings$method)) {
     method <- dots$settings$method
   }
   
+  # Check strategies
+  bad_names <- lapply(dots$strategies$name, function(x) !grepl('^[[:alpha:]]+[[:alnum:]\\_]*$', x)) %>%
+    as.logical()
+  
+  if (any(bad_names)) {
+    stop(
+      paste0(
+        'Invalid strategy names: ',
+        paste(dots$strategies$name[bad_names], collapse = ', '),
+        '. Strategy names must start with letter and contain only letters, numbers, and underscores.'
+      ), call. = F)
+  }
+  
+  if (nrow(dots$strategies) < 2) {
+    stop('You must have at least two strategies selected to run a model.', call. = F)
+  }
+  
+  
+  # Fix column names
+  dots$tables <- lapply(dots$tables, function(x) {
+    colnames(x) <- gsub("[\r\n]", "", colnames(x))
+    x
+  })
+
   cores <- 1
   if (dots$psa$parallel) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))

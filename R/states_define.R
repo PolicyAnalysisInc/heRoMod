@@ -242,7 +242,7 @@ define_state_list_ <- function(.dots) {
     invalid_state_refs <- st_states[st_states_check]
     if(length(invalid_state_refs) > 0) {
       stop(sprintf(
-        "Invalid states%s reference in state_transition: %s",
+        "Invalid state reference in state_transition: %s",
         plur(length(invalid_state_refs)),
         paste(invalid_state_refs, collapse = ", ")
       ))
