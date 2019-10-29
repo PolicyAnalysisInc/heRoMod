@@ -1672,7 +1672,6 @@ export_hero_xlsx <- function(...) {
     tables_list <- list()
   }
   wb_list <- list(
-    "Inputs - Decision" = data.frame("Decision" = dots$decision),
     "Inputs - Settings" = data.frame(setting = names(dots$settings), value = as.character(dots$settings)),
     "Inputs - Groups" = dots$groups,
     "Inputs - Strategies" = dots$strategies,
