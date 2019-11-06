@@ -796,7 +796,7 @@ test_that("Defining Survival Distributions",
             reg <- define_surv_lifetable(surv_lifetable_df, 1, 0.5)
             
             expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
-                         c(1, 0.9974969, 0.9950000, 0.9932572, 0.9915175, 0.9895345, 0.9757638),
+                         c(1, 0.9977474, 0.9955000, 0.9937564, 0.9920160, 0.9900320, 0.9762544),
                          tolerance = 1e-7)
           })
 

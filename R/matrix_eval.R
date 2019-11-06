@@ -289,7 +289,7 @@ replace_C <- function(x, state_names) {
   c_counts <- rowSums(posC, dims = 2)
   colnames(c_counts) <- state_names
   if (!all(c_counts <= 1)) {
-    problem_states <- c_counts[, apply(c_counts, 2, function(z) any(z > 1))]
+    problem_states <- c_counts[, as.logical(apply(c_counts, 2, function(z) any(z > 1))), drop = F]
     problems <- lapply(seq_len(ncol(problem_states)), function(i) {
       cycles <- problem_states[ , i]
       problem_cycles <- which(cycles > 1)
