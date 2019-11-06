@@ -790,13 +790,13 @@ test_that("Defining Survival Distributions",
             
             surv_lifetable_df <- data.frame(
               age = c(0, 1, 2, 3),
-              male = c(0.011, 0.005, 0.003, 0.002),
+              male = c(0.011, 0.004, 0.003, 0.002),
               female = c(0.010, 0.005, 0.004, 0.002)
             )
             reg <- define_surv_lifetable(surv_lifetable_df, 1, 0.5)
             
             expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
-                         c(1, 0.9974969, 0.9950000, 0.9932571, 0.9915172, 0.9895342, 0.9757636),
+                         c(1, 0.9974969, 0.9950000, 0.9932572, 0.9915175, 0.9895345, 0.9757638),
                          tolerance = 1e-7)
           })
 

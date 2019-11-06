@@ -354,9 +354,14 @@ define_surv_lifetable.data.frame <- function(x, start_age, percent_male) {
   func_female <- function(time) msm::ppexp(time,  rate = lambdas_female, t = x$age, lower.tail = F)
   
   the_surv_func <- function(time) {
-    init_surv <- func_male(start_age[1]) * percent_male[1] + func_female(start_age[1]) * (1 - percent_male[1])
-    full_surv <- func_male(time + start_age[1]) * percent_male[1] + func_female(time + start_age[1]) * (1 - percent_male[1])
-    full_surv / init_surv
+    init_surv_male <- func_male(start_age[1])
+    full_surv_male <- func_male(time + start_age[1])
+    
+    init_surv_female <- func_female(start_age[1])
+    full_surv_female <- func_female(time + start_age[1])
+    
+    (full_surv_male / init_surv_male) * percent_male[1] +
+      (full_surv_female / init_surv_female) * (1 - percent_male[1])
   }
   
   attr(x, "start_age") <- start_age[1]
