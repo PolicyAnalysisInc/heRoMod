@@ -52,22 +52,22 @@ combine_models <- function(newmodels, weights, oldmodel) {
     
     # collapse total values
     collapsed_total_values <- (newmodels[[i]]) %>% 
-      dplyr::rowwise() %>% 
-      dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-      dplyr::ungroup() %>% 
-      dplyr::summarise_all(apply_weights)
+      rowwise() %>% 
+      do(get_total_state_values(.$.mod)) %>% 
+      ungroup() %>% 
+      summarise_all(apply_weights)
     
     tab_counts_uncorrected <- (newmodels[[i]]) %>% 
-      dplyr::rowwise() %>% 
-      dplyr::do_(.counts_uncorrected = ~ .$.mod$counts_uncorrected)
+      rowwise() %>% 
+      do(tibble(.counts_uncorrected = list(.$.mod$counts_uncorrected)))
     
     tab_counts <- (newmodels[[i]]) %>% 
-      dplyr::rowwise() %>% 
-      dplyr::do_(.counts = ~ get_counts(.$.mod))
+      rowwise() %>% 
+      do(tibble(.counts = list(get_counts(.$.mod))))
     
     tab_values <- (newmodels[[i]]) %>% 
-      dplyr::rowwise() %>% 
-      dplyr::do_(.values = ~ get_values(.$.mod))
+      rowwise() %>% 
+      do(tibble(.values = list(get_values(.$.mod))))
     
     collapsed_counts <- tab_counts$.counts %>% 
       mapply(
@@ -111,8 +111,8 @@ combine_models <- function(newmodels, weights, oldmodel) {
   }
   
   res <- 
-    dplyr::bind_rows(list_res) %>%
-    dplyr::mutate_(.dots = get_ce(oldmodel))
+    bind_rows(list_res) %>%
+    mutate(!!!lazy_eval(get_ce(oldmodel), data = .))
   
   root_strategy <- get_root_strategy(res)
   noncomparable_strategy <- get_noncomparable_strategy(res)

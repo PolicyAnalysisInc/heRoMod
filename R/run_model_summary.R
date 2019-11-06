@@ -40,9 +40,9 @@ summary.run_model <- function(object, threshold = NULL, strategy_order = NULL, .
   }
   
   res_values <- get_model_results(object) %>% 
-    dplyr::select_(
-      ~ - .cost,
-      ~ - .effect
+    select(
+      - .cost,
+      - .effect
     ) %>% 
     as.data.frame()
   
@@ -54,7 +54,7 @@ summary.run_model <- function(object, threshold = NULL, strategy_order = NULL, .
     
     res_nmb <- object %>% 
       scale.run_model(center = FALSE) %>% 
-      dplyr::select_(".strategy_names", ".cost", ".effect") %>% 
+      select(.strategy_names, .cost, .effect) %>% 
       as.data.frame()
     
     res_nmb_strat <- character()
@@ -240,9 +240,9 @@ print.summary_run_model <- function(x, ...) {
 print_results <- function(res_values, res_comp, res_nmb) {
   cat("Values:\n\n")
   rownames(res_values) <- res_values$.strategy_names
-  res_values <- dplyr::select_(res_values,
-                               ~ - .strategy_names,
-                               ~ - .n_indiv)
+  res_values <- select(res_values,
+                               - .strategy_names,
+                               - .n_indiv)
   print(res_values)
   
   if (! is.null(res_nmb)) {
@@ -250,12 +250,12 @@ print_results <- function(res_values, res_comp, res_nmb) {
     .strategy_names <- res_nmb$.strategy_names
     f <- function(x) x - min(x)
     res_nmb <- res_nmb %>% 
-      dplyr::select_(
-        ~ - .strategy_names,
-        ~ - .cost,
-        ~ - .effect
+      select(
+        - .strategy_names,
+        - .cost,
+        - .effect
       ) %>% 
-      dplyr::mutate_all(dplyr::funs(f))
+      mutate_all(list(f))
     
     rownames(res_nmb) <- .strategy_names
     print(res_nmb)
@@ -268,8 +268,8 @@ print_results <- function(res_values, res_comp, res_nmb) {
     
     rownames(res_comp) <- res_comp$.strategy_names
     res_comp <- res_comp %>% 
-      dplyr::select_(".dcost", ".deffect",
-                     ".icer", ".dref")
+      select(.dcost, .deffect,
+                     .icer, .dref)
     res_comp$.icer <- format(res_comp$.icer)
     res_comp$.icer[res_comp$.icer == "NA"] <- "-"
     res_comp <- res_comp[-1, ]

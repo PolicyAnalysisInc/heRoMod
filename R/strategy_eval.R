@@ -100,7 +100,7 @@ eval_strategy <- function(strategy, parameters, cycles,
           )
         }
       ) %>%
-      dplyr::mutate(
+      mutate(
         .state = as.character(.state),
         .full_state = as.character(.full_state)
       )
@@ -118,8 +118,8 @@ eval_strategy <- function(strategy, parameters, cycles,
   # Inform user about state expansion
   if(any(expand_table$.expand)){
     expanded <- expand_table %>%
-      dplyr::filter(.expand) %>%
-      dplyr::distinct(.state)
+      filter(.expand) %>%
+      distinct(.state)
     message(
       sprintf(
         "%s: detected use of 'state_time', expanding state%s: %s.",
@@ -204,7 +204,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   
   # Aggregate over states
   count_table_agg <- plyr::dlply(
-    expand_table %>% dplyr::mutate_(.state = ~factor(.state, unique(.state))),
+    expand_table %>% mutate(.state = factor(.state, unique(.state))),
     ".state",
     function(st) rowSums(count_table[st$.full_state])
   ) %>%
@@ -212,7 +212,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   
   # Aggregate over states
   count_table_agg_uncorrected <- plyr::dlply(
-    expand_table %>% dplyr::mutate_(.state = ~factor(.state, unique(.state))),
+    expand_table %>% mutate(.state = factor(.state, unique(.state))),
     ".state",
     function(st) rowSums(count_table_uncorrected[st$.full_state])
   ) %>%
@@ -325,7 +325,7 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   trans_counts <- uncond_trans * (1 - zero_diag)
   
   # Convert counts to data_frames
-  counts_df <- dplyr::as.tbl(as.data.frame(counts_array))
+  counts_df <- as.tbl(as.data.frame(counts_array))
   colnames(counts_df) <- state_names
   
   # Set dimnames on transition counts
@@ -392,15 +392,15 @@ compute_values <- function(states, counts, init, inflow, starting) {
   if(!is.null(attr(states, "transitions"))) {
     
     trans_values_df <- attr(states, "transitions") %>%
-      dplyr::mutate(
+      mutate(
         .dim1 = as.numeric(.from_name_expanded),
         .dim2 = as.numeric(.to_name_expanded),
         .dim3 = as.numeric(markov_cycle),
         .index = .dim1 + ((.dim2 - 1) * n_states) + ((.dim3 - 1) * (n_states ^ 2)),
         .product = value * as.numeric(attr(counts, "transitions"))[.index]
       ) %>%
-      dplyr::group_by(markov_cycle, variable) %>%
-      dplyr::summarize(value = sum(.product))
+      group_by(markov_cycle, variable) %>%
+      summarize(value = sum(.product))
     
     trans_values <- reshape2::acast(trans_values_df, markov_cycle~variable, value.var = "value")
     

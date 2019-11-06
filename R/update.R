@@ -80,7 +80,7 @@ update.run_model <- function(object, newdata, ...) {
   
   if (has_weights) {
     weights <- newdata$.weights
-    newdata <- dplyr::select_(newdata, ~ - .weights)
+    newdata <- select(newdata, -.weights)
     
   } else {
     message("No weights specified in update, using equal weights.")
@@ -112,21 +112,21 @@ update.run_model <- function(object, newdata, ...) {
   }
   
   res <- 
-    dplyr::bind_rows(list_res)
+    bind_rows(list_res)
   suppressMessages({
     res_total <- res %>% 
-      dplyr::rowwise() %>% 
-      dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-      dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
-      dplyr::ungroup() %>% 
-      dplyr::mutate_(.dots = ce) %>% 
-      dplyr::left_join(
-        dplyr::data_frame(
+      rowwise() %>% 
+      do(get_total_state_values(.$.mod)) %>% 
+      bind_cols(res %>% select(-.mod)) %>% 
+      ungroup() %>% 
+      mutate(!!!lazy_eval(ce, data = .)) %>% 
+      left_join(
+        tibble(
           .index = seq_len(nrow(newdata)),
           .weights = weights
         )
       ) %>% 
-      dplyr::ungroup()
+      ungroup()
   })
   
   comb_mods <- combine_models(
@@ -218,9 +218,7 @@ plot.updated_model <- function(x, type = c("simple", "difference",
     }
   )
   summary(x)$scaled_results %>% 
-    dplyr::filter_(
-      substitute(.strategy_names %in% .x, list(.x = strategy))
-    ) %>% 
+    filter(.strategy_names %in% strategy) %>% 
     ggplot2::ggplot(ggplot2::aes_string(x = x_var)) +
     ggplot2::geom_histogram(...) +
     ggplot2::xlab(x_lab)+
@@ -234,20 +232,20 @@ scale.updated_model <- function(x, scale = TRUE, center = TRUE) {
   
   if (scale) {
     res <- res %>% 
-      dplyr::mutate_(
-        .cost = ~ .cost / .n_indiv,
-        .effect = ~ .effect / .n_indiv
+      mutate(
+        .cost = .cost / .n_indiv,
+        .effect = .effect / .n_indiv
       )
   }
   
   if (center) {
     res <- res %>% 
-      dplyr::group_by_(".index") %>% 
-      dplyr::mutate_(
-        .cost = ~ (.cost - sum(.cost * (.strategy_names == .bm))),
-        .effect = ~ (.effect - sum(.effect * (.strategy_names == .bm)))
+      group_by(.index) %>% 
+      mutate(
+        .cost = (.cost - sum(.cost * (.strategy_names == .bm))),
+        .effect = (.effect - sum(.effect * (.strategy_names == .bm)))
       ) %>% 
-      dplyr::ungroup()
+      ungroup()
   }
   
   res
@@ -268,15 +266,15 @@ summary.updated_model <- function(object, ...) {
   
   tab_scaled <- object %>% 
     scale(center = FALSE) %>% 
-    dplyr::group_by_(".index") %>% 
-    dplyr::do_(~ compute_icer(
+    group_by(.index) %>% 
+    do(compute_icer(
       ., strategy_order = ord_eff)
     )
   
   for (.n in strategy_names) {
     
     tmp <- tab_scaled %>%
-      dplyr::filter_(~ .strategy_names == .n)
+      filter(.strategy_names == .n)
     
     list_res <- c(
       list_res,
@@ -315,10 +313,10 @@ summary.updated_model <- function(object, ...) {
                  "Icer")
     )
   
-  mat_res <- dplyr::select_(
+  mat_res <- select(
     tab_res,
-    ~ - Model,
-    ~ - Value
+    - Model,
+    - Value
   ) %>% 
     as.matrix()
   

@@ -92,7 +92,7 @@ define_vbp_ <- function(par_name, low_dots, med_dots, high_dots) {
   tab <- tibble::tibble()
   for (i in seq_along(dots)) {
     suppressWarnings({ # tofix https://github.com/tidyverse/dplyr/issues/2688
-      tab <- dplyr::bind_rows(
+      tab <- bind_rows(
         tab,
         stats::setNames(tibble::tibble(dots[i]), names(dots)[i])
       )
@@ -109,7 +109,7 @@ define_vbp_ <- function(par_name, low_dots, med_dots, high_dots) {
   structure(
     list(
       vbp = tab %>% 
-        dplyr::mutate_all(dplyr::funs(clean_null)),
+        mutate_all(list(clean_null)),
       variable  = par_name,
       low_dots  = low_dots,
       med_dots  = med_dots,

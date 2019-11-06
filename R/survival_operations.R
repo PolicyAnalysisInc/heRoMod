@@ -486,7 +486,7 @@ plot.surv_obj <- function(x, times, type = c("surv", "prob"),
   
   if("at" %in% names(x))
     this_plot <- this_plot +
-    ggplot2::geom_point(data = dplyr::filter_(res1, ~ times == x$at),
+    ggplot2::geom_point(data = filter(res1, times == x$at),
                         ggplot2::aes_string(x = "times", y = "res"),
                         pch = "join_pch", size = "join_size", 
                         col = "join_col")

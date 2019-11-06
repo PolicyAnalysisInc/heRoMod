@@ -190,11 +190,10 @@ define_part_surv_custom_ <- function(.dots) {
 part_survs_from_surv_inputs <- function(surv_inputs, state_names) {
   
   surv_inputs %>%
-    dplyr::group_by_(
-      ~ treatment, ~ set_name, ~ dist, ~ set_def) %>%
-    dplyr::do_(
-      part_surv = ~ make_part_surv_from_small_tibble(
-        ., state_names = state_names))
+    group_by(treatment, set_name, dist, set_def) %>%
+    do(tibble(
+      part_surv = list(make_part_surv_from_small_tibble(
+        ., state_names = state_names))))
 }
 
 get_state_names.part_surv <- function(x) {
@@ -207,7 +206,7 @@ eval_transition.part_surv <- function(x, parameters, expand) {
   
   pfs_dist <- lazyeval::lazy_eval(
     x$pfs, 
-    data = dplyr::slice(parameters, 1)
+    data = slice(parameters, 1)
   )
   
   pfs_surv <- compute_surv(
@@ -219,7 +218,7 @@ eval_transition.part_surv <- function(x, parameters, expand) {
   
   os_dist <- lazyeval::lazy_eval(
     x$os, 
-    data = dplyr::slice(parameters, 1)
+    data = slice(parameters, 1)
   )
   
   os_surv <- compute_surv(
@@ -242,8 +241,8 @@ eval_transition.part_surv_custom <- function(x, parameters, expand) {
   
   parameters$C <- -pi
   
-  trace <- dplyr::mutate_(parameters, .dots = x) %>%
-    dplyr::select_(.dots = names(x))
+  trace <- safe_eval(parameters, x, .vartype = "transition") %>%
+    select(!!!names(x))
   
   posC <- trace == -pi
   
@@ -251,11 +250,12 @@ eval_transition.part_surv_custom <- function(x, parameters, expand) {
     stop("Only one 'C' is allowed per cycle.")
   }
   
-  valC <- dplyr::mutate_all(trace, funs(ifelse(. == -pi, 0, .))) %>%
+  valC <-  trace %>%
+    mutate_all(list(~ifelse(. == -pi, 0, .))) %>%
     rowSums() %>%
     {1- .}
   
-  trace <- dplyr::mutate_all(trace, funs(ifelse(. == -pi, valC, .)))
+  trace <- mutate_all(trace, list(~ifelse(. == -pi, valC, .)))
   
   structure(
     list(
@@ -465,8 +465,8 @@ construct_part_surv_tib <-
     ## we handle directly defined distributions
     ##   (those defined with define_survival())
     ##   separately from fits
-    with_direct_dist <- dplyr::filter_(surv_def, ~ grepl("^define_survival", dist))
-    should_be_fits <- dplyr::filter_(surv_def, ~ !grepl("^define_survival", dist))
+    with_direct_dist <- filter(surv_def, grepl("^define_survival", dist))
+    should_be_fits <- filter(surv_def, !grepl("^define_survival", dist))
     
     should_be_fits_3 <- should_be_fits
     if (nrow(should_be_fits) > 0) {
@@ -497,23 +497,22 @@ construct_part_surv_tib <-
     ## and now we can rejoin them and continue
     surv_def_4 <-
       rbind(should_be_fits_3, direct_dist_def_3) %>%
-      dplyr::group_by_(~ .strategy, ~ .type) %>%
-      dplyr::do_(fit = ~ join_fits_across_time(.)) %>%
-      dplyr::ungroup()
+      group_by(.strategy, .type) %>%
+      do(tibble(fit = list(join_fits_across_time(.)))) %>%
+      ungroup()
     surv_def_5 <-
       surv_def_4 %>%
-      dplyr::group_by_(~ .strategy) %>%
-      dplyr::rename_(type = ~ .type) %>%
-      dplyr::do_(part_surv = ~ make_part_surv_from_small_tibble(.,
-                                                                state_names = state_names))
+      group_by(.strategy) %>%
+      rename(type = .type) %>%
+      do(tibble(part_surv = list(make_part_surv_from_small_tibble(.,
+                                                                state_names = state_names))))
     surv_def_5
   }
 
 join_fits_across_time <- function(this_part){
 if(nrow(this_part) == 1) return(this_part$fit[[1]])
   if ("until" %in% names(this_part)) {
-    this_part <-
-      dplyr::arrange_(this_part, ~ until)
+    this_part <- arrange(this_part, until)
     
     join_(this_part$fit, as.list(this_part$until[!is.na(this_part$until)]))
     
@@ -552,16 +551,15 @@ join_fits_to_def <- function(surv_def, fit_tibble) {
          paste(fit_tibble_names[!present_names], collapse = ", "))
   }
   
-    fit_tibble <-
-    dplyr::mutate_(fit_tibble, type = ~ toupper(type))
+    fit_tibble <- mutate(fit_tibble, type = toupper(type))
   
   ## reduce fit expressions to distribution names
   should_be_fits_2 <- surv_def %>%
-    dplyr::mutate_(
-      dist = ~ gsub("fit\\((.*)\\)", "\\1", dist) %>%
+    mutate(
+      dist = gsub("fit\\((.*)\\)", "\\1", dist) %>%
         gsub("'", "", .) %>%
         gsub('"', '', .),
-      .type = ~ toupper(.type)
+      .type = toupper(.type)
     )
   ok_dist_names <-
     should_be_fits_2$dist %in% c(allowed_fit_distributions, "km")
@@ -594,7 +592,7 @@ join_fits_to_def <- function(surv_def, fit_tibble) {
   
   ## and join in the fits and subset definitions
   should_be_fits_3 <- should_be_fits_2 %>%
-    dplyr::left_join(
+    left_join(
       fit_tibble,
       by = c(
         ".strategy" = "treatment",

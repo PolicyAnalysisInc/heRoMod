@@ -22,22 +22,25 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
-                          run_demo = FALSE, state_time_limit = NULL, aux_params = NULL, psa = NULL) {
+                          run_scen = FALSE, run_demo = FALSE, state_time_limit = NULL,
+                          aux_params = NULL, psa = NULL, scen = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data, aux_params = aux_params, psa = psa)
+                                  source, data, aux_params = aux_params, psa = psa, scen = scen)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
-                                      run_demo = run_demo, parallel = psa$parallel)
+                                      run_demo = run_demo, 
+                                      run_scen = run_scen,
+                                      parallel = psa$parallel)
   outputs
 }
 
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
-                                  data = NULL, aux_params = NULL, psa = NULL) {
+                                  data = NULL, aux_params = NULL, psa = NULL, scen = NULL) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -76,6 +79,15 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   aux_param_info <- NULL
   if(!is.null(aux_params)) {
     aux_param_info <- create_parameters_from_tabular(aux_params, df_env)
+  }
+  
+  # Setup scenarios
+  scen_info <- NULL
+  if (!is.null(scen)) {
+    param_info$scen <- scen %>%
+      mutate(
+        formula = lapply(formula, function(x) lazyeval::as.lazy(x))
+      )
   }
   
   # Setup demographics
@@ -130,8 +142,8 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
       tm_info,
       group_vars = c("from", "to"))
     tab_undefined <- 
-      dplyr::bind_rows(tm_info) %>%
-      dplyr::filter_(~ is.na(prob))
+      bind_rows(tm_info) %>%
+      filter(is.na(prob))
     
     if (nrow(tab_undefined) > 0) {
       rownames(tab_undefined) <- NULL
@@ -165,8 +177,8 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
         tm_info,
         group_vars = "state")
       tab_undefined <- 
-        dplyr::bind_rows(tm_info) %>%
-        dplyr::filter_(~ is.na(prob))
+        bind_rows(tm_info) %>%
+        filter(is.na(prob))
       
       if (nrow(tab_undefined) > 0) {
         rownames(tab_undefined) <- NULL
@@ -207,9 +219,9 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
     seq_along(state_info),
     function(i) {
       if (inherits(tm_info, "tbl_df")) {
-        this_tm <- dplyr::filter_(
+        this_tm <- filter(
           tm_info,
-          ~ .strategy == names(state_info)[i])$part_surv[[1]]
+          .strategy == names(state_info)[i])$part_surv[[1]]
       } else {
         this_tm <- tm_info[[names(state_info)[i]]]
         if(is.null(state_trans_info)) {
@@ -428,6 +440,7 @@ eval_models_from_tabular <- function(inputs,
                                      run_dsa = TRUE,
                                      run_psa = TRUE,
                                      run_demo = TRUE,
+                                     run_scen = FALSE,
                                      parallel = FALSE) {
   
   if (options()$heRomod.verbose) message("* Running files...")
@@ -444,7 +457,7 @@ eval_models_from_tabular <- function(inputs,
       cycles = inputs$model_options$cycles,
       state_time_limit = inputs$state_time_limit,
       aux_params = inputs$aux_param_info$params,
-      parallel = !(run_dsa | run_psa | run_demo),
+      parallel = !(run_dsa | run_psa | run_demo | run_scen),
       cores = inputs$model_options$num_cores
     )
   )
@@ -473,6 +486,16 @@ eval_models_from_tabular <- function(inputs,
     )
   }
   
+  model_scen <- NULL
+  if (run_scen & !is.null(inputs$param_info$scen)) {
+    if (options()$heRomod.verbose) message("** Running Scenario Analysis...")
+    model_scen <- run_scen(
+      model_runs,
+      inputs$param_info$scen,
+      cores = inputs$model_options$num_cores
+    )
+  }
+  
   model_psa <- NULL
   if (!is.null(inputs$param_info$psa_params) & run_psa) {
     if (options()$heRomod.verbose) message("** Running PSA...")
@@ -495,6 +518,7 @@ eval_models_from_tabular <- function(inputs,
     models = inputs$models,
     model_runs = model_runs,
     dsa = model_dsa,
+    scen = model_scen,
     psa = model_psa,
     demographics = demo_res
   )
@@ -541,8 +565,8 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
       tm_info,
       group_vars = c("from", "to"))
     tab_undefined <- 
-      dplyr::bind_rows(tm_info) %>%
-      dplyr::filter_(~ is.na(prob))
+      bind_rows(tm_info) %>%
+      filter(is.na(prob))
     
     if (nrow(tab_undefined) > 0) {
       rownames(tab_undefined) <- NULL
@@ -586,7 +610,7 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
   
   if(trans_type == "part_surv")
     tm_info <- 
-      dplyr::filter_(tm_info, ~ .strategy %in% names(state_info))
+      filter(tm_info, .strategy %in% names(state_info))
   else
     tm_info <- tm_info[names(state_info)]
 
@@ -596,9 +620,9 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
     seq_along(state_info),
     function(i) {
       if(inherits(tm_info, "tbl_df"))
-        this_tm <- dplyr::filter_(
+        this_tm <- filter(
           tm_info,
-          ~ .strategy == names(state_info)[i])$part_surv[[1]]
+          .strategy == names(state_info)[i])$part_surv[[1]]
       else
         this_tm <- tm_info[[i]]
         if(is.null(state_trans_info)) {
@@ -1389,8 +1413,8 @@ parse_multi_spec <- function(multi_spec,
   num_splits <- length(unique_splits)
   
   occurences <- multi_spec %>% 
-    dplyr::group_by_(.dots = group_vars) %>% 
-    dplyr::summarize_(count = ~ n())
+    group_by(!!!syms(group_vars)) %>% 
+    summarize(count = n())
   
   orig_order <- unique(multi_spec[, group_vars, drop = FALSE])
   
@@ -1402,9 +1426,9 @@ parse_multi_spec <- function(multi_spec,
   }
   
   just_once <- multi_spec %>% 
-    dplyr::group_by_(.dots = group_vars) %>% 
-    dplyr::filter_(~ n() == 1) %>%
-    dplyr::select_(~ - dplyr::one_of(split_on))
+    group_by(!!!syms(group_vars)) %>% 
+    filter(n() == 1) %>%
+    select(- one_of(split_on))
   
   just_once <- data.frame(
     temp = rep(unique_splits, nrow(just_once)),
@@ -1415,11 +1439,11 @@ parse_multi_spec <- function(multi_spec,
   names(just_once)[1] <- split_on
   
   more_than_once <- multi_spec %>% 
-    dplyr::group_by_(.dots = group_vars) %>%
-    dplyr::filter_(~ n() > 1)
+    group_by(!!!syms(group_vars)) %>%
+    filter(n() > 1)
   
   multi_spec <- 
-    dplyr::bind_rows(just_once, as.data.frame(more_than_once))
+    bind_rows(just_once, as.data.frame(more_than_once))
   rownames(multi_spec) <- NULL
   list_spec <- split(multi_spec, multi_spec[, split_on])
   ## sort by order of appearance of split variables in multi_spec
@@ -1774,7 +1798,7 @@ modify_param_defs_for_multinomials <- function(param_defs, psa) {
         (this_pos + 1):nrow(param_defs)
       }
     
-    param_defs <- dplyr::bind_rows(
+    param_defs <- bind_rows(
       param_defs[start_index,],
       replacements[[i]],
       param_defs[end_index,])
@@ -1831,7 +1855,7 @@ check_survival_specs <-
     ## our checks will make sure that we have the right entries,
     ##   and that they are in the right order
     surv_specs <- 
-      surv_specs %>% dplyr::arrange_(~ treatment, ~ desc(type))
+      surv_specs %>% arrange(treatment, desc(type))
     
     os_ind <- grep("os", surv_specs$type, ignore.case = TRUE)
     pfs_ind <- grep("pfs", surv_specs$type, ignore.case = TRUE)

@@ -77,9 +77,9 @@ run_dsa.run_model <- function(model, dsa, cores = 1) {
     )
     
     res <- tab %>% 
-      dplyr::mutate_if(
+      mutate_if(
         names(tab) %in% dsa$variables,
-        dplyr::funs(to_text_dots),
+        list(to_text_dots),
         name = FALSE
       )
     
@@ -102,11 +102,11 @@ run_dsa.run_model <- function(model, dsa, cores = 1) {
   }
 
   res <- 
-    dplyr::bind_rows(list_res) %>%
+    bind_rows(list_res) %>%
     reshape_long(
       key_col = ".par_names", value_col = ".par_value",
       gather_cols = dsa$variables, na.rm = TRUE) %>% 
-    dplyr::rowwise()
+    rowwise()
   
   add_newdata <- function(df) {
     df$.par_value_eval <- unlist(e_newdata)
@@ -114,12 +114,11 @@ run_dsa.run_model <- function(model, dsa, cores = 1) {
   }
   
   res <- res %>% 
-    dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-    dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
-    dplyr::ungroup() %>% 
-    dplyr::do(add_newdata(.)) %>% 
-    dplyr::mutate_(
-      .dots = get_ce(model))
+    do(get_total_state_values(.$.mod)) %>% 
+    bind_cols(res %>% select(-.mod)) %>% 
+    ungroup() %>% 
+    do(add_newdata(.)) %>% 
+    mutate(!!!lazy_eval(get_ce(model), data = .))
   
   structure(
     list(
@@ -164,9 +163,9 @@ run_dsa.updated_model <- function(model, dsa) {
     )
     
     res <- tab %>% 
-      dplyr::mutate_if(
+      mutate_if(
         names(tab) %in% dsa$variables,
-        dplyr::funs(to_text_dots),
+        list(to_text_dots),
         name = FALSE
       )
     
@@ -189,11 +188,11 @@ run_dsa.updated_model <- function(model, dsa) {
   }
   
   res <- 
-    dplyr::bind_rows(list_res) %>%
+    bind_rows(list_res) %>%
     reshape_long(
       key_col = ".par_names", value_col = ".par_value",
       gather_cols = dsa$variables, na.rm = TRUE) %>% 
-    dplyr::rowwise()
+    rowwise()
   
   add_newdata <- function(df) {
     df$.par_value_eval <- unlist(e_newdata)
@@ -201,12 +200,11 @@ run_dsa.updated_model <- function(model, dsa) {
   }
   
   res <- res %>% 
-    dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-    dplyr::bind_cols(res %>% dplyr::select_(~ - .mod)) %>% 
-    dplyr::ungroup() %>% 
-    dplyr::do(add_newdata(.)) %>% 
-    dplyr::mutate_(
-      .dots = get_ce(model))
+    do(get_total_state_values(.$.mod)) %>% 
+    bind_cols(select(res, - .mod)) %>% 
+    ungroup() %>% 
+    do(add_newdata(.)) %>% 
+    mutate(!!!lazy_eval(get_ce(model), data = .))
   
   structure(
     list(
