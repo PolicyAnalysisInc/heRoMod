@@ -102,7 +102,7 @@ test_that(
       scen_res_test$nmb
     )
     
-    model$psa$n <- 100
+    model$psa$n <- 20
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
@@ -176,7 +176,7 @@ test_that(
       dsa_res_test$nmb
     )
     
-    model$psa$n <- 100
+    model$psa$n <- 20
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
@@ -241,7 +241,7 @@ test_that(
     dsa_res <- readRDS(system.file("hero","groups", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa,model)
     
-    model$psa$n <- 100
+    model$psa$n <- 20
     psa_res_test <- do.call(run_hero_psa,model)
     
     expect_equal(
@@ -348,7 +348,7 @@ test_that(
       dsa_res_test$nmb
     )
     
-    model$psa$n <- 100
+    model$psa$n <- 20
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
