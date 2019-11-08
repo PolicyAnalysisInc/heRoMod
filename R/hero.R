@@ -1121,6 +1121,23 @@ build_hero_model <- function(...) {
   # Capture arguments
   dots <- list(...)
   
+  # Check strategies
+  bad_names <- lapply(dots$strategies$name, function(x) !grepl('^[[:alpha:]]+[[:alnum:]\\_]*$', x)) %>%
+    as.logical()
+  
+  if (any(bad_names)) {
+    stop(
+      paste0(
+        'Invalid strategy names: ',
+        paste(dots$strategies$name[bad_names], collapse = ', '),
+        '. Strategy names must start with letter and contain only letters, numbers, and underscores.'
+      ), call. = F)
+  }
+  
+  if (nrow(dots$strategies) < 2) {
+    stop('You must have at least two strategies selected to run a model.', call. = F)
+  }
+  
   if (is.null(dots$psa)) {
     dots$psa <- list(
       parallel = F
@@ -1177,23 +1194,6 @@ build_hero_model <- function(...) {
   method <- "life-table"
   if (!is.null(dots$settings$method)) {
     method <- dots$settings$method
-  }
-  
-  # Check strategies
-  bad_names <- lapply(dots$strategies$name, function(x) !grepl('^[[:alpha:]]+[[:alnum:]\\_]*$', x)) %>%
-    as.logical()
-  
-  if (any(bad_names)) {
-    stop(
-      paste0(
-        'Invalid strategy names: ',
-        paste(dots$strategies$name[bad_names], collapse = ', '),
-        '. Strategy names must start with letter and contain only letters, numbers, and underscores.'
-      ), call. = F)
-  }
-  
-  if (nrow(dots$strategies) < 2) {
-    stop('You must have at least two strategies selected to run a model.', call. = F)
   }
   
   
