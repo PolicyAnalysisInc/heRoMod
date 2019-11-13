@@ -2,16 +2,25 @@
 #' @export
 run_analysis <- function(...) {
   data <- list(...)
-  if (data$analysis == 'psa') {
-    res <- do.call(run_hero_psa, data)
-  } else if (data$analysis == 'dsa') {
-    res <- do.call(run_hero_dsa, data)
-  } else if (data$analysis == 'vbp') {
-    res <- do.call(run_hero_vbp, data)
-  } else if (data$analysis == 'bc') {
-    res <- do.call(run_hero_bc, data)
-  } else if (data$analysis == "excel") {
-    res <- do.call(export_hero_xlsx, data)
+  res <- try({
+    if (data$analysis == 'psa') {
+      res <- do.call(run_hero_psa, data)
+    } else if (data$analysis == 'dsa') {
+      res <- do.call(run_hero_dsa, data)
+    } else if (data$analysis == 'vbp') {
+      res <- do.call(run_hero_vbp, data)
+    } else if (data$analysis == 'bc') {
+      res <- do.call(run_hero_bc, data)
+    } else if (data$analysis == "excel") {
+      res <- do.call(export_hero_xlsx, data)
+    }
+    res
+  })
+  if (inherits(res, "try-error")) {
+    msg <- gsub('Error : ', fixed = T, '', res)
+    res <- list(
+      error = paste0('Error: ', as.character(msg))
+    )
   }
   res
 }

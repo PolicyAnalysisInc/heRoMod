@@ -207,7 +207,9 @@ run_model_ <- function(uneval_strategy_list,
     plyr::l_ply(
       eval_strategy_list,
       function(x) {
-        if ("try-error" %in% class(x)) stop(x, call. = F)
+        if ("try-error" %in% class(x)) {
+          stop(x, call. = F)
+        }
       }
     )
   } else {
