@@ -81,14 +81,16 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         )
     }, mc.cores = cores)
   )
-  res <- bind_rows(pieces)
   
   plyr::l_ply(
-    res$.mod,
+    pieces,
     function(x) {
-      if ("try-error" %in% class(x)) stop(clean_err_msg(x), call. = F)
+      plyr::l_ply(x$.mod, function(y) {
+        if ("try-error" %in% class(y)) stop(clean_err_msg(y), call. = F)
+      })
     }
   )
+  res <- bind_rows(pieces)
   rownames(res) <- NULL
   res
 }
