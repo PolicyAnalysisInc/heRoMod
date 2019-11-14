@@ -62,7 +62,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
       newdata %>% 
         rowwise() %>% 
         do(tibble(
-          .mod = list(eval_newdata(
+          .mod = list(try(eval_newdata(
             .,
             strategy = uneval_strategy,
             old_parameters = old_parameters,
@@ -74,7 +74,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             strategy_name = strategy,
             expand_limit = expand_limit
           )
-        ))) %>% 
+        )))) %>% 
         ungroup() %>% 
         bind_cols(
           newdata
@@ -82,6 +82,13 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
     }, mc.cores = cores)
   )
   res <- bind_rows(pieces)
+  
+  plyr::l_ply(
+    res$.mod,
+    function(x) {
+      if ("try-error" %in% class(x)) stop(clean_err_msg(x), call. = F)
+    }
+  )
   rownames(res) <- NULL
   res
 }
