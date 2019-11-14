@@ -57,6 +57,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   message(paste("Using a cluster with", cores, "cores."))
   
   pnewdata <- split(newdata, seq_len(nrow(newdata)))
+  stop('test!')
   suppressMessages(
     pieces <- parallel::mclapply(pnewdata, function(newdata) {
       newdata %>% 
@@ -81,7 +82,6 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         )
     }, mc.cores = cores)
   )
-  stop('test!')
   plyr::l_ply(
     pieces,
     function(x) {
