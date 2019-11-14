@@ -81,7 +81,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         )
     }, mc.cores = cores)
   )
-  
+  stop('test!')
   plyr::l_ply(
     pieces,
     function(x) {
