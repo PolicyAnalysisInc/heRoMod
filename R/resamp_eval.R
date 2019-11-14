@@ -38,9 +38,6 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
     psa <- resample
   }
   
-  
-  stop('test!')
-  
   stopifnot(
     N > 0,
     ! is.null(N)
