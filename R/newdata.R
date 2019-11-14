@@ -58,7 +58,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   
   pnewdata <- split(newdata, seq_len(nrow(newdata)))
   suppressMessages(
-    pieces <- parallel::mclapply(pnewdata, function(newdata) {
+    pieces <- pbmcapply::pbmclapply(pnewdata, function(newdata) {
       newdata %>% 
         dplyr::rowwise() %>% 
         dplyr::do_(
@@ -79,7 +79,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         dplyr::bind_cols(
           newdata
         )
-    }, mc.cores = cores)
+    }, mc.cores = cores,
+    ignore.interactive = T)
   )
   res <- dplyr::bind_rows(pieces)
   rownames(res) <- NULL
@@ -101,7 +102,6 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     old_parameters,
     lazy_new_param
   )
-  
   eval_strategy(
     strategy = strategy,
     parameters = parameters,

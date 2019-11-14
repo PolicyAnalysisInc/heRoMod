@@ -1446,6 +1446,15 @@ run_hero_dsa <- function(...) {
 run_hero_psa <- function(...) {
   # Capture arguments
   dots <- list(...)
+  n_groups <- max(1, nrow(as.data.frame(dots$groups)))
+  n_strats <- nrow(dots$strategies)
+  print(
+    paste0(
+    'Evaluating model with ', n_strats,
+    ' strategies and ', n_groups,
+    ' groups.'
+    )
+  )
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
