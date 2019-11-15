@@ -1520,7 +1520,7 @@ run_hero_psa <- function(...) {
   
   if (!is.null(dots$results_so_far)) {
     psa_res_df$.index <- psa_res_df$.index + max(dots$results_so_far$.index, na.rm = T)
-    psa_res_df <- rbind.fill(dots$results_so_far, psa_res_df)
+    psa_res_df <- plyr::rbind.fill(dots$results_so_far, psa_res_df)
   }
   
   if(is.null(dots$interim) || !dots$interim) {
