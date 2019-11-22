@@ -17,7 +17,8 @@ Description: A package for developing and running cost-effectiveness
     models in R.  Forked from the HEEMOD package.
 Depends: R (>= 3.3.0),
     flexsurv,
-    flexsurvcure
+    flexsurvcure,
+    dplyr
 Imports:
     reshape2,
     dplyr (>= 0.7.2),
@@ -52,6 +53,7 @@ Imports:
     readxl,
     rgho,
     rmarkdown,
+    pbmcapply,
     stringr,
     survival,
     testthat,

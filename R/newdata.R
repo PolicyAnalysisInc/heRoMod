@@ -56,14 +56,20 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   
   message(paste("Using a cluster with", cores, "cores."))
   
-  pnewdata <- split(newdata, seq_len(nrow(newdata)))
+  newdata <- newdata %>%
+    dplyr::mutate(.iteration = seq_len(n()))
+  pnewdata <- split(newdata, newdata$.iteration)
   suppressMessages(
-    pieces <- pbmcapply::pbmclapply(pnewdata, function(newdata) {
+    pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      #lapply(pnewdata, function(newdata) {
       newdata %>% 
-        dplyr::rowwise() %>% 
-        dplyr::do_(
-          .mod = ~ eval_newdata(
-            .,
+        rowwise() %>% 
+        do({
+          df <- as_tibble(.)
+          iter <- df$.iteration
+          tibble(
+          .mod = list(try(eval_newdata(
+            df,
             strategy = uneval_strategy,
             old_parameters = old_parameters,
             aux_params = aux_params,
@@ -72,24 +78,34 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             inflow = inflow,
             method = method,
             strategy_name = strategy,
-            expand_limit = expand_limit
+            expand_limit = expand_limit,
+            iteration = iter
           )
-        ) %>% 
-        dplyr::ungroup() %>% 
-        dplyr::bind_cols(
+          )))}) %>% 
+        ungroup() %>% 
+        bind_cols(
           newdata
         )
-    }, mc.cores = cores,
-    ignore.interactive = T)
+    #})
+      }, mc.cores = cores)
   )
-  res <- dplyr::bind_rows(pieces)
+  plyr::l_ply(
+    pieces,
+    function(x) {
+      plyr::l_ply(x$.mod, function(y) {
+        if ("try-error" %in% class(y)) stop(clean_err_msg(y), call. = F)
+      })
+    }
+  )
+  res <- bind_rows(pieces)
   rownames(res) <- NULL
   res
 }
 
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
-                         strategy_name, expand_limit, aux_params = NULL) {
+                         strategy_name, expand_limit, aux_params = NULL,
+                         iteration = NULL) {
   
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
@@ -102,7 +118,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     old_parameters,
     lazy_new_param
   )
-  eval_strategy(
+  res <- eval_strategy(
     strategy = strategy,
     parameters = parameters,
     cycles = cycles,
@@ -113,4 +129,21 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     expand_limit = expand_limit,
     aux_params = aux_params
   )
+  if(!is.null(iteration)) {
+    path <- '~/downloads/progress/'
+    if (!file.exists(path)){
+      dir.create(path)
+    }
+    group_name_var <- old_parameters$.group
+    if(!is.null(group_name_var)) {
+      group_name <- lazyeval::lazy_eval(group_name_var)
+    } else {
+      group_name <- 'all'
+    }
+    writeLines(
+      '',
+      paste0('~/downloads/progress/', group_name, '-', strategy_name, '-', iteration)
+    )
+  }
+  res
 }

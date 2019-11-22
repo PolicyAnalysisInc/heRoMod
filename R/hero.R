@@ -1448,13 +1448,8 @@ run_hero_psa <- function(...) {
   dots <- list(...)
   n_groups <- max(1, nrow(as.data.frame(dots$groups)))
   n_strats <- nrow(dots$strategies)
-  print(
-    paste0(
-    'Evaluating model with ', n_strats,
-    ' strategies and ', n_groups,
-    ' groups.'
-    )
-  )
+  n_sims <- n_strats * n_groups * dots$psa$n
+  print(paste0('Running ', n_sims, ' simulations.'))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
