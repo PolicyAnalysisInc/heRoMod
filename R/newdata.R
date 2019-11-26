@@ -130,7 +130,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     aux_params = aux_params
   )
   if(!is.null(iteration)) {
-    path <- '~/downloads/progress/'
+    path <- './04_progress/'
     if (!file.exists(path)){
       dir.create(path)
     }
@@ -142,7 +142,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     }
     writeLines(
       '',
-      paste0('~/downloads/progress/', group_name, '-', strategy_name, '-', iteration)
+      paste0(path , group_name, '-', strategy_name, '-sens-', iteration)
     )
   }
   res
