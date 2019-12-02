@@ -1210,7 +1210,7 @@ build_hero_model <- function(...) {
   
   if (class(dots$scenario) == "list") {
     msg <- capture.output(print(dots$scenario))
-    stop(msg)
+    stop(msg, call. = F)
   }
   
   # Return model object
