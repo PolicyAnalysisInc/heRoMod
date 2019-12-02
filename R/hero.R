@@ -1208,8 +1208,8 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
-  if (class(scen) == "list") {
-    msg <- capture.output(print(scen))
+  if (class(dots$scenario) == "list") {
+    msg <- capture.output(print(dots$scenario))
     stop(msg)
   }
   
