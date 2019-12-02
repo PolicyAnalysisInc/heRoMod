@@ -1745,7 +1745,8 @@ package_hero_model <- function(...) {
     surv_dists = dots$surv_dists,
     type = dots$type,
     vbp = dots$vbp,
-    psa = dots$psa
+    psa = dots$psa,
+    scenario = dots$scenario
   )
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default

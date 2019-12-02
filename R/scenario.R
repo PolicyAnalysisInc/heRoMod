@@ -72,10 +72,22 @@ run_hero_scen_ <- function(...) {
 
 #' @export
 run_hero_scen <- function(...) {
+  dots <- list(...)
   # Run the DSA
   res <- run_hero_scen_(...)
   # Compress the results
   res$nmb <- res$nmb  %>%
+    left_join(
+      select(dots$scenario, scenario_name, description),
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    mutate(
+      description = ifelse(
+        scenario_name == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(health_outcome, econ_outcome, series) %>%
     group_split() %>%
     purrr::map(function(x) {
@@ -87,6 +99,17 @@ run_hero_scen <- function(...) {
       )
     }) 
   res$cost <- res$cost %>%
+    left_join(
+      select(dots$scenario, scenario_name, description),
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    mutate(
+      description = ifelse(
+        scenario_name == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(outcome, disc, series) %>%
     group_split() %>%
     purrr::map(function(x) {
@@ -98,6 +121,17 @@ run_hero_scen <- function(...) {
       )
     }) 
   res$outcomes <- res$outcomes %>%
+    left_join(
+      select(dots$scenario, scenario_name, description),
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    mutate(
+      description = ifelse(
+        scenario_name == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(outcome, disc, series) %>%
     group_split() %>%
     purrr::map(function(x) {
