@@ -84,6 +84,9 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   # Setup scenarios
   scen_info <- NULL
   if (!is.null(scen)) {
+    if (class(scen) == "list") {
+      stop('this is a list!')
+    }
     param_info$scen <- scen %>%
       mutate(
         formula = lapply(formula, function(x) lazyeval::as.lazy(x))
