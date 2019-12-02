@@ -105,7 +105,7 @@ run_hero_scen <- function(...) {
     ) %>%
     mutate(
       description = ifelse(
-        scenario_name == "Base Case",
+        scenario == "Base Case",
         "Base case scenario of model.",
         description
       )
@@ -127,7 +127,7 @@ run_hero_scen <- function(...) {
     ) %>%
     mutate(
       description = ifelse(
-        scenario_name == "Base Case",
+        scenario == "Base Case",
         "Base case scenario of model.",
         description
       )
