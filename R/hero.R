@@ -1208,6 +1208,11 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
+  if (class(scen) == "list") {
+    msg <- capture.output(print(scen))
+    stop(msg)
+  }
+  
   # Return model object
   list(
     states = state_list,
