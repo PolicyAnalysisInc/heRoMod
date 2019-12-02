@@ -83,7 +83,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   # Setup scenarios
   scen_info <- NULL
-  if (!is.null(scen)) {
+  if (!is.null(scen) && class(scen) == 'data.frame') {
     param_info$scen <- scen %>%
       mutate(
         formula = lapply(formula, function(x) lazyeval::as.lazy(x))
