@@ -3,14 +3,7 @@ context("Running heRo model")
 test_that(
   "Example Simple PSM Runs Correctly", {
     model <- readRDS(system.file("hero","example_simple_psm", "model.rds", package="heRomod"))
-    model$scenario <- tibble::tribble(
-      ~scenario_name, ~param_name,       ~formula,
-      'scen1',        'pfs_cost',   '4000',
-      'scen2',        'pfs_cost',   '2000',
-      'scen2',        'os_hr_target',       '0.6',
-      'scen3',        'os_hr_target',   '0.5',
-    )
-    
+
     # Base Case Results
     bc_res <- readRDS(system.file("hero","example_simple_psm", "bc_res.rds", package="heRomod"))
     bc_res_test <- do.call(run_hero_bc, model)
@@ -84,25 +77,25 @@ test_that(
       )
     )
     
-    scen_res <- readRDS(system.file("hero","example_simple_psm", "scen_res.rds", package="heRomod"))
-    scen_res_test <- do.call(run_hero_scen, model)
+    # scen_res <- readRDS(system.file("hero","example_simple_psm", "scen_res.rds", package="heRomod"))
+    # scen_res_test <- do.call(run_hero_scen, model)
+    # 
+    # expect_equal(
+    #   scen_res$outcomes,
+    #   scen_res_test$outcomes
+    # )
+    # 
+    # expect_equal(
+    #   scen_res$cost,
+    #   scen_res_test$cost
+    # )
+    # 
+    # expect_equal(
+    #   scen_res$nmb,
+    #   scen_res_test$nmb
+    # )
     
-    expect_equal(
-      scen_res$outcomes,
-      scen_res_test$outcomes
-    )
-    
-    expect_equal(
-      scen_res$cost,
-      scen_res_test$cost
-    )
-    
-    expect_equal(
-      scen_res$nmb,
-      scen_res_test$nmb
-    )
-    
-    model$psa$n <- 100
+    model$psa$n <- 10
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
@@ -176,7 +169,7 @@ test_that(
       dsa_res_test$nmb
     )
     
-    model$psa$n <- 100
+    model$psa$n <- 10
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
@@ -192,13 +185,6 @@ test_that(
 test_that(
   "Groups Model Runs Correctly", {
     model <- readRDS(system.file("hero","groups", "model.rds", package="heRomod"))
-    model$scenario <- tibble::tribble(
-      ~scenario_name, ~param_name,       ~formula,
-      'scen1',        'percent_male',   '0.6',
-      'scen2',        'target_hr',   '0.4',
-      'scen2',        'percent_male',       '0.7',
-      'scen3',        'target_hr',   '0.5',
-    )
     
     # Base Case Results
     bc_res <- readRDS(system.file("hero","groups", "bc_res.rds", package="heRomod"))
@@ -241,7 +227,7 @@ test_that(
     dsa_res <- readRDS(system.file("hero","groups", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa,model)
     
-    model$psa$n <- 100
+    model$psa$n <- 10
     psa_res_test <- do.call(run_hero_psa,model)
     
     expect_equal(
@@ -258,20 +244,20 @@ test_that(
       dsa_res$nmb,
       dsa_res_test$nmb
     )
-    
+
     scen_res <- readRDS(system.file("hero","groups", "scen_res.rds", package="heRomod"))
     scen_res_test <- do.call(run_hero_scen, model)
-    
+
     expect_equal(
       scen_res$outcomes,
       scen_res_test$outcomes
     )
-    
+
     expect_equal(
       scen_res$cost,
       scen_res_test$cost
     )
-    
+
     expect_equal(
       scen_res$nmb,
       scen_res_test$nmb
@@ -348,7 +334,25 @@ test_that(
       dsa_res_test$nmb
     )
     
-    model$psa$n <- 100
+    scen_res <- readRDS(system.file("hero","markov_model", "scen_res.rds", package="heRomod"))
+    scen_res_test <- do.call(run_hero_scen, model)
+    
+    expect_equal(
+      scen_res$outcomes,
+      scen_res_test$outcomes
+    )
+    
+    expect_equal(
+      scen_res$cost,
+      scen_res_test$cost
+    )
+    
+    expect_equal(
+      scen_res$nmb,
+      scen_res_test$nmb
+    )
+    
+    model$psa$n <- 10
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
