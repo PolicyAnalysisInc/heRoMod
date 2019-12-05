@@ -83,10 +83,19 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   # Setup scenarios
   scen_info <- NULL
-  if (!is.null(scen) && class(scen) == 'data.frame') {
+  if ('data.frame' %in% class(scen)) {
     param_info$scen <- scen %>%
       mutate(
-        formula = lapply(formula, function(x) lazyeval::as.lazy(x))
+        formula = lapply(seq_len(n()), function(i) {
+          tryCatch({
+            lazyeval::as.lazy(formula[i])
+          }, error = function(e) {
+            stop(
+              paste0('Error in scenario "', scenario_name[i], '", invalid formula.'),
+              call. = F
+            )
+          })
+        })
       )
   }
   

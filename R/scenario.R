@@ -73,6 +73,9 @@ run_hero_scen_ <- function(...) {
 #' @export
 run_hero_scen <- function(...) {
   dots <- list(...)
+  if (!'data.frame' %in% class(dots$scenario)) {
+    stop('Cannot run scenario analysis: no scenarios were defined.', call. = F)
+  }
   # Run the DSA
   res <- run_hero_scen_(...)
   # Compress the results
