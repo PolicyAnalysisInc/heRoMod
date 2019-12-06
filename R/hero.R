@@ -1208,7 +1208,7 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
-  if (is.null(dotsdisc_method)) {
+  if (is.null(dots$settings$disc_method)) {
     disc_method <- 'start'
   } else {
     disc_method <- dots$settings$disc_method
