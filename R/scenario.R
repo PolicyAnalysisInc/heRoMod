@@ -84,7 +84,9 @@ run_hero_scen <- function(...) {
       select(dots$scenario, scenario_name, description),
       by = c("scenario" = "scenario_name")
     ) %>%
+    ungroup() %>%
     mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
       description = ifelse(
         scenario == "Base Case",
         "Base case scenario of model.",
@@ -98,7 +100,10 @@ run_hero_scen <- function(...) {
         health_outcome = x$health_outcome[1],
         econ_outcome = x$econ_outcome[1],
         series = x$series[1],
-        data = select(x, -health_outcome, -econ_outcome, -series)
+        data = arrange(
+          select(x, -health_outcome, -econ_outcome, -series),
+          scenario
+        )
       )
     }) 
   res$cost <- res$cost %>%
@@ -106,7 +111,9 @@ run_hero_scen <- function(...) {
       select(dots$scenario, scenario_name, description),
       by = c("scenario" = "scenario_name")
     ) %>%
+    ungroup() %>%
     mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
       description = ifelse(
         scenario == "Base Case",
         "Base case scenario of model.",
@@ -120,7 +127,10 @@ run_hero_scen <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
+        data = arrange(
+          select(x, -outcome, -disc, -series),
+          scenario
+        )
       )
     }) 
   res$outcomes <- res$outcomes %>%
@@ -128,7 +138,9 @@ run_hero_scen <- function(...) {
       select(dots$scenario, scenario_name, description),
       by = c("scenario" = "scenario_name")
     ) %>%
+    ungroup() %>%
     mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
       description = ifelse(
         scenario == "Base Case",
         "Base case scenario of model.",
@@ -142,7 +154,10 @@ run_hero_scen <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
+        data = arrange(
+          select(x, -outcome, -disc, -series),
+          scenario
+        )
       )
     }) 
   

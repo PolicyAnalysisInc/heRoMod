@@ -99,10 +99,10 @@ test_that(
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
       
     })
@@ -173,10 +173,10 @@ test_that(
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
     })
     
@@ -265,10 +265,10 @@ test_that(
 
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
     })
     
@@ -356,10 +356,10 @@ test_that(
     psa_res <- do.call(run_hero_psa,model)
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
     })
     
@@ -427,10 +427,10 @@ test_that(
     
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
     })
     
@@ -498,10 +498,10 @@ test_that(
     
     withr::with_dir(new = tempdir(), {
       model$name <- 'test'
-      do.call(export_hero_xlsx,model)
+      suppressMessages(do.call(export_hero_xlsx,model))
       xl_file <- openxlsx::read.xlsx('test.xlsx')
       file.remove('test.xlsx')
-      do.call(package_hero_model,model)
+      suppressMessages(do.call(package_hero_model,model))
       file.remove('test.zip')
     })
     

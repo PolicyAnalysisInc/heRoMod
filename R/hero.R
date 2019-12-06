@@ -1781,7 +1781,8 @@ results <- do.call(run_hero_bc, model)
   saveRDS(model_object, "model.rds")
   utils::zip(
     paste0(dots$name, ".zip"),
-    c(paste0(dots$name, ".rproj"), "run.R", "model.rds")
+    c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
+    flags="-q"
   )
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
