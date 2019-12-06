@@ -31,7 +31,8 @@
 #'   value and a line per cycle.
 #'   
 #' @keywords internal
-eval_state_list <- function(x, parameters, expand = NULL) {
+eval_state_list <- function(x, parameters, expand = NULL,
+                            disc_method = 'start') {
   
   # Assinging NULLS to avoid CMD Check issues
   .state <- .limit <- state_time <- .value <- NULL
@@ -59,7 +60,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   exp_state_names <- expand$.full_state
   
   f <- function(i) {
-    obj <- discount_hack(x[[i]])
+    obj <- discount_hack(x[[i]], method = disc_method)
     
     # update calls to dispatch_strategy()
     obj <- dispatch_strategy_hack(obj)
@@ -111,7 +112,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
     to_state_names <- lapply(state_trans_uneval, function(y) attr(y, "to"))
     
     f_state_val <- function(i) {
-      obj <- discount_hack(state_trans_uneval[[i]])
+      obj <- discount_hack(state_trans_uneval[[i]], method = disc_method)
       from_states <- from_state_names[[i]]
       if (any(is.na(from_states))) from_states <- state_names
       to_states <- to_state_names[[i]]

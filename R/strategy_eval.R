@@ -52,7 +52,8 @@
 #' @keywords internal
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
-                          inflow, strategy_name, aux_params = NULL) {
+                          inflow, strategy_name, aux_params = NULL,
+                          disc_method = 'start') {
   
   .state <- .full_state <- .expand <- NULL
   
@@ -135,7 +136,8 @@ eval_strategy <- function(strategy, parameters, cycles,
     parameters,
     cycles = cycles,
     strategy_name = strategy_name,
-    max_state_time = max(expand_table$.limit)
+    max_state_time = max(expand_table$.limit),
+    disc_method = disc_method
   )
   
   # Evaluate object parameters.  Doesn't need to
@@ -171,7 +173,8 @@ eval_strategy <- function(strategy, parameters, cycles,
   e_states <- eval_state_list(
     get_states(strategy),
     e_parameters,
-    expand_table
+    expand_table,
+    disc_method = disc_method
   )
   
   # Evaluate Transitions

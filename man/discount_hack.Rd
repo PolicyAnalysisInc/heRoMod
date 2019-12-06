@@ -4,7 +4,7 @@
 \alias{discount_hack}
 \title{Hack to Work Around a Discounting Issue}
 \usage{
-discount_hack(.dots)
+discount_hack(.dots, method = "start")
 }
 \arguments{
 \item{.dots}{A state object.}

@@ -1208,6 +1208,12 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
+  if (is.null(dots$disc_method)) {
+    disc_method <- 'start'
+  } else {
+    disc_method <- dots$disc_method
+  }
+  
   # Return model object
   list(
     states = state_list,
@@ -1220,6 +1226,7 @@ build_hero_model <- function(...) {
       "cost",   paste0(".disc_", dots$esumms$name[1]),
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", method,
+      "disc_method", disc_method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", "),

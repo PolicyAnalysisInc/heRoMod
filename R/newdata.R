@@ -49,6 +49,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
   init <- get_uneval_init(x)
   inflow <- get_inflow(x)
   method <- get_method(x)
+  disc_method <- x$disc_method
   old_parameters <- get_parameters(x)
   aux_params <- x$aux_params
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
@@ -72,7 +73,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             inflow = inflow,
             method = method,
             strategy_name = strategy,
-            expand_limit = expand_limit
+            expand_limit = expand_limit,
+            disc_method = disc_method
           )
         ))) %>% 
         ungroup() %>% 
@@ -88,7 +90,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
 
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
-                         strategy_name, expand_limit, aux_params = NULL) {
+                         strategy_name, expand_limit, aux_params = NULL, disc_method = 'start') {
   
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
@@ -111,6 +113,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     inflow = inflow,
     strategy_name = strategy_name,
     expand_limit = expand_limit,
-    aux_params = aux_params
+    aux_params = aux_params,
+    disc_method = disc_method
   )
 }

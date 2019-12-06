@@ -15,10 +15,11 @@
 #'   
 #' @keywords internal
 eval_parameters <- function(x, cycles = 1,
-                            strategy_name = '', max_state_time = cycles) {
+                            strategy_name = '', max_state_time = cycles,
+                            disc_method = 'start') {
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
-  x <- discount_hack(x)
+  x <- discount_hack(x, method = disc_method)
   
   expanding <- max_state_time > 1
   

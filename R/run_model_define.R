@@ -85,7 +85,8 @@ run_model <- function(...,
                       inflow = rep(0L, get_state_number(get_states(list(...)[[1]]))),
                       aux_params = NULL,
                       parallel = F,
-                      cores = 1) {
+                      cores = 1,
+                      disc_method = 'start') {
   
   uneval_strategy_list <- list(...)
   
@@ -105,7 +106,8 @@ run_model <- function(...,
     inflow = inflow,
     aux_params = aux_params,
     parallel = parallel,
-    cores = cores
+    cores = cores,
+    disc_method = disc_method
   )
 }
 
@@ -122,7 +124,8 @@ run_model_ <- function(uneval_strategy_list,
                        inflow,
                        aux_params = NULL,
                        parallel = F,
-                       cores = 1) {
+                       cores = 1,
+                       disc_method = 'start') {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -200,7 +203,8 @@ run_model_ <- function(uneval_strategy_list,
         expand_limit = state_time_limit[[i]],
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
-        aux_params = aux_params
+        aux_params = aux_params,
+        disc_method = disc_method
       ))
     }, mc.cores = cores)
     
@@ -221,7 +225,8 @@ run_model_ <- function(uneval_strategy_list,
         expand_limit = state_time_limit[[i]],
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
-        aux_params = aux_params
+        aux_params = aux_params,
+        disc_method = disc_method
       )
     })
   }
@@ -268,7 +273,8 @@ run_model_ <- function(uneval_strategy_list,
       central_strategy = central_strategy,
       noncomparable_strategy = noncomparable_strategy,
       state_time_limit = state_time_limit,
-      frontier = if (! is.null(root_strategy)) get_frontier(res)
+      frontier = if (! is.null(root_strategy)) get_frontier(res),
+      disc_method = disc_method
     ),
     class = c("run_model", class(res))
   )
