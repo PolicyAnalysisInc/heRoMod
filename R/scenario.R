@@ -76,12 +76,31 @@ run_hero_scen <- function(...) {
   if (!'data.frame' %in% class(dots$scenario)) {
     stop('Cannot run scenario analysis: no scenarios were defined.', call. = F)
   }
+  scen_param_count <- dots$scenario %>%
+    group_by(scenario_name, param_name) %>%
+    summarize(n=n())
+  dupe <- scen_param_count$n > 1
+  scenario_descs <- dots$scenario %>%
+    group_by(scenario_name, description) %>%
+    summarise()
+  if (any(dupe)) {
+    index <- which(dupe)
+    dupe_scen <- scen_param_count[index[1], ]$scenario_name
+    dupe_param <- scen_param_count[index[1], ]$param_name
+    stop(
+      paste0(
+        'Error in scenario "', dupe_scen, '", parameter "',
+        dupe_param, '" is used more than once.'
+      ),
+      call. = F
+    )
+  }
   # Run the DSA
   res <- run_hero_scen_(...)
   # Compress the results
   res$nmb <- res$nmb  %>%
     left_join(
-      select(dots$scenario, scenario_name, description),
+      scenario_descs,
       by = c("scenario" = "scenario_name")
     ) %>%
     ungroup() %>%
@@ -108,7 +127,7 @@ run_hero_scen <- function(...) {
     }) 
   res$cost <- res$cost %>%
     left_join(
-      select(dots$scenario, scenario_name, description),
+      scenario_descs,
       by = c("scenario" = "scenario_name")
     ) %>%
     ungroup() %>%
@@ -135,7 +154,7 @@ run_hero_scen <- function(...) {
     }) 
   res$outcomes <- res$outcomes %>%
     left_join(
-      select(dots$scenario, scenario_name, description),
+      scenario_descs,
       by = c("scenario" = "scenario_name")
     ) %>%
     ungroup() %>%
