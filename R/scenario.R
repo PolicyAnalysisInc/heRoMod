@@ -72,10 +72,46 @@ run_hero_scen_ <- function(...) {
 
 #' @export
 run_hero_scen <- function(...) {
+  dots <- list(...)
+  if (!'data.frame' %in% class(dots$scenario)) {
+    stop('Cannot run scenario analysis: no scenarios were defined.', call. = F)
+  }
+  scen_param_count <- dots$scenario %>%
+    group_by(scenario_name, param_name) %>%
+    summarize(n=n())
+  dupe <- scen_param_count$n > 1
+  scenario_descs <- dots$scenario %>%
+    group_by(scenario_name, description) %>%
+    summarise()
+  if (any(dupe)) {
+    index <- which(dupe)
+    dupe_scen <- scen_param_count[index[1], ]$scenario_name
+    dupe_param <- scen_param_count[index[1], ]$param_name
+    stop(
+      paste0(
+        'Error in scenario "', dupe_scen, '", parameter "',
+        dupe_param, '" is used more than once.'
+      ),
+      call. = F
+    )
+  }
   # Run the DSA
   res <- run_hero_scen_(...)
   # Compress the results
   res$nmb <- res$nmb  %>%
+    left_join(
+      scenario_descs,
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    ungroup() %>%
+    mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
+      description = ifelse(
+        scenario == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(health_outcome, econ_outcome, series) %>%
     group_split() %>%
     purrr::map(function(x) {
@@ -83,10 +119,26 @@ run_hero_scen <- function(...) {
         health_outcome = x$health_outcome[1],
         econ_outcome = x$econ_outcome[1],
         series = x$series[1],
-        data = select(x, -health_outcome, -econ_outcome, -series)
+        data = arrange(
+          select(x, -health_outcome, -econ_outcome, -series),
+          scenario
+        )
       )
     }) 
   res$cost <- res$cost %>%
+    left_join(
+      scenario_descs,
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    ungroup() %>%
+    mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
+      description = ifelse(
+        scenario == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(outcome, disc, series) %>%
     group_split() %>%
     purrr::map(function(x) {
@@ -94,10 +146,26 @@ run_hero_scen <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
+        data = arrange(
+          select(x, -outcome, -disc, -series),
+          scenario
+        )
       )
     }) 
   res$outcomes <- res$outcomes %>%
+    left_join(
+      scenario_descs,
+      by = c("scenario" = "scenario_name")
+    ) %>%
+    ungroup() %>%
+    mutate(
+      scenario = factor(scenario, levels = unique(c("Base Case", dots$scenario$scenario_name))),
+      description = ifelse(
+        scenario == "Base Case",
+        "Base case scenario of model.",
+        description
+      )
+    ) %>%
     group_by(outcome, disc, series) %>%
     group_split() %>%
     purrr::map(function(x) {
@@ -105,7 +173,10 @@ run_hero_scen <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
+        data = arrange(
+          select(x, -outcome, -disc, -series),
+          scenario
+        )
       )
     }) 
   

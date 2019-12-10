@@ -8,14 +8,14 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
     "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
     "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
-    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA, NA,
-    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA, NA,
-    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA, NA,
-    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA, NA,
-    "state_day",           "state_time * cycle_length_days",       NA,   NA, NA,
-    "state_week",          "state_time * cycle_length_weeks",      NA,   NA, NA,
-    "state_month",         "state_time * cycle_length_months",     NA,   NA, NA,
-    "state_year",          "state_time * cycle_length_years",      NA,   NA, NA,
+    "model_day",           "round(markov_cycle * cycle_length_days, 10)",     NA,   NA, NA,
+    "model_week",          "round(markov_cycle * cycle_length_weeks, 10)",    NA,   NA, NA,
+    "model_month",         "round(markov_cycle * cycle_length_months, 10)",   NA,   NA, NA,
+    "model_year",          "round(markov_cycle * cycle_length_years, 10)",    NA,   NA, NA,
+    "state_day",           "round(state_time * cycle_length_days, 10)",       NA,   NA, NA,
+    "state_week",          "round(state_time * cycle_length_weeks, 10)",      NA,   NA, NA,
+    "state_month",         "round(state_time * cycle_length_months, 10)",     NA,   NA, NA,
+    "state_year",          "round(state_time * cycle_length_years, 10)",      NA,   NA, NA,
     "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA, NA,
     "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA, NA
   )
@@ -1208,6 +1208,12 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
+  if (is.null(dots$settings$disc_method)) {
+    disc_method <- 'start'
+  } else {
+    disc_method <- dots$settings$disc_method
+  }
+  
   # Return model object
   list(
     states = state_list,
@@ -1220,6 +1226,7 @@ build_hero_model <- function(...) {
       "cost",   paste0(".disc_", dots$esumms$name[1]),
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", method,
+      "disc_method", disc_method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", "),
@@ -1745,7 +1752,8 @@ package_hero_model <- function(...) {
     surv_dists = dots$surv_dists,
     type = dots$type,
     vbp = dots$vbp,
-    psa = dots$psa
+    psa = dots$psa,
+    scenario = dots$scenario
   )
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
@@ -1773,7 +1781,8 @@ results <- do.call(run_hero_bc, model)
   saveRDS(model_object, "model.rds")
   utils::zip(
     paste0(dots$name, ".zip"),
-    c(paste0(dots$name, ".rproj"), "run.R", "model.rds")
+    c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
+    flags="-q"
   )
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")

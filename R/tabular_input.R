@@ -83,10 +83,19 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   # Setup scenarios
   scen_info <- NULL
-  if (!is.null(scen)) {
+  if ('data.frame' %in% class(scen)) {
     param_info$scen <- scen %>%
       mutate(
-        formula = lapply(formula, function(x) lazyeval::as.lazy(x))
+        formula = lapply(seq_len(n()), function(i) {
+          tryCatch({
+            lazyeval::as.lazy(formula[i])
+          }, error = function(e) {
+            stop(
+              paste0('Error in scenario "', scenario_name[i], '", invalid formula.'),
+              call. = F
+            )
+          })
+        })
       )
   }
   
@@ -458,7 +467,8 @@ eval_models_from_tabular <- function(inputs,
       state_time_limit = inputs$state_time_limit,
       aux_params = inputs$aux_param_info$params,
       parallel = !(run_dsa | run_psa | run_demo | run_scen),
-      cores = inputs$model_options$num_cores
+      cores = inputs$model_options$num_cores,
+      disc_method = inputs$model_options$disc_method
     )
   )
   
@@ -1154,7 +1164,7 @@ create_options_from_tabular <- function(opt, state_names, df_env = globalenv()) 
   
   allowed_opt <- c("cost", "effect", "init",
                    "method", "base", "cycles", "n",
-                   "num_cores")
+                   "num_cores", "disc_method")
   if(! inherits(opt, "data.frame"))
     stop("'opt' must be a data frame.")
   
