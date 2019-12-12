@@ -22,6 +22,7 @@ run_analysis <- function(...) {
       error = paste0('Error: ', as.character(msg))
     )
   }
+  res$warnings <- paste(capture.output(warnings()), collapse = '\n')
   res
 }
 
