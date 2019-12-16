@@ -8,14 +8,14 @@ parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
     "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
     "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
     "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
-    "model_day",           "round(markov_cycle * cycle_length_days, 10)",     NA,   NA, NA,
-    "model_week",          "round(markov_cycle * cycle_length_weeks, 10)",    NA,   NA, NA,
-    "model_month",         "round(markov_cycle * cycle_length_months, 10)",   NA,   NA, NA,
-    "model_year",          "round(markov_cycle * cycle_length_years, 10)",    NA,   NA, NA,
-    "state_day",           "round(state_time * cycle_length_days, 10)",       NA,   NA, NA,
-    "state_week",          "round(state_time * cycle_length_weeks, 10)",      NA,   NA, NA,
-    "state_month",         "round(state_time * cycle_length_months, 10)",     NA,   NA, NA,
-    "state_year",          "round(state_time * cycle_length_years, 10)",      NA,   NA, NA,
+    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA, NA,
+    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA, NA,
+    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA, NA,
+    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA, NA,
+    "state_day",           "state_time * cycle_length_days",       NA,   NA, NA,
+    "state_week",          "state_time * cycle_length_weeks",      NA,   NA, NA,
+    "state_month",         "state_time * cycle_length_months",     NA,   NA, NA,
+    "state_year",          "state_time * cycle_length_years",      NA,   NA, NA,
     "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA, NA,
     "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA, NA
   )
@@ -429,6 +429,46 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
     st_df <- NULL
   }
   st_df
+}
+parse_hero_settings <- function(settings) {
+  
+  # Determine half-cycle method
+  if (is.null(settings$method)) {
+    settings$method <- "life-table"
+  }
+  
+  # Determine discounting method
+  if (is.null(settings$disc_method)) {
+    settings$disc_method <- 'start'
+  }
+  
+  if (!is.null(settings$CycleLength)) {
+    # Caclulate cycle length
+    cl_n <- settings$CycleLength
+    cl_u <- settings$CycleLengthUnits
+    cl <- time_in_days(cl_u, 365) * cl_n
+    
+    # Calculate timeframe
+    tf_n <- settings$ModelTimeframe
+    tf_u <- settings$ModelTimeframeUnits
+    tf <- time_in_days(tf_u, 365) * tf_n
+    
+    # Populate settings object with cycle length & number of cycles
+    settings$cycle_length <- cl
+    settings$n_cycles <- max(1, round(tf / cl))
+  }
+  
+  settings
+}
+
+time_in_days <- function(x, days_per_year) {
+  switch(
+    x,
+    "days" = 1,
+    "weeks" = 7,
+    "months" = days_per_year / 12,
+    "years" = days_per_year
+  )
 }
 
 hero_extract_summ <- function(res, summ) {
@@ -1145,12 +1185,14 @@ build_hero_model <- function(...) {
     dots$psa$n = 1
   }
   
+  settings <- parse_hero_settings(dots$settings)
+  
   # Format parameters Table
   params <- parse_hero_vars(
     dots$variables,
-    dots$settings$cycle_length,
-    dots$settings$disc_eff,
-    dots$settings$disc_cost,
+    settings$cycle_length,
+    settings$disc_eff,
+    settings$disc_cost,
     dots$groups
   )
   
@@ -1171,7 +1213,7 @@ build_hero_model <- function(...) {
     dots$esumms,
     dots$strategies$name,
     dots$states$name,
-    dots$settings$cycle_length
+    settings$cycle_length
   )
   
   # Format state transitions list
@@ -1182,19 +1224,13 @@ build_hero_model <- function(...) {
     dots$esumms,
     dots$strategies$name,
     dots$states$name,
-    dots$settings$cycle_length
+    settings$cycle_length
   )
   
   # Format state time limits
   limits <- as.numeric(dots$states$limit)
   names(limits) <- dots$states$name
   limits <- limits[!is.na(limits) & !(limits == 0)]
-  
-  # Determine half-cycle method
-  method <- "life-table"
-  if (!is.null(dots$settings$method)) {
-    method <- dots$settings$method
-  }
   
   
   # Fix column names
@@ -1208,12 +1244,6 @@ build_hero_model <- function(...) {
     cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
   }
   
-  if (is.null(dots$settings$disc_method)) {
-    disc_method <- 'start'
-  } else {
-    disc_method <- dots$settings$disc_method
-  }
-  
   # Return model object
   list(
     states = state_list,
@@ -1225,8 +1255,8 @@ build_hero_model <- function(...) {
       ~option,  ~value,
       "cost",   paste0(".disc_", dots$esumms$name[1]),
       "effect", paste0(".disc_", dots$hsumms$name[1]),
-      "method", method,
-      "disc_method", disc_method,
+      "method", settings$method,
+      "disc_method", settings$disc_method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse=", "),
