@@ -1,10 +1,47 @@
-
-parse_hero_vars <- function(data, clength, hdisc, edisc, groups) {
-  hdisc_adj <- rescale_discount_rate(hdisc, 365, clength)
-  edisc_adj <- rescale_discount_rate(edisc, 365, clength)
+parse_hero_settings <- function(settings) {
+  
+  # Determine half-cycle method
+  if (is.null(settings$method)) {
+    settings$method <- "life-table"
+  }
+  
+  # Determine discounting method
+  if (is.null(settings$disc_method)) {
+    settings$disc_method <- 'start'
+  }
+  
+  if (!is.null(settings$CycleLength)) {
+    # Caclulate cycle length
+    cl_n <- settings$CycleLength
+    cl_u <- settings$CycleLengthUnits
+    cl <- time_in_days(cl_u, 365) * cl_n
+    
+    # Calculate timeframe
+    tf_n <- settings$ModelTimeframe
+    tf_u <- settings$ModelTimeframeUnits
+    tf <- time_in_days(tf_u, 365) * tf_n
+    
+    # Populate settings object with number of cycles
+    settings$n_cycles <- max(1, round(tf / cl))
+  }
+  
+  settings
+}
+parse_hero_vars <- function(data, settings, groups) {
+  if (!is.null(settings$CycleLengthUnits)) {
+    cl_u <- settings$CycleLengthUnits
+    cl_n <- settings$CycleLength
+    cl_d_formula <- paste0('time_in_days("', cl_u, '", 365) * ', cl_n)
+    cl <- time_in_days(cl_u, 365) * cl_n
+  } else {
+    cl <- settings$cycle_length
+    cl_d_formula <- as.character(cl)
+  }
+  hdisc_adj <- rescale_discount_rate(settings$disc_eff, 365, cl)
+  edisc_adj <- rescale_discount_rate(settings$disc_cost, 365, cl)
   hero_pars <- tibble::tribble(
     ~parameter,            ~value,                                 ~low, ~high, ~psa,
-    "cycle_length_days",   as.character(clength),                  NA,   NA, NA,
+    "cycle_length_days",   cl_d_formula,                           NA,   NA, NA,
     "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
     "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
     "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
@@ -68,7 +105,7 @@ parse_hero_groups <- function(data) {
     NULL
   }
 }
-parse_hero_values <- function(data, health, strategies, states, clength) {
+parse_hero_values <- function(data, health, strategies, states) {
   
   trans_string <- "\U2192"
   if(health) {
@@ -135,7 +172,7 @@ parse_hero_values <- function(data, health, strategies, states, clength) {
   }
   rbind(states_undisc, states_disc)
 }
-parse_hero_values_st <- function(data, health, strategies, clength) {
+parse_hero_values_st <- function(data, health, strategies) {
   
   trans_string <- "\U2192"
   
@@ -184,7 +221,7 @@ parse_hero_values_st <- function(data, health, strategies, clength) {
   
   rbind(states_undisc, states_disc)
 }
-parse_hero_summaries <- function(data, values, health, strategies, states, clength) {
+parse_hero_summaries <- function(data, values, health, strategies, states) {
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -215,7 +252,7 @@ parse_hero_summaries <- function(data, values, health, strategies, states, cleng
   
   rbind(sum_undisc, sum_disc)
 }
-parse_hero_summaries_st <- function(data, values, health, strategies, states, clength) {
+parse_hero_summaries_st <- function(data, values, health, strategies, states) {
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -334,7 +371,7 @@ parse_hero_trans <- function(data, strategies, states) {
   }
   trans_table
 }
-parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
+parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, states) {
   bad_names <- lapply(states, function(x) !grepl('^[[:alpha:]]+[[:alnum:]\\_]*$', x)) %>%
     as.logical()
   
@@ -358,12 +395,12 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
     paste0(".disc_", all_value_names)
   )
   values <- rbind(
-    parse_hero_values(hvalues, TRUE, strategies, states, clength),
-    parse_hero_values(evalues, FALSE, strategies, states, clength)
+    parse_hero_values(hvalues, TRUE, strategies, states),
+    parse_hero_values(evalues, FALSE, strategies, states)
   )
   summaries <- rbind(
-    parse_hero_summaries(hsumms, values, TRUE, strategies, states, clength),
-    parse_hero_summaries(esumms, values, FALSE, strategies, states, clength)
+    parse_hero_summaries(hsumms, values, TRUE, strategies, states),
+    parse_hero_summaries(esumms, values, FALSE, strategies, states)
   )
   states_df <- rbind(
     values,
@@ -379,7 +416,7 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
   
   states_df
 }
-parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, states, clength) {
+parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, states) {
   all_value_names <- unique(c(
     hvalues$name,
     hsumms$name,
@@ -392,12 +429,12 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
   )
   trans_string <- "\U2192"
   values <- rbind(
-    parse_hero_values_st(hvalues, TRUE, strategies, clength),
-    parse_hero_values_st(evalues, FALSE, strategies, clength)
+    parse_hero_values_st(hvalues, TRUE, strategies),
+    parse_hero_values_st(evalues, FALSE, strategies)
   )
   summaries <- rbind(
-    parse_hero_summaries_st(hsumms, values, TRUE, strategies, states, clength),
-    parse_hero_summaries_st(esumms, values, FALSE, strategies, states, clength)
+    parse_hero_summaries_st(hsumms, values, TRUE, strategies, states),
+    parse_hero_summaries_st(esumms, values, FALSE, strategies, states)
   )
   all_values <- rbind(
     values,
@@ -430,37 +467,8 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
   }
   st_df
 }
-parse_hero_settings <- function(settings) {
-  
-  # Determine half-cycle method
-  if (is.null(settings$method)) {
-    settings$method <- "life-table"
-  }
-  
-  # Determine discounting method
-  if (is.null(settings$disc_method)) {
-    settings$disc_method <- 'start'
-  }
-  
-  if (!is.null(settings$CycleLength)) {
-    # Caclulate cycle length
-    cl_n <- settings$CycleLength
-    cl_u <- settings$CycleLengthUnits
-    cl <- time_in_days(cl_u, 365) * cl_n
-    
-    # Calculate timeframe
-    tf_n <- settings$ModelTimeframe
-    tf_u <- settings$ModelTimeframeUnits
-    tf <- time_in_days(tf_u, 365) * tf_n
-    
-    # Populate settings object with cycle length & number of cycles
-    settings$cycle_length <- cl
-    settings$n_cycles <- max(1, round(tf / cl))
-  }
-  
-  settings
-}
 
+#' @export
 time_in_days <- function(x, days_per_year) {
   switch(
     x,
@@ -1190,9 +1198,7 @@ build_hero_model <- function(...) {
   # Format parameters Table
   params <- parse_hero_vars(
     dots$variables,
-    settings$cycle_length,
-    settings$disc_eff,
-    settings$disc_cost,
+    settings,
     dots$groups
   )
   
@@ -1212,8 +1218,7 @@ build_hero_model <- function(...) {
     dots$hsumms,
     dots$esumms,
     dots$strategies$name,
-    dots$states$name,
-    settings$cycle_length
+    dots$states$name
   )
   
   # Format state transitions list
@@ -1223,8 +1228,7 @@ build_hero_model <- function(...) {
     dots$hsumms,
     dots$esumms,
     dots$strategies$name,
-    dots$states$name,
-    settings$cycle_length
+    dots$states$name
   )
   
   # Format state time limits
@@ -1259,7 +1263,7 @@ build_hero_model <- function(...) {
       "disc_method", settings$disc_method,
       "cycles", max(1, round(dots$settings$n_cycles,0)),
       "n",      dots$psa$n,
-      "init",   paste(dots$states$prob,collapse=", "),
+      "init",   paste(dots$states$prob,collapse = ", "),
       "num_cores", cores
     ),
     data = dots$tables,

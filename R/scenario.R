@@ -198,7 +198,9 @@ run_scen <- function(model, scen, cores = 1) {
   scenario_names <- unique(scen$scenario_name)
   par_names <- unique(scen$param_name)
   
-  new_data <- group_by(scen, scenario_name) %>%
+  new_data <- scen %>%
+    mutate(scenario_name = factor(scenario_name, levels = unique(scenario_name))) %>%
+    group_by(scenario_name) %>%
     group_split() %>%
     lapply(function(x) {
       args_list <- lapply(x$formula, list)
