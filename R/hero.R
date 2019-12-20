@@ -1,5 +1,10 @@
 parse_hero_settings <- function(settings) {
   
+  # Determine days per year
+  if (is.null(settings$days_per_year)) {
+    settings$days_per_year <- 365
+  }
+  
   # Determine half-cycle method
   if (is.null(settings$method)) {
     settings$method <- "life-table"
@@ -14,12 +19,12 @@ parse_hero_settings <- function(settings) {
     # Caclulate cycle length
     cl_n <- settings$CycleLength
     cl_u <- settings$CycleLengthUnits
-    cl <- time_in_days(cl_u, 365) * cl_n
+    cl <- time_in_days(cl_u, settings$days_per_year) * cl_n
     
     # Calculate timeframe
     tf_n <- settings$ModelTimeframe
     tf_u <- settings$ModelTimeframeUnits
-    tf <- time_in_days(tf_u, 365) * tf_n
+    tf <- time_in_days(tf_u, settings$days_per_year) * tf_n
     
     # Populate settings object with number of cycles
     settings$n_cycles <- max(1, round(tf / cl))
@@ -28,23 +33,24 @@ parse_hero_settings <- function(settings) {
   settings
 }
 parse_hero_vars <- function(data, settings, groups) {
+  dpy <- settings$days_per_year
   if (!is.null(settings$CycleLengthUnits)) {
     cl_u <- settings$CycleLengthUnits
     cl_n <- settings$CycleLength
-    cl_d_formula <- paste0('time_in_days("', cl_u, '", 365) * ', cl_n)
-    cl <- time_in_days(cl_u, 365) * cl_n
+    cl_d_formula <- paste0('time_in_days("', cl_u, '", ', dpy, ') * ', cl_n)
+    cl <- time_in_days(cl_u, dpy) * cl_n
   } else {
     cl <- settings$cycle_length
     cl_d_formula <- as.character(cl)
   }
-  hdisc_adj <- rescale_discount_rate(settings$disc_eff, 365, cl)
-  edisc_adj <- rescale_discount_rate(settings$disc_cost, 365, cl)
+  hdisc_adj <- rescale_discount_rate(settings$disc_eff, dpy, cl)
+  edisc_adj <- rescale_discount_rate(settings$disc_cost, dpy, cl)
   hero_pars <- tibble::tribble(
     ~parameter,            ~value,                                 ~low, ~high, ~psa,
     "cycle_length_days",   cl_d_formula,                           NA,   NA, NA,
     "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
-    "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
-    "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
+    "cycle_length_months", paste0("cycle_length_days * 12 / ", dpy),         NA,   NA, NA,
+    "cycle_length_years",  paste0("cycle_length_days / ", dpy),              NA,   NA, NA,
     "model_day",           "markov_cycle * cycle_length_days",     NA,   NA, NA,
     "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA, NA,
     "model_month",         "markov_cycle * cycle_length_months",   NA,   NA, NA,
