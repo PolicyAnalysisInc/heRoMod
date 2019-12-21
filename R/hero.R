@@ -26,6 +26,14 @@ parse_hero_settings <- function(settings) {
     tf_u <- settings$ModelTimeframeUnits
     tf <- time_in_days(tf_u, settings$days_per_year) * tf_n
     
+    if (cl > tf) {
+      stop('Cycle length may not exceed timeframe', call. = F)
+    }
+    
+    if (cl <= 0) {
+      stop('Cycle length must be positive', call. = F)
+    }
+    
     # Populate settings object with number of cycles
     settings$n_cycles <- max(1, round(tf / cl))
   }
