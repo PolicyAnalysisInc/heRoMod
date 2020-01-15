@@ -1174,10 +1174,10 @@ build_hero_model <- function(...) {
     method <- dots$settings$method
   }
   
-  cores <- 1
-  if (!is.null(dots$cores)) {
-    cores <- dots$cores
-  }
+  cores <- parallel::detectCores()
+  # if (!is.null(dots$cores)) {
+  #   cores <- dots$cores
+  # }
   
   # Return model object
   list(
