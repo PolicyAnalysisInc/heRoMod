@@ -304,10 +304,20 @@ define_surv_table.character <- function(x){
 #' Define a survival distribution based on explicit survival probabilities
 #'
 #' @param x a data frame with columns `age`, `male`, and `female`, where age is
-#' a counting sequence representing each age covered by the life-table, male
-#' represents the conditional probability of death at each age for men, and female represents
-#' the conditional probability  of death at each age for women.
-#'
+#' the starting age in each age band, male is the conditional probability of death
+#' at each age for men, and female is the conditional probability of death at each
+#' for women.
+#' @param start_age The starting age of the population.
+#' @param percent_male The percent of population that is male.
+#' @param output_unit The time unit resulting survival distribution will be defined
+#' in terms of. Valid options are `c("days", "weeks", "months", "years")`. Defaults to `"years"`.
+#' @param age_col Optional argument to change name of the `age` column accepted by the
+#' first argument.
+#' @param male_col Optional argument to change name of the `male` column accepted by the
+#' first argument.
+#' @param female_col Optional argument to change name of the `female` column accepted by the
+#' first argument.
+
 #' @return a `surv_lifetable` object, which can be used with [compute_surv()].
 #' @export
 #'
@@ -315,14 +325,14 @@ define_surv_table.character <- function(x){
 #'  x <- data.frame(age = c(0, 1, 2, 3), male = c(0.011, 0.005, 0.003, 0.002), female = c(0.010, 0.005, 0.004, 0.002))
 #'  define_surv_lifetable(x, 1, 0.45)
 #'  
-define_surv_lifetable <- function(x, start_age, percent_male){
+define_surv_lifetable <- function(x, start_age, percent_male, output_unit = "years", age_col = "age", male_col = "male", female_col = "female"){
   UseMethod("define_surv_lifetable", x)
 }
 
 #' @rdname define_surv_lifetable
 #' @export
-define_surv_lifetable.data.frame <- function(x, start_age, percent_male) {
-  required_names <- c("age", "male", "female")
+define_surv_lifetable.data.frame <- function(x, start_age, percent_male, output_unit = "years", age_col = "age", male_col = "male", female_col = "female") {
+  required_names <- c(age_col, male_col, female_col)
   names_present <- required_names %in% names(x)
   if(any(!names_present)){
     stop("missing column",
@@ -331,37 +341,38 @@ define_surv_lifetable.data.frame <- function(x, start_age, percent_male) {
          paste(required_names[!names_present], collapse = ", ")
     )
   }
-  x$age <- as.numeric(x$age)
-  x <- x[order(x$age),]
-  dup_time <- duplicated(x$age)
+  x[[age_col]] <- as.numeric(x[[age_col]])
+  x <- x[order(x[[age_col]]),]
+  dup_time <- duplicated(x[[age_col]])
   if(any(dup_time))
     stop("any age can appear only once in life table data. ",
          "Duplicated age",
          plur(sum(dup_time)),
          ": ",
-         paste(x$age[dup_time], collapse = ", ")
+         paste(x[[age_col]][dup_time], collapse = ", ")
     )
-  if(any(diff(x$age) != 1)) {
-    stop("ages in a life table must appear in a counting sequence (e.g. 0, 1, 2, ...)")
-  }
   
+  agediffs <- diff(x[[age_col]])
+  agediff <- agediffs[1]
+  if(!all(agediffs == agediff)) {
+    stop("Life table must use constant age bands.")
+  }
   class(x) <- c("surv_lifetable", "surv_object", "data.frame")
   
-  lambdas_male <- -log(1 - x$male)
-  func_male <- function(time) msm::ppexp(time,  rate = lambdas_male, t = x$age, lower.tail = F)
+  first_index <- tail(which(x[[age_col]] <= start_age), 1)
+  first_used_age <- x[[age_col]][first_index]
+  indices_to_use <- seq_len(nrow(x)) >= first_index
+  cut_points <- x[indices_to_use, ][[age_col]] - start_age
+  cut_points[1] <- 0
   
-  lambdas_female <- -log(1 - x$female)
-  func_female <- function(time) msm::ppexp(time,  rate = lambdas_female, t = x$age, lower.tail = F)
+  lambdas_male <- (-log(1 - x[[male_col]]) / agediff)[indices_to_use]
+  lambdas_female <- (-log(1 - x[[female_col]]) / agediff)[indices_to_use]
   
+  func_male <- function(time) msm::ppexp(time,  rate = lambdas_male, t = cut_points, lower.tail = F)
+  func_female <- function(time) msm::ppexp(time,  rate = lambdas_female, t = cut_points, lower.tail = F)
   the_surv_func <- function(time) {
-    init_surv_male <- func_male(start_age[1])
-    full_surv_male <- func_male(time + start_age[1])
-    
-    init_surv_female <- func_female(start_age[1])
-    full_surv_female <- func_female(time + start_age[1])
-    
-    (full_surv_male / init_surv_male) * percent_male[1] +
-      (full_surv_female / init_surv_female) * (1 - percent_male[1])
+    converted_time <- time * time_in_days(output_unit, 365) / 365
+    func_male(converted_time) * percent_male[1] + func_female(converted_time) * (1 - percent_male[1])
   }
   
   attr(x, "start_age") <- start_age[1]

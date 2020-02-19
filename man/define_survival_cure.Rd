@@ -4,9 +4,13 @@
 \alias{define_survival_cure}
 \title{Define a Parametric Mixture or Non-Mixture Cure Distribution}
 \usage{
-define_survival_cure(distribution = c("exp", "weibull", "weibullPH",
-  "lnorm", "llogis", "gamma", "gompertz", "gengamma", "gengamma.orig",
-  "genf", "genf.orig"), theta, ..., mixture = T)
+define_survival_cure(
+  distribution = c("exp", "weibull", "weibullPH", "lnorm", "llogis", "gamma",
+    "gompertz", "gengamma", "gengamma.orig", "genf", "genf.orig"),
+  theta,
+  ...,
+  mixture = T
+)
 }
 \arguments{
 \item{distribution}{A parametric survival distribution.}

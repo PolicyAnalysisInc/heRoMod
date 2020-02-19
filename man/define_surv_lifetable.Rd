@@ -5,15 +5,47 @@
 \alias{define_surv_lifetable.data.frame}
 \title{Define a survival distribution based on explicit survival probabilities}
 \usage{
-define_surv_lifetable(x, start_age, percent_male)
+define_surv_lifetable(
+  x,
+  start_age,
+  percent_male,
+  output_unit = "years",
+  age_col = "age",
+  male_col = "male",
+  female_col = "female"
+)
 
-\method{define_surv_lifetable}{data.frame}(x, start_age, percent_male)
+\method{define_surv_lifetable}{data.frame}(
+  x,
+  start_age,
+  percent_male,
+  output_unit = "years",
+  age_col = "age",
+  male_col = "male",
+  female_col = "female"
+)
 }
 \arguments{
 \item{x}{a data frame with columns \code{age}, \code{male}, and \code{female}, where age is
-a counting sequence representing each age covered by the life-table, male
-represents the conditional probability of death at each age for men, and female represents
-the conditional probability  of death at each age for women.}
+the starting age in each age band, male is the conditional probability of death
+at each age for men, and female is the conditional probability of death at each
+for women.}
+
+\item{start_age}{The starting age of the population.}
+
+\item{percent_male}{The percent of population that is male.}
+
+\item{output_unit}{The time unit resulting survival distribution will be defined
+in terms of. Valid options are \code{c("days", "weeks", "months", "years")}. Defaults to \code{"years"}.}
+
+\item{age_col}{Optional argument to change name of the \code{age} column accepted by the
+first argument.}
+
+\item{male_col}{Optional argument to change name of the \code{male} column accepted by the
+first argument.}
+
+\item{female_col}{Optional argument to change name of the \code{female} column accepted by the
+first argument.}
 }
 \value{
 a \code{surv_lifetable} object, which can be used with \code{\link[=compute_surv]{compute_surv()}}.

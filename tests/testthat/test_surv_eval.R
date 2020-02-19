@@ -772,10 +772,10 @@ test_that("Defining Survival Distributions",
             )
             
             # This test works, but still throwing false positive
-            # expect_error(
-            #   define_surv_lifetable(bad_surv_lifetable_df, 0, 0.5),
-            #   "ages in a life table must appear in a counting sequence (e.g. 0, 1, 2, ...)"
-            # )
+            expect_error(
+              define_surv_lifetable(bad_surv_lifetable_df, 0, 0.5),
+              "Life table must use constant age bands."
+            )
             
             surv_table_df <- data.frame(time = c(0, 1, 5, 10),
                                         survival = c(1, 0.9, 0.7, 0.4))
@@ -798,6 +798,44 @@ test_that("Defining Survival Distributions",
             expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
                          c(1, 0.9977474, 0.9955000, 0.9937564, 0.9920160, 0.9900320, 0.9762544),
                          tolerance = 1e-7)
+            
+            
+            
+            surv_lifetable_df2 <- data.frame(
+              the_age = c(4, 6, 8, 10),
+              men = c(0.011, 0.004, 0.003, 0.002),
+              women = c(0.010, 0.005, 0.004, 0.002)
+            )
+            reg2 <- define_surv_lifetable(surv_lifetable_df2, 6, 0.5, age_col = "the_age", male_col = "men", female_col = "women")
+            
+            expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
+                         surv_prob(reg2, time = c(0, 1, 2, 3, 4, 6, 20)),
+                         tolerance = 1e-7)
+            
+            surv_lifetable_df3 <- data.frame(
+              age = c(0, 1, 2, 3),
+              male = c(0.011, 0.004, 1, 1),
+              female = c(0.010, 0.005, 1, 1)
+            )
+            reg3 <- define_surv_lifetable(surv_lifetable_df3, 1, 0.5)
+            
+            expect_equal(surv_prob(reg3, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
+                         c(1, 0.9977474, 0.9955000, 0, 0, 0, 0),
+                         tolerance = 1e-7)
+            
+            surv_lifetable_df4 <- data.frame(
+              age = c(0, 1, 2, 3),
+              male = c(0.011, 0.004, 0.003, 0.002),
+              female = c(0.010, 0.005, 0.004, 0.002)
+            )
+            reg4 <- define_surv_lifetable(surv_lifetable_df4, 1, 0.5, output_unit = "months")
+            
+            expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
+                         surv_prob(reg4, time = c(0, 6, 12, 18, 24, 36, 120)),
+                         tolerance = 1e-7)
+            
+            
+            
           })
 
 test_that("Survfit",

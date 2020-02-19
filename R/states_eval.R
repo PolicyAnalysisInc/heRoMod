@@ -64,6 +64,7 @@ eval_state_list <- function(x, parameters, expand = NULL,
     
     # update calls to dispatch_strategy()
     obj <- dispatch_strategy_hack(obj)
+    obj <- by_group_hack(obj)
     
     var_names <- names(obj)
     
@@ -122,6 +123,7 @@ eval_state_list <- function(x, parameters, expand = NULL,
       
       # update calls to dispatch_strategy()
       obj <- dispatch_strategy_hack(obj)
+      obj <- by_group_hack(obj)
       
       var_names <- names(obj)
       

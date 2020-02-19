@@ -48,7 +48,7 @@ test_that(
     #### Define state rewards ####
     ## State PreSymptomatic (Pre)
     state_disease <- define_state(
-      cost_treat = 4 + (2* dispatch_strategy(
+      cost_treat = 4 + (2* by_strategy(
         base = cC, 
         A    = cA, 
         B    = cB)+1), 

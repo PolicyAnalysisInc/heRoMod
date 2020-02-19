@@ -3,7 +3,6 @@
 \docType{package}
 \name{heRomod}
 \alias{heRomod}
-\alias{heRomod-package}
 \title{heRomod: Health Economic Evaluation MODelling}
 \description{
 \code{heRomod} is an R toolset for health economic

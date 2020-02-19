@@ -19,6 +19,7 @@ eval_parameters <- function(x, cycles = 1,
                             disc_method = 'start') {
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   x <- discount_hack(x, method = disc_method)
   
   expanding <- max_state_time > 1
@@ -44,6 +45,7 @@ eval_parameters <- function(x, cycles = 1,
 eval_obj_parameters <- function(x, params) {
   
   x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   
   if(length(x) > 0) {
     env <- x[[1]]$env
@@ -88,6 +90,7 @@ eval_init <- function(x, parameters, expand) {
   .state <- .limit <- model_time <- state_time <- .value <- NULL
   
   x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   
   to_keep <- names(x)
   

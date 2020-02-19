@@ -121,6 +121,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   
   # Set up time values for which transition probabilities
   # will be evaluated

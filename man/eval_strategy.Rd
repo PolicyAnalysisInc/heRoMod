@@ -4,8 +4,18 @@
 \alias{eval_strategy}
 \title{Evaluate Strategy}
 \usage{
-eval_strategy(strategy, parameters, cycles, init, method, expand_limit,
-  inflow, strategy_name, aux_params = NULL, disc_method = "start")
+eval_strategy(
+  strategy,
+  parameters,
+  cycles,
+  init,
+  method,
+  expand_limit,
+  inflow,
+  strategy_name,
+  aux_params = NULL,
+  disc_method = "start"
+)
 }
 \arguments{
 \item{strategy}{An \code{uneval_strategy} object.}
