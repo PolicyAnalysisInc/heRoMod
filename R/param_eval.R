@@ -202,7 +202,7 @@ eval_starting_values <- function(x, parameters) {
   
   start_df <- parameters %>%
     filter(state_time == 1) %>%
-    mutate(!!!lazy_eval(x, data = .)) %>%
+    mutate_(.dots = x) %>%
     .[to_keep]
   
   start_df[nrow(start_df), ] <- 0

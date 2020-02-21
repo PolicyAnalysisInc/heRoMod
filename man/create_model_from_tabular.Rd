@@ -8,7 +8,8 @@ create_model_from_tabular(
   state_info,
   tm_info,
   df_env = globalenv(),
-  state_trans_info = NULL
+  state_trans_info = NULL,
+  start_info = NULL
 )
 }
 \arguments{

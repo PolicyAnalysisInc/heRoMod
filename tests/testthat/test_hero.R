@@ -257,6 +257,8 @@ test_that(
 test_that(
   "Markov model Runs Correctly", {
     model <- readRDS(system.file("hero","markov_model", "model.rds", package="heRomod"))
+    model$evalues <- rbind(model$evalues, tibble(name = 'ae_cost', description = 'Adverse Event Cost', strategy = 'nat', state = 'Model Start', value = '100'))
+    model$esumms <- rbind(model$esumms, tibble(name = 'cost_hc', description = 'Healthcare system costs', value = 'ae_cost'))
     
     # Base Case Results
     bc_res <- readRDS(system.file("hero","markov_model", "bc_res.rds", package="heRomod"))

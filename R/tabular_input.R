@@ -23,10 +23,10 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
                           run_scen = FALSE, run_demo = FALSE, state_time_limit = NULL,
-                          aux_params = NULL, psa = NULL, scen = NULL) {
+                          aux_params = NULL, psa = NULL, scen = NULL, start = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data, aux_params = aux_params, psa = psa, scen = scen)
+                                  source, data, aux_params = aux_params, psa = psa, scen = scen, start = start)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
@@ -40,7 +40,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
-                                  data = NULL, aux_params = NULL, psa = NULL, scen = NULL) {
+                                  data = NULL, aux_params = NULL, psa = NULL, scen = NULL, start = NULL) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -50,6 +50,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
     states = states,
     tm = tm,
     st = st,
+    start = start,
     df_env = df_env
   )
   
@@ -124,7 +125,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
 }
 
-create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv()) {
+create_model_list_from_api <- function(states, tm, st = NULL, start = NULL, df_env = globalenv()) {
   
   state_info <- parse_multi_spec(
     states,
@@ -137,6 +138,12 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
     )
   } else {
     state_trans_info <- NULL
+  }
+  
+  if (!is.null(start)) {
+    start_info <- plyr::dlply(start, ".model", identity)
+  } else {
+    start_info <- NULL
   }
   
   state_names <- state_info[[1]]$.state
@@ -238,12 +245,18 @@ create_model_list_from_api <- function(states, tm, st = NULL, df_env = globalenv
         } else{
           this_state_trans <- state_trans_info[[i]]
         }
-        create_model_from_tabular(state_info[[i]], 
-                                  this_tm,
-                                  df_env = df_env,
-                                  state_trans_info = this_state_trans)
+        if (is.null(start_info)) {
+          this_start_info <- NULL
+        } else {
+          this_start_info <- start_info[[i]]
+        }
       }
-    })  
+      create_model_from_tabular(state_info[[i]], 
+                                this_tm,
+                                df_env = df_env,
+                                state_trans_info = this_state_trans,
+                                start_info = this_start_info)
+    })
   
   names(models) <- names(state_info)
   
@@ -1250,7 +1263,8 @@ create_options_from_tabular <- function(opt, state_names, df_env = globalenv()) 
 create_model_from_tabular <- function(state_info,
                                       tm_info,
                                       df_env = globalenv(),
-                                      state_trans_info = NULL) {
+                                      state_trans_info = NULL,
+                                      start_info = NULL) {
   if (length(tm_info) == 0) {
     stop("A transition object must be defined.")
   }
@@ -1270,6 +1284,14 @@ create_model_from_tabular <- function(state_info,
   states <- create_states_from_tabular(state_info,
                                        df_env = df_env,
                                        state_trans_info = state_trans_info)
+  starting <- define_starting_values_(
+    safe_lazy_dots(
+      as.character(start_info)[-1],
+      colnames(start_info)[-1],
+      df_env
+    )
+  ) %>%
+    resolve_dependencies()
   if (options()$heRomod.verbose) message("**** Defining TM...")
   
   trans_type <- transition_type(tm_info)
@@ -1298,7 +1320,7 @@ create_model_from_tabular <- function(state_info,
   
   define_strategy_(transition = TM, states = states,
                    starting_values = check_starting_values(
-                     define_starting_values(),
+                     starting,
                      get_state_value_names(states)))
 }
 
