@@ -60,8 +60,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
   suppressMessages(
-    pieces <- parallel::mclapply(pnewdata, function(newdata) {
-      #lapply(pnewdata, function(newdata) {
+    pieces <- #parallel::mclapply(pnewdata, function(newdata) {
+      lapply(pnewdata, function(newdata) {
       newdata %>% 
         rowwise() %>% 
         do({
@@ -69,7 +69,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
           iter <- df$.iteration
           tibble(
           .mod = list(try(eval_newdata(
-            df,
+            as.data.frame(df),
             strategy = uneval_strategy,
             old_parameters = old_parameters,
             aux_params = aux_params,
@@ -87,7 +87,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
           newdata
         )
     #})
-      }, mc.cores = cores)
+      })#, mc.cores = cores)
   )
   plyr::l_ply(
     pieces,
@@ -112,7 +112,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     new_parameters
   )
   
-  lazy_new_param <- to_dots(new_parameters)
+  lazy_new_param <- to_dots(as.data.frame(new_parameters))
   
   parameters <- utils::modifyList(
     old_parameters,

@@ -52,11 +52,15 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     "Running VBP on strategy '%s'...", strategy_vbp
   ))
   
+  vbp_newdata <- vbp$vbp %>%
+    dplyr::mutate_all(~purrr::map_dbl(., lazyeval::lazy_eval))
+    
+  
   res <- purrr::map_dfr(strategy_names, function(n) {
     eval_strategy_newdata(
       model,
       strategy = n,
-      newdata = vbp$vbp
+      newdata = vbp_newdata
     ) %>%
       dplyr::mutate(
         .strategy_names = n,

@@ -24,8 +24,7 @@
 \usage{
 eval_surv(x, time, ...)
 
-compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"),
-  ...)
+compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"), ...)
 
 surv_prob_(x, time, ...)
 
@@ -75,7 +74,7 @@ absolute time units.}
 \item{type}{Either \code{prob}, for transition probabilities,
 or \code{surv}, for survival.}
 
-\item{start}{The start time of the interval.}
+\item{start}{The end time of the interval.}
 }
 \value{
 Returns either the survival probalities or

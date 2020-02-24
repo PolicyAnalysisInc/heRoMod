@@ -9,11 +9,9 @@ event_prob(x, start, end, ...)
 \arguments{
 \item{x}{A survival distribution object}
 
-\item{start}{The start time of the interval.}
+\item{start}{The end time of the interval.}
 
 \item{...}{arguments passed to methods.}
-
-\item{start}{The end time of the interval.}
 }
 \value{
 Returns either the survival probalities or
