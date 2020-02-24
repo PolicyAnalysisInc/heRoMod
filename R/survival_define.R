@@ -334,6 +334,12 @@ define_surv_lifetable <- function(x, start_age, percent_male, output_unit = "yea
 define_surv_lifetable.data.frame <- function(x, start_age, percent_male, output_unit = "years", age_col = "age", male_col = "male", female_col = "female") {
   required_names <- c(age_col, male_col, female_col)
   names_present <- required_names %in% names(x)
+  start_age <- start_age[1]
+  percent_male <- percent_male[1]
+  output_unit <- output_unit[1]
+  male_col <- male_col[1]
+  age_col <- age_col[1]
+  female_col <- female_col[1]
   if(any(!names_present)){
     stop("missing column",
          plur(sum(!names_present)),

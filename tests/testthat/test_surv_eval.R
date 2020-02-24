@@ -793,7 +793,7 @@ test_that("Defining Survival Distributions",
               male = c(0.011, 0.004, 0.003, 0.002),
               female = c(0.010, 0.005, 0.004, 0.002)
             )
-            reg <- define_surv_lifetable(surv_lifetable_df, 1, 0.5)
+            reg <- define_surv_lifetable(surv_lifetable_df, c(1,1,1), 0.5)
             
             expect_equal(surv_prob(reg, time = c(0, 0.5, 1, 1.5, 2, 3, 10)),
                          c(1, 0.9977474, 0.9955000, 0.9937564, 0.9920160, 0.9900320, 0.9762544),
