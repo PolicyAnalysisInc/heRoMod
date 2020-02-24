@@ -86,8 +86,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
         bind_cols(
           newdata
         )
-    #})
-      })#, mc.cores = cores)
+    })
+     # }, mc.cores = cores)
   )
   plyr::l_ply(
     pieces,
@@ -112,7 +112,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     new_parameters
   )
   
-  lazy_new_param <- to_dots(as.data.frame(new_parameters))
+  lazy_new_param <- to_dots(as.data.frame(select(new_parameters, -.iteration)))
   
   parameters <- utils::modifyList(
     old_parameters,
@@ -142,7 +142,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     }
     writeLines(
       '',
-      paste0(path , group_name, '-', strategy_name, '-sens-', iteration)
+      paste0(path , group_name, '-', unname(strategy_name), '-sens-', iteration[1])
     )
   }
   res
