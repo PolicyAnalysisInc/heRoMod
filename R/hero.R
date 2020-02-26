@@ -13,6 +13,8 @@ run_analysis <- function(...) {
       res <- do.call(run_hero_bc, data)
     } else if (data$analysis == "excel") {
       res <- do.call(export_hero_xlsx, data)
+    } else if (data$analysis == "code_preview") {
+      res <- do.call(run_markdown, data)
     }
     res
   })
