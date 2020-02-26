@@ -73,7 +73,7 @@ check_matrix <- function(x) {
     problem <- which(x < 0 | x > 1, arr.ind = TRUE)
     # Use tibble here to avoid potentially confusing warnings about
     # Duplicate rownames
-    problem <- tibble::as.tibble(problem)
+    problem <- tibble::as_tibble(problem)
     names(problem) <- c("cycle", "from", "to")
     states <- get_state_names(x)
     problem$from <- states[problem$from]
@@ -121,6 +121,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   
   # Set up time values for which transition probabilities
   # will be evaluated
@@ -157,7 +158,18 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   if(expanding) {
     
     nrow_param = nrow(parameters)
-    eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
+    matrix_pos_names <- names(x)
+    state_trans_names <- paste0(
+      rep(state_names, each = length(state_names)),
+      ' → ',
+      rep(state_names, length(state_names))
+    )
+    names(x) <- state_trans_names
+    renamer <- state_trans_names
+    names(renamer) <- matrix_pos_names
+    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
+      rename(!!!syms(renamer))
+    names(x) <- matrix_pos_names
     
     trans_table <- tibble::tibble(
       model_time = rep.int(parameters$model_time, times = n_state^2),
@@ -166,8 +178,8 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .to = rep(state_names, times = n_state, each = nrow_param),
       .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
     ) %>%
-      dplyr::left_join(
-        dplyr::transmute(
+      left_join(
+        transmute(
           expand,
           .state = .state,
           state_time = state_time,
@@ -176,12 +188,12 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
         ),
         by = c(".from" = ".state", "state_time" = "state_time")
       ) %>%
-      dplyr::filter(.from_lim >= state_time) %>%
-      dplyr::mutate(
+      filter(.from_lim >= state_time) %>%
+      mutate(
         .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
       ) %>%
-      dplyr::left_join(
-        dplyr::transmute(
+      left_join(
+        transmute(
           expand,
           .state = .state,
           state_time = state_time,
@@ -189,17 +201,27 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
         ),
         by = c(".to" = ".state", ".to_state_time" = "state_time")
       ) %>%
-      dplyr::mutate(
+      mutate(
         .from_e = as.numeric(factor(.from_e, levels = expand$.full_state)),
         .to_e = as.numeric(factor(.to_e, levels = expand$.full_state)),
         .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
         .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
       )
   } else {
-    parameters <- dplyr::filter_(parameters, "state_time==1")
+    parameters <- filter(parameters, state_time == 1)
     nrow_param = nrow(parameters)
-    eval_trans_probs <- dplyr::mutate_(parameters, .dots = x)
-    
+    matrix_pos_names <- names(x)
+    state_trans_names <- paste0(
+      rep(state_names, each = length(state_names)),
+      ' → ',
+      rep(state_names, length(state_names))
+    )
+    names(x) <- state_trans_names
+    renamer <- state_trans_names
+    names(renamer) <- matrix_pos_names
+    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
+      rename(!!!syms(renamer))
+    names(x) <- matrix_pos_names
     trans_table <- tibble::tibble(
       model_time = rep(parameters$model_time, times = n_state^2),
       state_time = rep(parameters$state_time, times = n_state^2),
@@ -207,7 +229,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .to = rep(state_names, times = n_state, each = nrow_param),
       .value = unlist(eval_trans_probs[names(x)])
     ) %>%
-      dplyr::mutate(
+      mutate(
         .from_e = as.numeric(factor(.from, levels = expand$.full_state)),
         .to_e = as.numeric(factor(.to, levels = expand$.full_state)),
         .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
@@ -268,7 +290,7 @@ replace_C <- function(x, state_names) {
   c_counts <- rowSums(posC, dims = 2)
   colnames(c_counts) <- state_names
   if (!all(c_counts <= 1)) {
-    problem_states <- c_counts[, apply(c_counts, 2, function(z) any(z > 1))]
+    problem_states <- c_counts[, as.logical(apply(c_counts, 2, function(z) any(z > 1))), drop = F]
     problems <- lapply(seq_len(ncol(problem_states)), function(i) {
       cycles <- problem_states[ , i]
       problem_cycles <- which(cycles > 1)
@@ -283,7 +305,7 @@ replace_C <- function(x, state_names) {
         stringsAsFactors = F
       )
     }) %>%
-      dplyr::bind_rows() %>%
+      bind_rows() %>%
       as.data.frame()
     
     message <- paste0(

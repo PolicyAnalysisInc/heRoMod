@@ -9,6 +9,7 @@ eval_models_from_tabular(
   run_dsa = TRUE,
   run_psa = TRUE,
   run_demo = TRUE,
+  run_scen = FALSE,
   parallel = FALSE
 )
 }

@@ -72,14 +72,18 @@ discount <- function(x, r, first = FALSE, time = seq_along(x)) {
 #' @return A modified state object.
 #'   
 #' @keywords internal
-discount_hack <- function(.dots) {
+discount_hack <- function(.dots, method = "start") {
   f <- function (x, env) {
     if (is.atomic(x) || is.name(x)) {
       x
     } else if (is.call(x)) {
       if (discount_check(x[[1]], env)) {
         x <- pryr::standardise_call(x)
-        x$time <- substitute(markov_cycle - 1)
+        if (method == "start") offset <- 1
+        else if (method == "end") offset <- 0
+        else if (method == 'midpoint') offset <- 0.5
+        else stop('Invalid discounting method selected.', call. = F)
+        x$time <- substitute(markov_cycle - offset)
       }
       as.call(lapply(x, f, env = env))
     } else if (is.pairlist(x)) {
@@ -435,7 +439,7 @@ pretty_names <- function(x) {
            "ICER", "Ref.",
            "Strategy")
   ) %>% 
-    dplyr::filter_(~ from %in% n)
+    filter(from %in% n)
   
   n[ref$from] <- ref$to
   
@@ -653,7 +657,7 @@ reshape_wide <- function(data, key_col, value_col, fill = NA) {
   res <- data[! duplicated(ids), idvar, drop = FALSE]
   
   cbind(
-    dplyr::ungroup(res),
+    ungroup(res),
     do.call(
       cbind,
       stats::setNames(

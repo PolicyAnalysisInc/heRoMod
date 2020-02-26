@@ -62,10 +62,10 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
           newdata = newdata,
           cores = cores
         ) %>% 
-          dplyr::rowwise() %>% 
-          dplyr::do_(~ get_total_state_values(.$.mod)) %>% 
-          dplyr::bind_cols(newdata) %>% 
-          dplyr::ungroup()
+          rowwise() %>% 
+          do(get_total_state_values(.$.mod)) %>% 
+          bind_cols(newdata) %>% 
+          ungroup()
       )
     )
   }
@@ -79,13 +79,13 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
   }
   
   res <- 
-    dplyr::bind_rows(list_res)
-  res <- dplyr::mutate_(res, .dots = get_ce(model))
+    bind_rows(list_res)
+  res <- res %>% mutate(!!!lazy_eval(get_ce(model), data = .))
   
   run_model <- res %>% 
-    dplyr::select_(~ - .index) %>% 
-    dplyr::group_by_(".strategy_names") %>%
-    dplyr::summarise_all(mean) %>% 
+    select(-.index) %>% 
+    group_by(.strategy_names) %>%
+    summarise_all(mean) %>% 
     as.data.frame()
   
   structure(
@@ -208,7 +208,7 @@ eval_resample <- function(psa, N, model = NULL) {
   
   for (m in psa$multinom) {
     call_denom <- make_call(m, "+")
-    list_expr <- lazyeval::as.lazy_dots(
+    list_expr <- as.lazy_dots(
       c(list(
         .denom = call_denom),
       stats::setNames(
@@ -216,8 +216,10 @@ eval_resample <- function(psa, N, model = NULL) {
           m,
           function(x) as.call(list(as.name("/"), as.name(x), as.name(".denom")))),
         m)))
-    res <- dplyr::mutate_(res, .dots = list_expr) %>% 
-      dplyr::select_(~ - .denom)
+    res <- res %>%
+      mutate(.denom = !!call_denom) %>% 
+      mutate(!!!lazy_eval(list_expr, data = .)) %>% 
+      select(- .denom)
   }
   res
 }

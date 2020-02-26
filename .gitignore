@@ -1,7 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-.Rproj
+*.Rproj
 README.html
 .Rproj
 heemod-expand.Rproj

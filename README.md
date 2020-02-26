@@ -8,7 +8,10 @@ The heRomod package allows users to develop and run cost-effectiveness models in
 You can install the latest released version from github with:
 
 ```r
-devtools::install_github("heRomod")
+if(!require(remotes)) {
+  install.packages('remotes')
+}
+remotes::install_github("PolicyAnalysisInc/heRomod")
 ```
 
 ## Features

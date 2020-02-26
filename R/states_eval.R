@@ -31,7 +31,8 @@
 #'   value and a line per cycle.
 #'   
 #' @keywords internal
-eval_state_list <- function(x, parameters, expand = NULL) {
+eval_state_list <- function(x, parameters, expand = NULL,
+                            disc_method = 'start') {
   
   # Assinging NULLS to avoid CMD Check issues
   .state <- .limit <- state_time <- .value <- NULL
@@ -42,7 +43,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   state_names <- names(x)
   
   # Fill in expansion table if empty
-  if(is.null(expand)) {
+  if (is.null(expand)) {
     expand <- tibble::tibble(
       .state = state_names,
       .full_state = state_names,
@@ -59,18 +60,19 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   exp_state_names <- expand$.full_state
   
   f <- function(i) {
-    obj <- discount_hack(x[[i]])
+    obj <- discount_hack(x[[i]], method = disc_method)
     
     # update calls to dispatch_strategy()
     obj <- dispatch_strategy_hack(obj)
+    obj <- by_group_hack(obj)
     
     var_names <- names(obj)
     
-    if(expanding) {
+    if (expanding) {
       # bottleneck!
       parameters %>%
         safe_eval(obj, .vartype = "value") %>%
-        dplyr::mutate(.state = state_names[i]) %>%
+        mutate(.state = state_names[i]) %>%
         .[c("markov_cycle", "state_time", ".state", var_names)]
     } else {
       
@@ -86,12 +88,12 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   # Evaluate and Handle expansion
   vars_df <- plyr::ldply(seq_len(n_states), f)
   vars_df <- vars_df %>%
-    dplyr::left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
-    dplyr::filter(state_time <= .limit) %>%
-    dplyr::mutate(
+    left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
+    filter(state_time <= .limit) %>%
+    mutate(
       .full_state = factor(.full_state, levels = unique(exp_state_names))
     ) %>%
-    dplyr::select_(.dots = c("markov_cycle",".full_state", var_names))
+    select(!!!syms(c("markov_cycle",".full_state", var_names)))
   split_vec <- vars_df$.full_state
   cols_to_keep <- setdiff(colnames(vars_df), ".full_state")
   vars_df_list <- split(vars_df[ ,cols_to_keep], split_vec)
@@ -103,7 +105,7 @@ eval_state_list <- function(x, parameters, expand = NULL) {
   
   # Evaluate state transition values (if present)
   state_trans_uneval <- attr(x, "transitions")
-  if(!is.null(state_trans_uneval)) {
+  if (!is.null(state_trans_uneval)) {
     
     # Get number/names of states
     n_states_trans <- length(state_trans_uneval)
@@ -111,28 +113,29 @@ eval_state_list <- function(x, parameters, expand = NULL) {
     to_state_names <- lapply(state_trans_uneval, function(y) attr(y, "to"))
     
     f_state_val <- function(i) {
-      obj <- discount_hack(state_trans_uneval[[i]])
+      obj <- discount_hack(state_trans_uneval[[i]], method = disc_method)
       from_states <- from_state_names[[i]]
-      if(any(is.na(from_states))) from_states <- state_names
+      if (any(is.na(from_states))) from_states <- state_names
       to_states <- to_state_names[[i]]
-      if(any(is.na(to_states))) to_states <- state_names
-      from_states_expanded <- dplyr::filter(expand, .state %in% from_states)
+      if (any(is.na(to_states))) to_states <- state_names
+      from_states_expanded <- filter(expand, .state %in% from_states)
       max_st <- max(expand$.limit)
       
       # update calls to dispatch_strategy()
       obj <- dispatch_strategy_hack(obj)
+      obj <- by_group_hack(obj)
       
       var_names <- names(obj)
       
       # bottleneck!
-      if(expanding) {
+      if (expanding) {
         eval_params <- parameters %>%
-          dplyr::mutate_(.trans_id = i) %>%
+          mutate(.trans_id = i) %>%
           safe_eval(obj, .vartype = "value") %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       } else {
         eval_params <- parameters %>%
-          dplyr::mutate_(.trans_id = i) %>%
+          mutate(.trans_id = i) %>%
           safe_eval(obj, .vartype = "value") %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       }
@@ -149,8 +152,8 @@ eval_state_list <- function(x, parameters, expand = NULL) {
     
     # Evaluate and Handle expansion
     st_var_df <- st_var_df %>%
-      dplyr::left_join(
-        dplyr::transmute(
+      left_join(
+        transmute(
           expand,
           .state = .state,
           .from_name_expanded = .full_state,
@@ -159,9 +162,9 @@ eval_state_list <- function(x, parameters, expand = NULL) {
         ),
         by = c(".from" =  ".state", "state_time" = "state_time")
       ) %>%
-      dplyr::mutate(.to_state_time = 1) %>%
-      dplyr::left_join(
-        dplyr::transmute(
+      mutate(.to_state_time = 1) %>%
+      left_join(
+        transmute(
           expand,
           .state = .state,
           .to_name_expanded = .full_state,
@@ -169,12 +172,12 @@ eval_state_list <- function(x, parameters, expand = NULL) {
         ),
         by = c(".to" =  ".state", ".to_state_time" = "state_time")
       ) %>%
-      dplyr::filter(state_time <= .limit) %>%
-      dplyr::mutate(
+      filter(state_time <= .limit) %>%
+      mutate(
         .to_name_expanded = factor(.to_name_expanded, levels = unique(exp_state_names)),
         .from_name_expanded = factor(.from_name_expanded, levels = unique(exp_state_names))
       ) %>%
-      dplyr::select_(.dots = c("markov_cycle", ".from_name_expanded", ".to_name_expanded", var_names)) %>%
+      select(!!!syms(c("markov_cycle", ".from_name_expanded", ".to_name_expanded", var_names))) %>%
       reshape2::melt(
         id.vars = c(
           "markov_cycle",

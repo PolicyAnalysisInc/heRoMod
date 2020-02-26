@@ -85,7 +85,8 @@ run_model <- function(...,
                       inflow = rep(0L, get_state_number(get_states(list(...)[[1]]))),
                       aux_params = NULL,
                       parallel = F,
-                      cores = 1) {
+                      cores = 1,
+                      disc_method = 'start') {
   
   uneval_strategy_list <- list(...)
   
@@ -98,14 +99,15 @@ run_model <- function(...,
     init = init,
     cycles = cycles,
     method = method,
-    cost = lazyeval::lazy_(substitute(cost), env = parent.frame()),
-    effect = lazyeval::lazy_(substitute(effect), env = parent.frame()),
+    cost = lazy_(substitute(cost), env = parent.frame()),
+    effect = lazy_(substitute(effect), env = parent.frame()),
     state_time_limit = state_time_limit,
     central_strategy = central_strategy,
     inflow = inflow,
     aux_params = aux_params,
     parallel = parallel,
-    cores = cores
+    cores = cores,
+    disc_method = disc_method
   )
 }
 
@@ -122,7 +124,8 @@ run_model_ <- function(uneval_strategy_list,
                        inflow,
                        aux_params = NULL,
                        parallel = F,
-                       cores = 1) {
+                       cores = 1,
+                       disc_method = 'start') {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -152,7 +155,7 @@ run_model_ <- function(uneval_strategy_list,
   )
   
   ce <- c(
-    lazyeval::lazy_dots(),
+    lazy_dots(),
     list_ce
   )
   
@@ -200,16 +203,15 @@ run_model_ <- function(uneval_strategy_list,
         expand_limit = state_time_limit[[i]],
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
-        aux_params = aux_params
+        aux_params = aux_params,
+        disc_method = disc_method
       ))
     }, mc.cores = cores)
     
     plyr::l_ply(
       eval_strategy_list,
       function(x) {
-        if ("try-error" %in% class(x)) {
-          stop(x, call. = F)
-        }
+        if ("try-error" %in% class(x)) stop(clean_err_msg(x), call. = F)
       }
     )
   } else {
@@ -223,7 +225,8 @@ run_model_ <- function(uneval_strategy_list,
         expand_limit = state_time_limit[[i]],
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
-        aux_params = aux_params
+        aux_params = aux_params,
+        disc_method = disc_method
       )
     })
   }
@@ -238,8 +241,8 @@ run_model_ <- function(uneval_strategy_list,
   }
   
   res <- 
-    dplyr::bind_rows(list_res) %>%
-      dplyr::mutate_(.dots = ce)
+    bind_rows(list_res) %>%
+      mutate(!!!lazy_eval(ce, data = .))
   
   root_strategy <- get_root_strategy(res)
   noncomparable_strategy <- get_noncomparable_strategy(res)
@@ -270,7 +273,8 @@ run_model_ <- function(uneval_strategy_list,
       central_strategy = central_strategy,
       noncomparable_strategy = noncomparable_strategy,
       state_time_limit = state_time_limit,
-      frontier = if (! is.null(root_strategy)) get_frontier(res)
+      frontier = if (! is.null(root_strategy)) get_frontier(res),
+      disc_method = disc_method
     ),
     class = c("run_model", class(res))
   )
@@ -289,7 +293,7 @@ get_state_value_names.run_model <- function(x) {
 }
 
 get_total_state_values <- function(x) {
-  # faster than as.data.frame or dplyr::as_data_frame
+  # faster than as.data.frame or as_data_frame
   res <- as.list(colSums((x$values)[- 1]))
   class(res) <- "data.frame"
   attr(res, "row.names") <- c(NA, -1)
@@ -311,7 +315,7 @@ get_root_strategy.default <- function(x, ...) {
     return(invisible(NULL))
   }
   (x %>% 
-      dplyr::arrange_(~ .cost, ~ desc(.effect)))$.strategy_names[1]
+      arrange(.cost, desc(.effect)))$.strategy_names[1]
 }
 
 get_root_strategy.run_model <- function(x, ...) {
@@ -328,8 +332,8 @@ get_noncomparable_strategy.default <- function(x, ...) {
     return(invisible(NULL))
   }
   (x %>% 
-      dplyr::arrange_(.dots = list(~ .effect)) %>% 
-      dplyr::slice(1))$.strategy_names
+      arrange(.effect) %>% 
+      slice(1))$.strategy_names
 }
 
 get_noncomparable_strategy.run_model <- function(x, ...) {
@@ -384,7 +388,7 @@ get_values.run_model <- function(x, ...) {
       get_strategy_names(x),
       function(.n) {
         get_values(x$eval_strategy_list[[.n]]) %>% 
-          dplyr::mutate_(.strategy_names = ~ .n)
+          mutate(.strategy_names = .n)
       }
     )
   )
@@ -435,9 +439,9 @@ get_counts.run_model <- function(x, ...) {
       get_strategy_names(x),
       function(.n) {
         get_counts(x$eval_strategy_list[[.n]]) %>% 
-          dplyr::mutate_(
-            .strategy_names = ~ .n,
-            markov_cycle = ~ dplyr::row_number())
+          mutate(
+            .strategy_names = .n,
+            markov_cycle = row_number())
       }
     )
   )

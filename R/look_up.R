@@ -131,7 +131,7 @@ look_up <- function(data, ..., bin = FALSE, value = "value") {
     ))
   }
   res <- suppressMessages(
-    dplyr::left_join(
+    left_join(
       df_vars,
       data,
       by = names(df_vars)

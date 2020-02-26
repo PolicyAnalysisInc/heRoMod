@@ -13,7 +13,8 @@ eval_strategy(
   expand_limit,
   inflow,
   strategy_name,
-  aux_params = NULL
+  aux_params = NULL,
+  disc_method = "start"
 )
 }
 \arguments{

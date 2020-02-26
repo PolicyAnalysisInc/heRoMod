@@ -18,7 +18,8 @@ run_model(
   inflow = rep(0L, get_state_number(get_states(list(...)[[1]]))),
   aux_params = NULL,
   parallel = F,
-  cores = 1
+  cores = 1,
+  disc_method = "start"
 )
 
 run_model_(
@@ -34,7 +35,8 @@ run_model_(
   inflow,
   aux_params = NULL,
   parallel = F,
-  cores = 1
+  cores = 1,
+  disc_method = "start"
 )
 }
 \arguments{

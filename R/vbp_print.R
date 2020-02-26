@@ -86,8 +86,8 @@ get_central_strategy.vbp <- function(x, ...) {
 summary.vbp <- function(x, ...) {
   
   res_values <- x$vbp %>% 
-    dplyr::filter(dplyr::row_number()==1 | dplyr::row_number()==n()) %>% 
-    dplyr::rename(VBP = Price) %>%
+    filter(row_number()==1 | row_number()==n()) %>% 
+    rename(VBP = Price) %>%
     as.data.frame()
   
   

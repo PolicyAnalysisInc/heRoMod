@@ -89,6 +89,82 @@ dispatch_strategy <- function(.strategy, ...) {
   vswitch(.strategy, ...)
 }
 
+#' Define a formula whose value is strategy-dependent
+#' 
+#' Returns different values depending on the strategy.
+#' 
+#' @param .strategy Optional strategy name. If not specified
+#'   it is implicitely added.
+#' @param ... Values of the parameter named depending on the
+#'   strategy.
+#'   
+#' @return A vector of values.
+#' @export
+#' 
+#' @examples
+#' 
+#' define_parameters(
+#'   val = 456,
+#'   x = by_strategy(
+#'     strat_1 = 1234,
+#'     strat_2 = 9876,
+#'     strat_3 = val * 2 + markov_cycle
+#'   )
+#' )
+by_strategy <- function(.strategy, ...) {
+  .dots <- list(...)
+  if (is.null(names(.dots)) || any(is.na(names(.dots)))) {
+    stop("All arguments to 'by_strategy()' must be named.")
+  }
+  if (any(is.na(.strategy))) {
+    stop("Function 'by_strategy' may only be called from inside the formulas of a heRo model.")
+  }
+  missing_arg <- !all(.strategy %in% names(.dots))
+  if (missing_arg) {
+    indices <- which(missing_arg)
+    stop(paste0("Call to 'by_strategy' was missing a value for the strategy '", .strategy[indices[1]]))
+  }
+  vswitch(.strategy, ...)
+}
+
+#' Define a formula whose value is group-dependent
+#' 
+#' Returns different values depending on the group
+#' 
+#' @param .group Optional group name. If not specified
+#'   it is implicitely added.
+#' @param ... Values of the parameter named depending on the
+#'   group
+#'   
+#' @return A vector of values.
+#' @export
+#' 
+#' @examples
+#' 
+#' define_parameters(
+#'   val = 456,
+#'   x = by_group(
+#'     strat_1 = 1234,
+#'     strat_2 = 9876,
+#'     strat_3 = val * 2 + markov_cycle
+#'   )
+#' )
+by_group <- function(.group, ...) {
+  .dots <- list(...)
+  if (is.null(names(.dots)) || any(is.na(names(.dots)))) {
+    stop("All arguments to 'by_strategy()' must be named.")
+  }
+  if (any(is.na(.group))) {
+    stop("Function 'by_group' may only be called from inside the formulas of a heRo model.")
+  }
+  missing_arg <- !all(.group %in% names(.dots))
+  if (missing_arg) {
+    indices <- which(missing_arg)
+    stop(paste0("Call to 'by_group' was missing a value for the group '", .group[indices[1]]))
+  }
+  vswitch(.group, ...)
+}
+
 #' Hack to Automate Use of Strategy Name
 #' 
 #' This function is a hack to automate the definition of the
@@ -141,9 +217,77 @@ dispatch_strategy_hack <- function(.dots) {
   )
 }
 
+
+#' Hack to Automate Use of Group Name
+#' 
+#' This function is a hack to automate the definition of the
+#' argument `.group` in
+#' [by_group()].
+#' 
+#' The hack consists in replacing calls to 
+#' `by_group(...)` by 
+#' `by_group(.group = group, ...)` if
+#' `.group` is not already defined.
+#' 
+#' @param .dots A `lazy_dots` object.
+#'   
+#' @return A modified `lazy_dots` object.
+#'   
+#' @keywords internal
+by_group_hack <- function(.dots) {
+  f <- function (x, env) {
+    if (is.atomic(x) || is.name(x)) {
+      x
+    } else if (is.call(x)) {
+      if (by_group_check(x[[1]], env)) {
+        x <- pryr::standardise_call(x)
+        if (is.null(x$.group)) {
+          x$.group <- substitute(group)
+        }
+      }
+      as.call(lapply(x, f, env = env))
+    } else if (is.pairlist(x)) {
+      as.pairlist(lapply(x, f, env = env))
+    } else {
+      stop(sprintf(
+        "Don't know how to handle type %s.",
+        typeof(x)))
+    }
+  }
+  
+  do.call(
+    structure,
+    c(list(
+      .Data = lapply(
+        .dots,
+        function(x) {
+          x$expr <- f(x$expr, env = x$env)
+          x
+        }
+      )),
+      attributes(.dots)
+    )
+  )
+}
+
+# Ensure only heRomod version of by_group gets used
+by_group_check <- function(x, env) {
+  if (identical(x, quote(by_group))) {
+    if (identical(environment(eval(x, envir = env)),
+                  asNamespace("heRomod"))) {
+      TRUE
+    } else {
+      warning("A version of 'by_group()' that is not defined by heRomod was found.")
+      FALSE
+    }
+  } else {
+    FALSE
+  }
+}
+
 # Ensure only heRomod version of dispatch_strategy gets used
 dispatch_strategy_check <- function(x, env) {
-  if (identical(x, quote(dispatch_strategy))) {
+  if (identical(x, quote(dispatch_strategy)) || identical(x, quote(by_strategy))) {
     if (identical(environment(eval(x, envir = env)),
                   asNamespace("heRomod"))) {
       TRUE
