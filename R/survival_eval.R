@@ -315,7 +315,9 @@ event_prob_ <- function(x, start, end, ...){
   check_time_inputs(end)
   surv_start <- eval_surv(x, start, ...)
   surv_end <- eval_surv(x, end, ...)
-  (surv_start - surv_end) / surv_start
+  e_prob <- (surv_start - surv_end) / surv_start
+  e_prob[surv_start == 0] <- 1
+  e_prob
 }
 
 #' Evaluate Event Probabilities
