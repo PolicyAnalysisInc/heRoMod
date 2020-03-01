@@ -60,8 +60,8 @@ check_matrix <- function(x) {
     
     stop(
       paste0(
-        "Not all transition matrix rows sum to 1.\n",
-        paste(capture.output(problem_rows), collapse = "\n")
+        "Not all transition matrix rows sum to 1.\n\n",
+        paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
       ),
       call. = F
     )
@@ -86,7 +86,8 @@ check_matrix <- function(x) {
         "cycle: %s, from: %s, to: %s",
         problem$cycle, problem$from, problem$to),
         collapse = "\n")
-    ))
+    ),
+    call. = F)
     
   }
 }
@@ -309,8 +310,8 @@ replace_C <- function(x, state_names) {
       as.data.frame()
     
     message <- paste0(
-      'Error in transition matrix, keyword "C" used more than once per state:\n',
-      paste(capture.output(problems), collapse = "\n")
+      'Error in transition matrix, keyword "C" used more than once per state:\n\n',
+      paste(capture.output(print(problems, row.names = F)), collapse = "\n")
     )
     stop(message, call. = F)
   }

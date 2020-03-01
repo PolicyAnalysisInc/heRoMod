@@ -247,7 +247,7 @@ eval_transition.part_surv_custom <- function(x, parameters, expand) {
   posC <- trace == -pi
   
   if (! all(rowSums(posC) <= 1)) {
-    stop("Only one 'C' is allowed per cycle.")
+    stop("Only one 'C' is allowed per cycle.", call. = F)
   }
   
   valC <-  trace %>%

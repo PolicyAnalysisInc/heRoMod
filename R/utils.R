@@ -551,7 +551,9 @@ resolve_dependencies.default <- function(x) {
       }
     }
     if(length(to_remove) == 0) {
-      stop('Error: Circular reference in parameters')
+      quoted_params <- paste0('"', unordered, '"')
+      param_string <- paste(quoted_params, collapse = ", ")
+      stop(paste0('Circular reference in parameters: ', param_string), call. = F)
     } else {
       unordered <- unordered[-to_remove]
     }
