@@ -251,6 +251,23 @@ parse_hero_values_st <- function(data, health, strategies) {
   rbind(states_undisc, states_disc)
 }
 parse_hero_summaries <- function(data, values, health, strategies, states) {
+  
+  # Check that there are no duplicate entries
+  duplicates <- group_by(data, name, value) %>%
+    mutate(n = seq_len(n())) %>%
+    filter(n > 1)
+  
+  if (nrow(duplicates) > 0) {
+    msg <- paste0(
+      "Summary '",
+      duplicates$name[1],
+      "' contains duplicate value '",
+      duplicates$value[1],
+      "'."
+    )
+    stop(msg, call. = F)
+  }
+    
   if(health) {
     disc_var <- "disc_h"
   } else {

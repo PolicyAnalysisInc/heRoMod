@@ -370,6 +370,26 @@ compute_surv <- memoise::memoise(
 
 #' @rdname eval_surv
 #' @export
+eval_surv.default <- function(x, time,  ...) {
+  the_class <- class(x)
+  class_statement <- switch(
+    the_class[1],
+    "numeric" = "a number",
+    "character" = "a string",
+    "data.frame" = "a table",
+    "tbl_df" = "a table",
+    paste0("an object of class '", the_class, "'")
+  )
+  msg <- paste0(
+    'Function expected a survival distribution but instead was passed ',
+    class_statement,
+    '.'
+  )
+  stop(msg, call. = F)
+}
+
+#' @rdname eval_surv
+#' @export
 eval_surv.survfit <- function(x, time,  ...) {
   
   dots <- list(...)
@@ -759,8 +779,4 @@ eval_surv.lazy <- function(x, ...){
   if("extra_env" %in% names(dots))
     use_data <- as.list.environment(dots$extra_env)
   eval_surv(lazyeval::lazy_eval(x, data = use_data), ...)
-}
-
-eval_surv.character <- function(x, ...){
-  eval_surv(eval(parse(text = x)), ...)
 }

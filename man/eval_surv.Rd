@@ -5,6 +5,7 @@
 \alias{compute_surv_}
 \alias{surv_prob_}
 \alias{event_prob_}
+\alias{eval_surv.default}
 \alias{eval_surv.survfit}
 \alias{eval_surv.flexsurvreg}
 \alias{eval_surv.surv_model}
@@ -29,6 +30,8 @@ compute_surv_(x, time, cycle_length = 1, type = c("prob", "survival"), ...)
 surv_prob_(x, time, ...)
 
 event_prob_(x, start, end, ...)
+
+\method{eval_surv}{default}(x, time, ...)
 
 \method{eval_surv}{survfit}(x, time, ...)
 
