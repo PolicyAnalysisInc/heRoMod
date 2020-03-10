@@ -1366,7 +1366,7 @@ build_hero_model <- function(...) {
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", settings$method,
       "disc_method", settings$disc_method,
-      "cycles", max(1, round(dots$settings$n_cycles,0)),
+      "cycles", max(1, round(settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse = ", "),
       "num_cores", cores
