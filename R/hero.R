@@ -159,6 +159,28 @@ parse_hero_values <- function(data, health, strategies, states) {
         }
       }
     }) %>%
+    ungroup() %>%
+    group_by(name, .model) %>%
+    do({
+      df <- data.frame(., stringsAsFactors = F)
+      isAllOther <- df$.state == "All Other"
+      if (!any(isAllOther)) df
+      else if (sum(isAllOther) > 1) {
+        stop('Error in values, "All Other" may only be used once per value and strategy.', call. = F)
+      } else {
+        allOtherIndex <- which(isAllOther)
+        isStateUsed <- states %in% df$.state
+        unusedStates <- states[!isStateUsed]
+        extraRows <- df[rep(allOtherIndex, length(unusedStates)), ]
+        extraRows$.state <- unusedStates
+        rows <- rbind(
+          df[-allOtherIndex, ],
+          extraRows,
+          stringsAsFactors = F
+        )
+        rows
+      }
+    }) %>%
     ungroup()
   
   if(nrow(states_undisc) > 0) {
