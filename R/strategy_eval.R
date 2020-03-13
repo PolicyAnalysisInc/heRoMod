@@ -69,17 +69,38 @@ eval_strategy <- function(strategy, parameters, cycles,
   # Extract transitions
   transitions <- get_transition(strategy)
   
-  # Interpolate to determine propogation of state_time
-  i_params <- interpolate(parameters)
-  i_state <- interpolate(states, more = as_expr_list(i_params))
-  i_trans <- interpolate(transitions, more = as_expr_list(i_params))
+  if (!'uneval_matrix' %in% class(transitions)) {
+    # No need for interpolation to figure out there is no state_time in a PSM
+    to_expand <- rep(F, n_states)
+  } else {
   
-  # Determine which states need to be expanded
-  state_td <- has_state_time(i_state)
-  mat_td <- has_state_time(i_trans) %>%
-    matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
-    apply(1, any)
-  to_expand <- state_td | mat_td
+    # Check for any references to state time
+    params_st <- has_state_time.state_transition(
+      parameters[!names(parameters) %in% c('state_time', 'state_day', 'state_week', 'state_month', 'state_year')]
+    )
+    mat_st <- has_state_time(transitions)
+    state_st <- has_state_time(states)
+    
+    if (params_st | any(mat_st) | any(state_st)) {
+      # No need for state interpol
+    
+      # Interpolate to determine propogation of state_time
+      i_params <- interpolate(parameters)
+      i_state <- interpolate(states, more = as_expr_list(i_params))
+      i_trans <- interpolate(transitions, more = as_expr_list(i_params))
+      
+      # Determine which states need to be expanded
+      state_td <- has_state_time(i_state)
+      mat_td <- has_state_time(i_trans) %>%
+        matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
+        apply(1, any)
+      to_expand <- state_td | mat_td
+    } else {
+      # No need for interpolation to figure out there is no state_time if there are
+      # no references to state_time
+      to_expand <- rep(F, n_states)
+    }
+  }
   
   # Build table to determine number of tunnels for each state
   if(any(to_expand)) {

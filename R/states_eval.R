@@ -54,6 +54,7 @@ eval_state_list <- function(x, parameters, expand = NULL,
   }
   
   var_names <- names(x[[1]])
+  param_names <- colnames(parameters);
 
   expanding <- any(expand$.expand)
   
@@ -66,23 +67,27 @@ eval_state_list <- function(x, parameters, expand = NULL,
     obj <- dispatch_strategy_hack(obj)
     obj <- by_group_hack(obj)
     
-    var_names <- names(obj)
+    char_formulas <- as.character(lapply(obj, deparse))
+    zero_indices <- char_formulas == '0'
+    zero_names <- var_names[zero_indices]
+    obj_no_zeros <- obj[!zero_indices]
+    params_with_zeros <- parameters
+    params_with_zeros[ , zero_names] <- 0
+    
     
     if (expanding) {
       # bottleneck!
       parameters %>%
-        safe_eval(obj, .vartype = "value") %>%
+        safe_eval(obj_no_zeros, .vartype = "value") %>%
         mutate(.state = state_names[i]) %>%
         .[c("markov_cycle", "state_time", ".state", var_names)]
     } else {
       
       # bottleneck!
-      res <- safe_eval(parameters, obj, .vartype = "value")
+      res <- safe_eval(parameters, obj_no_zeros, .vartype = "value")
       res$.state <- state_names[i]
       res[ ,c("markov_cycle", "state_time", ".state", var_names)]
     }
-    
-    
     
   }
   # Evaluate and Handle expansion
