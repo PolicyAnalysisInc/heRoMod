@@ -248,7 +248,7 @@ create_model_list_from_api <- function(states, tm, st = NULL, start = NULL, df_e
         if (is.null(start_info)) {
           this_start_info <- NULL
         } else {
-          this_start_info <- start_info[[i]]
+          this_start_info <- start_info[[names(state_info)[i]]]
         }
       }
       create_model_from_tabular(state_info[[i]], 
