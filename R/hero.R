@@ -704,7 +704,7 @@ hero_extract_ce <- function(res, hsumms, esumms) {
         )
     })
 }
-hero_extract_trace <- function(res) {
+hero_extract_trace <- function(res, corrected = F) {
   if(!is.null(res$oldmodel)) {
     params <- res$oldmodel$eval_strategy_list[[1]]$parameters
   } else {
@@ -712,7 +712,7 @@ hero_extract_trace <- function(res) {
   }
   
   time <- rbind(
-    data.frame(model_day=0,model_week=0,model_month=0,model_year=0),
+    if(corrected)data.frame(model_day=0,model_week=0,model_month=0,model_year=0) else data.frame(),
     distinct(
       params,
       model_day,
@@ -724,7 +724,8 @@ hero_extract_trace <- function(res) {
   trace <- plyr::ldply(
     res$eval_strategy_list,
     function(x) {
-      x$counts_uncorrected
+      if(corrected) x$counts_uncorrected
+      else x$counts
     }
   ) %>%
     rename(
@@ -1829,6 +1830,14 @@ export_hero_xlsx <- function(...) {
       "Year" = model_year,
       "Strategy" = series
     )
+  cor_trace_res <- hero_extract_trace(main_res, T) %>%
+    rename(
+      "Day" = model_day,
+      "Week" = model_week,
+      "Month" = model_month,
+      "Year" = model_year,
+      "Strategy" = series
+    )
   param_res <- compile_parameters(heemod_res)
   trans_res <- compile_transitions(heemod_res)
   unit_values_res <- compile_unit_values(heemod_res)
@@ -1859,6 +1868,7 @@ export_hero_xlsx <- function(...) {
       "Calc - Unit Values"= unit_values_res,
       "Calc - Values"= values_res,
       "Results - Trace" = trace_res,
+      "Results - Trace (Corrected)" = cor_trace_res,
       "Results - Outcomes" = health_res,
       "Results - Costs" = econ_res,
       "Results - CE" = ce_res,
