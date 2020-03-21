@@ -712,7 +712,7 @@ hero_extract_trace <- function(res, corrected = F) {
   }
   
   time <- rbind(
-    if(corrected)data.frame(model_day=0,model_week=0,model_month=0,model_year=0) else data.frame(),
+    if(!corrected) data.frame(model_day=0,model_week=0,model_month=0,model_year=0) else data.frame(),
     distinct(
       params,
       model_day,
@@ -724,7 +724,7 @@ hero_extract_trace <- function(res, corrected = F) {
   trace <- plyr::ldply(
     res$eval_strategy_list,
     function(x) {
-      if(corrected) x$counts_uncorrected
+      if(!corrected) x$counts_uncorrected
       else x$counts
     }
   ) %>%
