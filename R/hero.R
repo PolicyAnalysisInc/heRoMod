@@ -706,27 +706,63 @@ hero_extract_ce <- function(res, hsumms, esumms) {
 }
 hero_extract_ce_pw <- function(res, hsumm_res, esumm_res) {
   
-  hsumm_res <- filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
-    select(outcome, series, group, disc, value) %>%
-    group_by(outcome, series) %>%
-    summarize(deffect = sum(value))
+  abs_hsumm_res <- filter(hsumm_res, disc, !grepl(" vs. ", series, fixed=T)) %>%
+    mutate(referent = series) %>%
+    select(outcome, referent, group, disc, value) %>%
+    group_by(outcome, referent) %>%
+    summarize(effect = sum(value)) 
   
-  esumm_res <- filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+  abs_esumm_res <- filter(esumm_res, disc, !grepl(" vs. ", series, fixed=T)) %>%
+    mutate(referent = series) %>%
+    select(outcome, referent, group, disc, value) %>%
+    group_by(outcome, referent) %>%
+    summarize(cost = sum(value)) 
+  
+  
+  delta_hsumm_res <- filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
     select(outcome, series, group, disc, value) %>%
     group_by(outcome, series) %>%
-    summarize(dcost = sum(value))
+    summarize(deffect = sum(value)) %>%
+    mutate(
+      referent = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[1]
+      ),
+      comparator = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[2]
+      )
+    )
+  
+  delta_esumm_res <- filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    select(outcome, series, group, disc, value) %>%
+    group_by(outcome, series) %>%
+    summarize(dcost = sum(value)) %>%
+    mutate(
+      referent = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[1]
+      ),
+      comparator = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[2]
+      )
+    )
   
   outcome_tbl <- expand.grid(
     health = unique(hsumm_res$outcome),
     econ = unique(esumm_res$outcome),
     stringsAsFactors = F
   ) %>%
-    left_join(hsumm_res, by = c('health' = 'outcome')) %>%
-    left_join(esumm_res, by = c('econ' = 'outcome', 'series' = 'series')) %>%
+    left_join(delta_hsumm_res, by = c('health' = 'outcome')) %>%
+    left_join(delta_esumm_res, by = c('econ' = 'outcome', 'series' = 'series', 'referent' = 'referent', 'comparator' = 'comparator')) %>%
+    left_join(abs_hsumm_res, by = c('health' = 'outcome', 'referent' = 'referent')) %>%
+    left_join(abs_esumm_res, by = c('econ' = 'outcome', 'referent' = 'referent')) %>%
     mutate(
       icer = compute_pw_icer(deffect, dcost),
       icer_string = format_icer(icer)
-    )
+    ) %>%
+    select(health, econ, series, referent, comparator, effect, cost, deffect, dcost, icer, icer_string)
   
   outcome_tbl
 }

@@ -33,6 +33,11 @@ test_that(
       bc_res_test$ce
     )
     
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
+    )
+    
     vbp_res <- readRDS(system.file("hero","example_simple_psm", "vbp_res.rds", package="heRomod"))
     vbp_res_test <- do.call(run_hero_vbp,model)
     
@@ -123,6 +128,11 @@ test_that(
       bc_res_test$ce
     )
     
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
+    )
+    
     vbp_res <- readRDS(system.file("hero","psm_responders", "vbp_res.rds", package="heRomod"))
     vbp_res_test <- do.call(run_hero_vbp,model)
     
@@ -193,6 +203,11 @@ test_that(
     expect_equal(
       bc_res$ce,
       bc_res_test$ce
+    )
+    
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
     )
     
     vbp_res <- readRDS(system.file("hero","groups", "vbp_res.rds", package="heRomod"))
@@ -289,6 +304,11 @@ test_that(
       bc_res_test$ce
     )
     
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
+    )
+    
     vbp_res <- readRDS(system.file("hero","markov_model", "vbp_res.rds", package="heRomod"))
     vbp_res_test <- do.call(run_hero_vbp,model)
     
@@ -379,6 +399,11 @@ test_that(
       bc_res_test$ce
     )
     
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
+    )
+    
     vbp_res <- readRDS(system.file("hero","advanced_surv_modeling", "vbp_res.rds", package="heRomod"))
     vbp_res_test <- do.call(run_hero_vbp,model)
     
@@ -448,6 +473,11 @@ test_that(
     expect_equal(
       bc_res$ce,
       bc_res_test$ce
+    )
+    
+    expect_equal(
+      bc_res$pairwise_ce,
+      bc_res_test$pairwise_ce
     )
     
     vbp_res <- readRDS(system.file("hero","ta447", "vbp_res.rds", package="heRomod"))
