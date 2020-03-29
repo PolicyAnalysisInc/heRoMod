@@ -216,6 +216,50 @@ compute_icer <- function(x, strategy_order = order(x$.effect),
   tab
 }
 
+compute_pw_icer <- function(deffect, dcost) {
+  
+  # Compare costs & outcomes
+  eq_cost <- dcost == 0
+  lt_cost <- dcost < 0
+  lte_cost <- dcost <= 0
+  gt_cost <- dcost > 0
+  gte_cost <- dcost >=0 
+  eq_effect <- deffect == 0
+  lt_effect <- deffect < 0
+  lte_effect <- deffect <= 0
+  gt_effect <- deffect > 0
+  gte_effect <- deffect >= 0
+  
+  # First Quadrant (ICER of A vs B)
+  icer <- dcost / deffect
+  # Origin (Identical)
+  icer[eq_cost & eq_effect] <- NaN
+  # Second Quadrant (Dominanted)
+  icer[(lt_effect & gte_cost) | (lte_effect & gt_cost)] <- Inf
+  # Fourth Quadrant (Dominant)
+  icer[(gt_effect & lte_cost) | (gte_effect & lt_cost)] <- -Inf
+  # Third Quadrant (ICER of B vs A)
+  icer[lt_effect & lt_cost] <- -icer[lt_effect & lt_cost]
+  
+  return(icer)
+}
+
+format_icer <- function(icer) {
+  is_identical <- is.nan(icer)
+  is_dominated <- icer == Inf
+  is_dominant <- icer == -Inf
+  is_le_lc <- is.finite(icer)  & icer > 0
+  is_me_mc <- is.finite(icer) & icer < 0
+  formatted_icer <- character(length(icer))
+  formatted_icer[is_identical] <- 'Identical'
+  formatted_icer[is_dominated] <- 'Dominated'
+  formatted_icer[is_dominant] <- 'Dominant'
+  formatted_icer[is_le_lc] <- as.character(round(icer[is_le_lc],0))
+  formatted_icer[is_me_mc] <- paste0(round(-icer[is_me_mc], 0), '*')
+  
+  return(formatted_icer)
+}
+
 #' @export
 print.summary_run_model <- function(x, ...) {
   cat(sprintf(
