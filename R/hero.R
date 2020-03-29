@@ -704,6 +704,32 @@ hero_extract_ce <- function(res, hsumms, esumms) {
         )
     })
 }
+hero_extract_ce_pw <- function(res, hsumm_res, esumm_res) {
+  
+  hsumm_res <- filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    select(outcome, series, group, disc, value) %>%
+    group_by(outcome, series) %>%
+    summarize(deffect = sum(value))
+  
+  esumm_res <- filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    select(outcome, series, group, disc, value) %>%
+    group_by(outcome, series) %>%
+    summarize(dcost = sum(value))
+  
+  outcome_tbl <- expand.grid(
+    health = unique(hsumm_res$outcome),
+    econ = unique(esumm_res$outcome),
+    stringsAsFactors = F
+  ) %>%
+    left_join(hsumm_res, by = c('health' = 'outcome')) %>%
+    left_join(esumm_res, by = c('econ' = 'outcome', 'series' = 'series')) %>%
+    mutate(
+      icer = compute_pw_icer(deffect, dcost),
+      icer_string = format_icer(icer)
+    )
+  
+  outcome_tbl
+}
 hero_extract_trace <- function(res, corrected = F) {
   if(!is.null(res$oldmodel)) {
     params <- res$oldmodel$eval_strategy_list[[1]]$parameters
@@ -1428,6 +1454,7 @@ run_hero_bc <- function(...) {
   econ_res <- hero_extract_summ(main_res, dots$esumms)
   nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms)
   ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms)
+  pw_ce_res <- hero_extract_ce_pw(main_res, health_res, econ_res)
   trace_res <- hero_extract_trace(main_res)
   
   # Return
@@ -1436,7 +1463,9 @@ run_hero_bc <- function(...) {
     outcomes = health_res,
     costs = econ_res,
     ce = ce_res,
-    nmb = nmb_res
+    pairwise_ce = pw_ce_res,
+    nmb = nmb_res,
+    api_ver = '2.0'
   )
 }
 
