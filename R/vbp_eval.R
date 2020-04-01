@@ -302,46 +302,62 @@ p_comp <- function(e.P, e.comp, beta0.P, beta0.comp, beta1.P, beta1.comp, lambda
 #' @return TRUE if parameter potentially influences strategy, FALSE otherwise
 #' 
 param_in_strategy <- function(mod,  strategy, parameter){
-  # Obtain parameter list
-  param_list <- mod$parameters
-  # Obtian lazyeval of parameter of interest
-  param_list[[parameter]] <- lazy(.._my_param)
-  # Interpolate paramater list with lazyeval of parameter of interest
-  i_params <- interpolate(param_list) # interpolate(params)
+  # Obtain parameter/surv dist list
+  param_list <- c(
+    mod$parameters,
+    mod$aux_params
+  )
+  
+  # Determine which parameters/surv dists depend on price parameter
+  dep_params <- params_dependent(param_list, parameter)
   
   ## States
   # Extract states
   state_list <- mod$uneval_strategy_list[[strategy]]$states
-  i_state <- interpolate(state_list, more = as_expr_list(i_params)) 
-  i_state <- i_state %>%
+  dep_in_states <- state_list %>%
     unlist(recursive=F) %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
-    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    lapply(function(x) any(dep_params %in% all.vars(x$expr))) %>%
     as.logical %>%
     any
   
   ## Transitions
   # Extract Transitions
   trans_list <- mod$uneval_strategy_list[[strategy]]$transition
-  i_trans <- interpolate(trans_list, more = as_expr_list(i_params))
-  if ("part_surv" %in% class(i_trans)) {
-    i_trans <- i_trans[1:2]
+  if ("part_surv" %in% class(trans_list)) {
+    trans_list <- trans_list[1:2]
   }
-  i_trans <- i_trans %>%
+  dep_in_trans <- trans_list %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
-    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    lapply(function(x) any(dep_params %in% all.vars(x$expr))) %>%
     as.logical %>%
     any
   
   ## Starting values
   start_list <- mod$uneval_strategy_list[[strategy]]$starting_values
-  i_start <- interpolate(start_list, more = as_expr_list(i_params)) 
-  i_start <- i_start %>%
+  dep_in_start <- start_list %>%
     dispatch_strategy_substitute(strategy = strategy) %>%
-    lapply(function(x) ".._my_param" %in% all.vars(x$expr)) %>%
+    lapply(function(x) any(dep_params %in% all.vars(x$expr))) %>%
     as.logical %>%
     any
   
   # Return TRUE if parameter potentially influences strategy
-  return(any(c(i_state, i_trans, i_start)))
+  return(any(c(dep_in_states, dep_in_trans, dep_in_start)))
+}
+
+get_deps <- function(x) all.vars(x$expr)
+
+
+params_dependent <- function(params, param) {
+  all_fo_deps <- purrr::map(params, get_deps)
+  unclaimed <- setdiff(names(params), param)
+  all_param_deps <- c(param)
+  while (TRUE) {
+    fo_param_deps <- purrr::keep(all_fo_deps[unclaimed], ~any(all_param_deps %in% .))
+    if (length(fo_param_deps) == 0) break
+    dep_params <- names(fo_param_deps)
+    unclaimed <- setdiff(unclaimed, dep_params)
+    all_param_deps <- c(all_param_deps, dep_params)
+  }
+  return(all_param_deps)
 }
