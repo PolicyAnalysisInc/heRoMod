@@ -80,7 +80,7 @@ test_that(
     )
     expect_output(
       str(e_par1),
-      "100 obs\\. of  6 variables"
+      "tibble \\[100 × 6\\]"
     )
     expect_equal(
       get_parameter_names(e_par1),

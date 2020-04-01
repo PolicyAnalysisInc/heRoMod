@@ -94,7 +94,7 @@ define_vbp_ <- function(par_name, low_dots, med_dots, high_dots) {
     suppressWarnings({ # tofix https://github.com/tidyverse/dplyr/issues/2688
       tab <- bind_rows(
         tab,
-        stats::setNames(tibble::tibble(dots[i]), names(dots)[i])
+        stats::setNames(tibble::tibble(a = list(dots[[i]])), names(dots)[i])
       )
     })
   }

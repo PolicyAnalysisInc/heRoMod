@@ -1451,10 +1451,10 @@ build_hero_model <- function(...) {
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", settings$method,
       "disc_method", settings$disc_method,
-      "cycles", max(1, round(settings$n_cycles,0)),
-      "n",      dots$psa$n,
+      "cycles", as.character(max(1, round(settings$n_cycles,0))),
+      "n",      as.character(dots$psa$n),
       "init",   paste(dots$states$prob,collapse = ", "),
-      "num_cores", cores
+      "num_cores", as.character(cores)
     ),
     data = dots$tables,
     state_time_limit = limits,
