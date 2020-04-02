@@ -2025,21 +2025,21 @@ run_markdown <- function(...) {
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
-  data$report_progress
+  try(data$report_progress(1L))
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
-  data$report_progress(2)
+  try(data$report_progress(1L))
   writeLines(text, con = paste0(dots$name, ".r"))
-  data$report_progress(3)
+  try(data$report_progress(1L))
   knitr::spin(paste0(dots$name, ".r"), knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
-  data$report_progress(4)
+  try(data$report_progress(1L))
   file.remove(paste0(dots$name, ".md"))
   file.remove(paste0(dots$name, ".r"))
-  data$report_progress(5)
+  try(data$report_progress(1L))
   ls(eval_env)
 }
 

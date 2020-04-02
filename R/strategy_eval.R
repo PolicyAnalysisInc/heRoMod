@@ -246,7 +246,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   ) %>%
     do.call(tibble::tibble, .)
   
-  try(report_progress(1))
+  try(report_progress(1L))
   structure(
     list(
       parameters = e_parameters,
