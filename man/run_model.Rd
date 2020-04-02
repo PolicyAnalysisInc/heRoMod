@@ -19,7 +19,8 @@ run_model(
   aux_params = NULL,
   parallel = F,
   cores = 1,
-  disc_method = "start"
+  disc_method = "start",
+  report_progress = function() { }
 )
 
 run_model_(
@@ -36,7 +37,8 @@ run_model_(
   aux_params = NULL,
   parallel = F,
   cores = 1,
-  disc_method = "start"
+  disc_method = "start",
+  report_progress = function() { }
 )
 }
 \arguments{

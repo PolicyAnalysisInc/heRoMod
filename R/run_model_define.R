@@ -86,7 +86,8 @@ run_model <- function(...,
                       aux_params = NULL,
                       parallel = F,
                       cores = 1,
-                      disc_method = 'start') {
+                      disc_method = 'start',
+                      report_progress = function() {}) {
   
   uneval_strategy_list <- list(...)
   
@@ -107,7 +108,8 @@ run_model <- function(...,
     aux_params = aux_params,
     parallel = parallel,
     cores = cores,
-    disc_method = disc_method
+    disc_method = disc_method,
+    report_progress = report_progress
   )
 }
 
@@ -125,7 +127,8 @@ run_model_ <- function(uneval_strategy_list,
                        aux_params = NULL,
                        parallel = F,
                        cores = 1,
-                       disc_method = 'start') {
+                       disc_method = 'start',
+                       report_progress = function(){}) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -256,7 +259,7 @@ run_model_ <- function(uneval_strategy_list,
       central_strategy %in% strategy_names
     )
   }
-  
+  report_progress(1)
   structure(
     list(
       run_model = res,

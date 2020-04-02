@@ -1,6 +1,12 @@
 #' @export
 run_analysis <- function(...) {
   data <- list(...)
+  if (is.null(data$report_progress)) {
+    data$report_progress <- function(x){ }
+  }
+  if (is.null(data$report_max_progress)) {
+    data$report_max_progress <- function(x) {}
+  }
   res <- try({
     if (data$analysis == 'psa') {
       res <- do.call(run_hero_psa, data)
@@ -1386,7 +1392,9 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    scen = dots$scenario
+    scen = dots$scenario,
+    report_progress = dots$report_progress,
+    report_max_progress = dots$report_max_progress,
   )
 }
 

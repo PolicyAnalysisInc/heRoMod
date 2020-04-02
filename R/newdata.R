@@ -131,21 +131,5 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     aux_params = aux_params,
     disc_method = disc_method
   )
-  if(!is.null(iteration)) {
-    path <- './04_progress/'
-    if (!file.exists(path)){
-      dir.create(path)
-    }
-    group_name_var <- old_parameters$.group
-    if(!is.null(group_name_var)) {
-      group_name <- lazyeval::lazy_eval(group_name_var)
-    } else {
-      group_name <- 'all'
-    }
-    writeLines(
-      '',
-      paste0(path , group_name, '-', unname(strategy_name), '-sens-', iteration[1])
-    )
-  }
   res
 }
