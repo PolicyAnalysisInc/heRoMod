@@ -1496,7 +1496,7 @@ build_hero_model <- function(...) {
     psa = dots$psa,
     scen = dots$scenario,
     report_progress = dots$report_progress,
-    report_max_progress = dots$report_max_progress,
+    report_max_progress = dots$report_max_progress
   )
 }
 
