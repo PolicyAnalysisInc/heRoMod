@@ -98,7 +98,8 @@ update.run_model <- function(object, newdata, ...) {
         list(eval_strategy_newdata(
           object, strategy = n, 
           newdata = newdata,
-          cores = dots$cores
+          cores = dots$cores,
+          report_progress = dots$report_progress
         ))
       )
     })

@@ -185,7 +185,7 @@ run_hero_scen <- function(...) {
   res
 }
 
-run_scen <- function(model, scen, cores = 1) {
+run_scen <- function(model, scen, cores = 1, report_progress = NULL) {
   # 
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
     stop("No cost and/or effect defined, sensitivity analysis unavailable.")
@@ -217,7 +217,7 @@ run_scen <- function(model, scen, cores = 1) {
   e_newdata <- list()
   for (n in strategy_names) {
     message(sprintf(
-      "Running DSA on strategy '%s'...", n
+      "Running scenarios for strategy '%s'...", n
     ))
     n_scenario <- nrow(new_data)
     n_var <- ncol(new_data)
@@ -237,7 +237,8 @@ run_scen <- function(model, scen, cores = 1) {
       model,
       strategy = n,
       newdata = new_data,
-      cores = cores
+      cores = cores,
+      report_progress = report_progress
     )
 
     res <- tab %>%

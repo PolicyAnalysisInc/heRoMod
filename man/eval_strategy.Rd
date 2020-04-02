@@ -14,7 +14,8 @@ eval_strategy(
   inflow,
   strategy_name,
   aux_params = NULL,
-  disc_method = "start"
+  disc_method = "start",
+  report_progress
 )
 }
 \arguments{

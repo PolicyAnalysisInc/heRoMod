@@ -29,7 +29,7 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_vbp.R
-run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
+run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds, report_progress = NULL) {
   
   # Run some checks
   check_vbp(model, vbp, strategy_vbp)
@@ -60,7 +60,8 @@ run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds) {
     eval_strategy_newdata(
       model,
       strategy = n,
-      newdata = vbp_newdata
+      newdata = vbp_newdata,
+      report_progress = report_progress
     ) %>%
       mutate(
         .strategy_names = n,

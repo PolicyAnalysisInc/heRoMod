@@ -32,7 +32,7 @@
 #' 
 #' @example inst/examples/example_run_psa.R
 #'   
-run_psa <- function(model, psa, N, resample, cores = 1) {
+run_psa <- function(model, psa, N, resample, cores = 1, report_progress = NULL) {
   if (! missing(resample)) {
     warning("Argument 'resample' is deprecated, use 'psa' instead.")
     psa <- resample
@@ -50,7 +50,6 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
   newdata <- eval_resample(psa, N, model)
   
   list_res <- list()
-  
   for (n in get_strategy_names(model)) {
     message(sprintf("Resampling strategy '%s'...", n))
     list_res <- c(
@@ -60,7 +59,8 @@ run_psa <- function(model, psa, N, resample, cores = 1) {
           x = model,
           strategy = n,
           newdata = newdata,
-          cores = cores
+          cores = cores,
+          report_progress
         ) %>% 
           rowwise() %>% 
           do(get_total_state_values(.$.mod)) %>% 

@@ -41,7 +41,7 @@
 #' @example inst/examples/example_eval_strategy_newdata.R
 #'   
 #' @keywords internal
-eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
+eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = NULL) {
   if (is.null(cores)) cores <- 1
   strategy <- check_strategy_index(x = x, i = strategy)
   
@@ -66,7 +66,9 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
       newdata %>% 
         rowwise() %>% 
         do({
-          df <- as_tibble(.)
+          df <- as_tibble(
+            lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+          )
           iter <- df$.iteration
           tibble(
           .mod = list(try(eval_newdata(
@@ -81,7 +83,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
             strategy_name = strategy,
             expand_limit = expand_limit,
             disc_method = disc_method,
-            iteration = iter
+            iteration = iter,
+            report_progress = report_progress
           )
           )))}) %>%
         ungroup() %>% 
@@ -89,7 +92,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
           newdata
         )
     #})
-      }, mc.cores = cores)
+    }, mc.cores = cores)
   )
   plyr::l_ply(
     pieces,
@@ -107,13 +110,13 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1) {
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
                          strategy_name, expand_limit, aux_params = NULL,
-                         disc_method = 'start', iteration = NULL) {
+                         disc_method = 'start', iteration = NULL, report_progress = NULL) {
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
     new_parameters
   )
   
-  lazy_new_param <- to_dots(as.data.frame(select(new_parameters, -.iteration)))
+  lazy_new_param <- to_dots(purrr::map(as.list(select(new_parameters, -.iteration)), ~.[[1]]))
   
   parameters <- utils::modifyList(
     old_parameters,
@@ -129,7 +132,8 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     strategy_name = strategy_name,
     expand_limit = expand_limit,
     aux_params = aux_params,
-    disc_method = disc_method
+    disc_method = disc_method,
+    report_progress = report_progress
   )
   res
 }

@@ -87,7 +87,7 @@ run_model <- function(...,
                       parallel = F,
                       cores = 1,
                       disc_method = 'start',
-                      report_progress = function() {}) {
+                      report_progress = NULL) {
   
   uneval_strategy_list <- list(...)
   
@@ -128,7 +128,7 @@ run_model_ <- function(uneval_strategy_list,
                        parallel = F,
                        cores = 1,
                        disc_method = 'start',
-                       report_progress = function(){}) {
+                       report_progress = NULL) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -207,7 +207,8 @@ run_model_ <- function(uneval_strategy_list,
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
-        disc_method = disc_method
+        disc_method = disc_method,
+        report_progress = report_progress
       ))
     }, mc.cores = cores)
     
@@ -229,7 +230,8 @@ run_model_ <- function(uneval_strategy_list,
         inflow = inflow,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
-        disc_method = disc_method
+        disc_method = disc_method,
+        report_progress = report_progress
       )
     })
   }
@@ -259,7 +261,6 @@ run_model_ <- function(uneval_strategy_list,
       central_strategy %in% strategy_names
     )
   }
-  report_progress(1)
   structure(
     list(
       run_model = res,
@@ -277,7 +278,8 @@ run_model_ <- function(uneval_strategy_list,
       noncomparable_strategy = noncomparable_strategy,
       state_time_limit = state_time_limit,
       frontier = if (! is.null(root_strategy)) get_frontier(res),
-      disc_method = disc_method
+      disc_method = disc_method,
+      report_progress = report_progress
     ),
     class = c("run_model", class(res))
   )

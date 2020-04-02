@@ -53,7 +53,11 @@
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
                           inflow, strategy_name, aux_params = NULL,
-                          disc_method = 'start') {
+                          disc_method = 'start', report_progress) {
+  
+  if (is.null(report_progress)) {
+    report_progress <- function(x) {}
+  }
   
   .state <- .full_state <- .expand <- NULL
   
@@ -242,6 +246,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   ) %>%
     do.call(tibble::tibble, .)
   
+  try(report_progress(1))
   structure(
     list(
       parameters = e_parameters,

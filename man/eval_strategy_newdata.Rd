@@ -5,7 +5,13 @@
 \title{Iteratively Evaluate a Markov Model With New Parameter
 Values}
 \usage{
-eval_strategy_newdata(x, strategy = 1, newdata, cores = 1)
+eval_strategy_newdata(
+  x,
+  strategy = 1,
+  newdata,
+  cores = 1,
+  report_progress = NULL
+)
 }
 \arguments{
 \item{x}{Result from \code{\link[=run_model]{run_model()}}.}

@@ -1,12 +1,8 @@
 #' @export
 run_analysis <- function(...) {
   data <- list(...)
-  if (is.null(data$report_progress)) {
-    data$report_progress <- function(x){ }
-  }
-  if (is.null(data$report_max_progress)) {
-    data$report_max_progress <- function(x) {}
-  }
+  n_iter <- do.call(get_n_iterations, data)
+  data$report_max_progress(n_iter)
   res <- try({
     if (data$analysis == 'psa') {
       res <- do.call(run_hero_psa, data)
@@ -16,6 +12,8 @@ run_analysis <- function(...) {
       res <- do.call(run_hero_vbp, data)
     } else if (data$analysis == 'bc') {
       res <- do.call(run_hero_bc, data)
+    } else if (data$analysis == 'scen') {
+        res <- do.call(run_hero_scen, data)
     } else if (data$analysis == "excel") {
       res <- do.call(export_hero_xlsx, data)
     } else if (data$analysis == "code_preview") {
@@ -31,6 +29,40 @@ run_analysis <- function(...) {
   }
   res$warnings <- paste(capture.output(warnings()), collapse = '\n')
   res
+}
+
+get_n_iterations <- function(...) {
+  data <- list(...)
+  n_group <- max(nrow(data$groups), 1)
+  n_strat <- nrow(data$strategies)
+  n_dsa_param <- sum(!(is.na(data$variables$low) | data$variables$low == ''))
+  n_scen <- length(unique(data$scenario$scenario_name))
+  n_psa_sim <- data$psa$n
+  
+  iter_init <- n_strat
+  iter_demo <- n_strat * n_group
+  iter_bc <- iter_init + ifelse(n_group > 1, iter_demo, 0)
+  iter_dsa <- (iter_init * (1 + n_dsa_param * 2)) * n_group
+  iter_psa <- (iter_init * (1 + n_psa_sim)) * n_group
+  iter_scen <- (iter_init * (1 + n_scen)) * n_group
+  iter_vbp <- (iter_init * 4) * n_group
+  
+  if (data$analysis == 'psa') {
+    iter <- iter_psa
+  } else if (data$analysis == 'dsa') {
+    iter <- iter_dsa
+  } else if (data$analysis == 'vbp') {
+    iter <- iter_vbp
+  } else if (data$analysis == 'bc') {
+    iter <- iter_bc
+  } else if (data$analysis == 'scen') {
+    iter <- iter_scen
+  } else if (data$analysis == "excel") {
+    iter <- iter_bc
+  } else if (data$analysis == "code_preview") {
+    iter <- 5
+  }
+  return(iter)
 }
 
 parse_hero_settings <- function(settings) {
@@ -1495,8 +1527,7 @@ build_hero_model <- function(...) {
     aux_params = surv,
     psa = dots$psa,
     scen = dots$scenario,
-    report_progress = dots$report_progress,
-    report_max_progress = dots$report_max_progress
+    report_progress = dots$report_progress
   )
 }
 
@@ -1570,7 +1601,8 @@ run_hero_vbp <- function(...) {
       model = main_res,
       vbp = vbp_settings,
       strategy_vbp = dots$vbp$strat,
-      wtp_thresholds = c(0, 100000)
+      wtp_thresholds = c(0, 100000),
+      report_progress = args$report_progress
     )
     eq <- vbp_res$lin_eq
     lin_df <- vbp_res$lin_df
@@ -1749,7 +1781,6 @@ run_hero_psa <- function(...) {
   n_groups <- max(1, nrow(as.data.frame(dots$groups)))
   n_strats <- nrow(dots$strategies)
   n_sims <- n_strats * n_groups * dots$psa$n
-  print(paste0('Running ', n_sims, ' simulations.'))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1994,16 +2025,21 @@ run_markdown <- function(...) {
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
+  data$report_progress
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
+  data$report_progress(2)
   writeLines(text, con = paste0(dots$name, ".r"))
+  data$report_progress(3)
   knitr::spin(paste0(dots$name, ".r"), knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
+  data$report_progress(4)
   file.remove(paste0(dots$name, ".md"))
   file.remove(paste0(dots$name, ".r"))
+  data$report_progress(5)
   ls(eval_env)
 }
 

@@ -23,10 +23,13 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
                           run_scen = FALSE, run_demo = FALSE, state_time_limit = NULL,
-                          aux_params = NULL, psa = NULL, scen = NULL, start = NULL, report_progress = NULL, report_max_progress = NULL) {
+                          aux_params = NULL, psa = NULL, scen = NULL, start = NULL,
+                          report_progress = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data, aux_params = aux_params, psa = psa, scen = scen, start = start, report_progress = report_progress, report_max_progress = report_max_progress)
+                                  source, data, aux_params = aux_params,
+                                  psa = psa, scen = scen, start = start,
+                                  report_progress = report_progress)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
@@ -41,8 +44,8 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
                                   data = NULL, aux_params = NULL, psa = NULL,
-                                  scen = NULL, start = NULL, report_progress = report_progress,
-                                  report_max_progress = report_max_progress) {
+                                  scen = NULL, start = NULL,
+                                  report_progress = report_progress) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -123,8 +126,7 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
     aux_param_info = aux_param_info,
     demographic_file = demographic_file,
     model_options = model_options,
-    report_progress = report_progress,
-    report_max_progress = report_max_progress
+    report_progress = report_progress
   )
   
 }
@@ -510,7 +512,8 @@ eval_models_from_tabular <- function(inputs,
     model_dsa <- run_dsa(
       model_runs,
       inputs$param_info$dsa_params,
-      cores = inputs$model_options$num_cores
+      cores = inputs$model_options$num_cores,
+      report_progress = inputs$report_progress
     )
   }
   
@@ -520,7 +523,8 @@ eval_models_from_tabular <- function(inputs,
     model_scen <- run_scen(
       model_runs,
       inputs$param_info$scen,
-      cores = inputs$model_options$num_cores
+      cores = inputs$model_options$num_cores,
+      report_progress = inputs$report_progress
     )
   }
   
@@ -531,7 +535,8 @@ eval_models_from_tabular <- function(inputs,
       model_runs,
       psa = inputs$param_info$psa_params,
       N = inputs$model_options$n,
-      cores = inputs$model_options$num_cores
+      cores = inputs$model_options$num_cores,
+      report_progress = inputs$report_progress
     )
   }
   
@@ -539,7 +544,7 @@ eval_models_from_tabular <- function(inputs,
   if (!is.null(inputs$demographic_file) & run_demo) {
     if (options()$heRomod.verbose) message("** Running demographic analysis...")
     demo_res <- stats::update(model_runs, inputs$demographic_file,
-                              cores = inputs$model_options$num_cores)
+                              cores = inputs$model_options$num_cores, report_progress = inputs$report_progress)
   }
   
   list(
