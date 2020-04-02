@@ -315,7 +315,9 @@ event_prob_ <- function(x, start, end, ...){
   check_time_inputs(end)
   surv_start <- eval_surv(x, start, ...)
   surv_end <- eval_surv(x, end, ...)
-  (surv_start - surv_end) / surv_start
+  e_prob <- (surv_start - surv_end) / surv_start
+  e_prob[surv_start == 0] <- 1
+  e_prob
 }
 
 #' Evaluate Event Probabilities
@@ -365,6 +367,26 @@ compute_surv <- memoise::memoise(
   compute_surv_,
   ~ memoise::timeout(options()$heRomod.memotime)
 )
+
+#' @rdname eval_surv
+#' @export
+eval_surv.default <- function(x, time,  ...) {
+  the_class <- class(x)
+  class_statement <- switch(
+    the_class[1],
+    "numeric" = "a number",
+    "character" = "a string",
+    "data.frame" = "a table",
+    "tbl_df" = "a table",
+    paste0("an object of class '", the_class, "'")
+  )
+  msg <- paste0(
+    'Function expected a survival distribution but instead was passed ',
+    class_statement,
+    '.'
+  )
+  stop(msg, call. = F)
+}
 
 #' @rdname eval_surv
 #' @export
@@ -757,8 +779,4 @@ eval_surv.lazy <- function(x, ...){
   if("extra_env" %in% names(dots))
     use_data <- as.list.environment(dots$extra_env)
   eval_surv(lazyeval::lazy_eval(x, data = use_data), ...)
-}
-
-eval_surv.character <- function(x, ...){
-  eval_surv(eval(parse(text = x)), ...)
 }

@@ -551,7 +551,9 @@ resolve_dependencies.default <- function(x) {
       }
     }
     if(length(to_remove) == 0) {
-      stop('Error: Circular reference in parameters')
+      quoted_params <- paste0('"', unordered, '"')
+      param_string <- paste(quoted_params, collapse = ", ")
+      stop(paste0('Circular reference in parameters: ', param_string), call. = F)
     } else {
       unordered <- unordered[-to_remove]
     }
@@ -582,7 +584,11 @@ resolve_dependencies.uneval_state_list <- function(x) {
       }
     }
     if(length(to_remove) == 0) {
-      stop('Error: Circular reference in parameters')
+      params <- names(unordered)
+      disc_index <- !grepl('^.disc', params)
+      quoted_params <- paste0('"', params[disc_index], '"')
+      param_string <- paste(quoted_params, collapse = ", ")
+      stop(paste0('Circular reference in values: ', param_string), call. = F)
     } else {
       unordered <- unordered[-to_remove]
     }

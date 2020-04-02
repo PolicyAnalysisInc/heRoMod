@@ -15,7 +15,7 @@ Authors@R: c(
     )
 Description: A package for developing and running cost-effectiveness
     models in R.  Forked from the HEEMOD package.
-Depends: R (>= 3.3.0),
+Depends: R (>= 3.5.0),
     flexsurv,
     flexsurvcure,
     dplyr (>= 0.7.2),

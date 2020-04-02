@@ -195,6 +195,28 @@ parse_hero_values <- function(data, health, strategies, states) {
         }
       }
     }) %>%
+    ungroup() %>%
+    group_by(name, .model) %>%
+    do({
+      df <- data.frame(., stringsAsFactors = F)
+      isAllOther <- df$.state == "All Other"
+      if (!any(isAllOther)) df
+      else if (sum(isAllOther) > 1) {
+        stop('Error in values, "All Other" may only be used once per value and strategy.', call. = F)
+      } else {
+        allOtherIndex <- which(isAllOther)
+        isStateUsed <- states %in% df$.state
+        unusedStates <- states[!isStateUsed]
+        extraRows <- df[rep(allOtherIndex, length(unusedStates)), ]
+        extraRows$.state <- unusedStates
+        rows <- rbind(
+          df[-allOtherIndex, ],
+          extraRows,
+          stringsAsFactors = F
+        )
+        rows
+      }
+    }) %>%
     ungroup()
   
   if(nrow(states_undisc) > 0) {
@@ -287,6 +309,23 @@ parse_hero_values_st <- function(data, health, strategies) {
   rbind(states_undisc, states_disc)
 }
 parse_hero_summaries <- function(data, values, health, strategies, states) {
+  
+  # Check that there are no duplicate entries
+  duplicates <- group_by(data, name, value) %>%
+    mutate(n = seq_len(n())) %>%
+    filter(n > 1)
+  
+  if (nrow(duplicates) > 0) {
+    msg <- paste0(
+      "Summary '",
+      duplicates$name[1],
+      "' contains duplicate value '",
+      duplicates$value[1],
+      "'."
+    )
+    stop(msg, call. = F)
+  }
+    
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -701,7 +740,7 @@ hero_extract_ce <- function(res, hsumms, esumms) {
         )
     })
 }
-hero_extract_trace <- function(res) {
+hero_extract_trace <- function(res, corrected = F) {
   if(!is.null(res$oldmodel)) {
     params <- res$oldmodel$eval_strategy_list[[1]]$parameters
   } else {
@@ -709,7 +748,7 @@ hero_extract_trace <- function(res) {
   }
   
   time <- rbind(
-    data.frame(model_day=0,model_week=0,model_month=0,model_year=0),
+    if(!corrected) data.frame(model_day=0,model_week=0,model_month=0,model_year=0) else data.frame(),
     distinct(
       params,
       model_day,
@@ -721,7 +760,8 @@ hero_extract_trace <- function(res) {
   trace <- plyr::ldply(
     res$eval_strategy_list,
     function(x) {
-      x$counts_uncorrected
+      if(!corrected) x$counts_uncorrected
+      else x$counts
     }
   ) %>%
     rename(
@@ -1382,7 +1422,7 @@ build_hero_model <- function(...) {
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", settings$method,
       "disc_method", settings$disc_method,
-      "cycles", max(1, round(dots$settings$n_cycles,0)),
+      "cycles", max(1, round(settings$n_cycles,0)),
       "n",      dots$psa$n,
       "init",   paste(dots$states$prob,collapse = ", "),
       "num_cores", cores
@@ -1829,6 +1869,14 @@ export_hero_xlsx <- function(...) {
       "Year" = model_year,
       "Strategy" = series
     )
+  cor_trace_res <- hero_extract_trace(main_res, T) %>%
+    rename(
+      "Day" = model_day,
+      "Week" = model_week,
+      "Month" = model_month,
+      "Year" = model_year,
+      "Strategy" = series
+    )
   param_res <- compile_parameters(heemod_res)
   trans_res <- compile_transitions(heemod_res)
   unit_values_res <- compile_unit_values(heemod_res)
@@ -1859,6 +1907,7 @@ export_hero_xlsx <- function(...) {
       "Calc - Unit Values"= unit_values_res,
       "Calc - Values"= values_res,
       "Results - Trace" = trace_res,
+      "Results - Trace (Corrected)" = cor_trace_res,
       "Results - Outcomes" = health_res,
       "Results - Costs" = econ_res,
       "Results - CE" = ce_res,

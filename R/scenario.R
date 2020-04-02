@@ -289,7 +289,7 @@ hero_extract_scen_summ <- function(res, bc_res, summ) {
     ungroup()
   
   bc_res_all <- plyr::rbind.fill(
-    bc_res %>% mutate(outcome=group),
+    bc_res %>% mutate(outcome=group) %>% distinct(outcome, series, group, disc, .keep_all = T),
     bc_res_summs
   ) %>%
     transmute(
