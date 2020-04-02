@@ -740,6 +740,68 @@ hero_extract_ce <- function(res, hsumms, esumms) {
         )
     })
 }
+hero_extract_ce_pw <- function(res, hsumm_res, esumm_res) {
+  
+  abs_hsumm_res <- filter(hsumm_res, disc, !grepl(" vs. ", series, fixed=T)) %>%
+    mutate(comparator = series) %>%
+    select(outcome, comparator, group, disc, value) %>%
+    group_by(outcome, comparator) %>%
+    summarize(effect = sum(value)) 
+  
+  abs_esumm_res <- filter(esumm_res, disc, !grepl(" vs. ", series, fixed=T)) %>%
+    mutate(comparator = series) %>%
+    select(outcome, comparator, group, disc, value) %>%
+    group_by(outcome, comparator) %>%
+    summarize(cost = sum(value)) 
+  
+  
+  delta_hsumm_res <- filter(hsumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    select(outcome, series, group, disc, value) %>%
+    group_by(outcome, series) %>%
+    summarize(deffect = sum(value)) %>%
+    mutate(
+      referent = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[1]
+      ),
+      comparator = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[2]
+      )
+    )
+  
+  delta_esumm_res <- filter(esumm_res, disc, grepl(" vs. ", series, fixed=T)) %>%
+    select(outcome, series, group, disc, value) %>%
+    group_by(outcome, series) %>%
+    summarize(dcost = sum(value)) %>%
+    mutate(
+      referent = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[1]
+      ),
+      comparator = purrr::map_chr(
+        strsplit(series, ' vs. '),
+        ~.[2]
+      )
+    )
+  
+  outcome_tbl <- expand.grid(
+    health = unique(hsumm_res$outcome),
+    econ = unique(esumm_res$outcome),
+    stringsAsFactors = F
+  ) %>%
+    left_join(delta_hsumm_res, by = c('health' = 'outcome')) %>%
+    left_join(delta_esumm_res, by = c('econ' = 'outcome', 'series' = 'series', 'referent' = 'referent', 'comparator' = 'comparator')) %>%
+    left_join(abs_hsumm_res, by = c('health' = 'outcome', 'comparator' = 'comparator')) %>%
+    left_join(abs_esumm_res, by = c('econ' = 'outcome', 'comparator' = 'comparator')) %>%
+    mutate(
+      icer = compute_pw_icer(deffect, dcost),
+      icer_string = format_icer(icer)
+    ) %>%
+    select(health, econ, series, referent, comparator, effect, cost, deffect, dcost, icer, icer_string)
+  
+  outcome_tbl
+}
 hero_extract_trace <- function(res, corrected = F) {
   if(!is.null(res$oldmodel)) {
     params <- res$oldmodel$eval_strategy_list[[1]]$parameters
@@ -1422,10 +1484,10 @@ build_hero_model <- function(...) {
       "effect", paste0(".disc_", dots$hsumms$name[1]),
       "method", settings$method,
       "disc_method", settings$disc_method,
-      "cycles", max(1, round(settings$n_cycles,0)),
-      "n",      dots$psa$n,
+      "cycles", as.character(max(1, round(settings$n_cycles,0))),
+      "n",      as.character(dots$psa$n),
       "init",   paste(dots$states$prob,collapse = ", "),
-      "num_cores", cores
+      "num_cores", as.character(cores)
     ),
     data = dots$tables,
     state_time_limit = limits,
@@ -1463,6 +1525,7 @@ run_hero_bc <- function(...) {
   econ_res <- hero_extract_summ(main_res, dots$esumms)
   nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms)
   ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms)
+  pw_ce_res <- hero_extract_ce_pw(main_res, health_res, econ_res)
   trace_res <- hero_extract_trace(main_res)
   
   # Return
@@ -1471,7 +1534,9 @@ run_hero_bc <- function(...) {
     outcomes = health_res,
     costs = econ_res,
     ce = ce_res,
-    nmb = nmb_res
+    pairwise_ce = pw_ce_res,
+    nmb = nmb_res,
+    api_ver = '2.0'
   )
 }
 

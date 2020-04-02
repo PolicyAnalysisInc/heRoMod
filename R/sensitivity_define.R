@@ -87,7 +87,7 @@ define_dsa_ <- function(par_names, low_dots, high_dots) {
     suppressWarnings({ # tofix https://github.com/tidyverse/dplyr/issues/2688
       tab <- bind_rows(
         tab,
-        stats::setNames(tibble::tibble(dots[i]), names(dots)[i])
+        stats::setNames(tibble::tibble(a = list(dots[[i]])), names(dots)[i])
       )
     })
   }
