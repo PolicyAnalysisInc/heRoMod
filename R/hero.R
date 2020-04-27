@@ -31,30 +31,41 @@ parse_hero_vars <- function(data, settings, groups) {
   if (!is.null(settings$CycleLengthUnits)) {
     cl_u <- settings$CycleLengthUnits
     cl_n <- settings$CycleLength
-    cl_d_formula <- paste0('time_in_days("', cl_u, '", 365) * ', cl_n)
+    if (!is.null(settings$days_per_year)) {
+      dpy <- settings$days_per_year
+    } else {
+      dpy <- 365
+    }
+    cl_d_formula <- str_interp('time_in_days("${cl_u}", ${dpy}) * ${cl_n}')
+    cl_w_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("weeks", ${dpy}) ')
+    cl_m_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("months", ${dpy}) ')
+    cl_y_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("years", ${dpy}) ')
     cl <- time_in_days(cl_u, 365) * cl_n
   } else {
     cl <- settings$cycle_length
     cl_d_formula <- as.character(cl)
+    cl_w_formula <- "cycle_length_days / 7"
+    cl_m_formula <- "cycle_length_days * 12 / 365"
+    cl_y_formula <- "cycle_length_days / 365"
   }
   hdisc_adj <- rescale_discount_rate(settings$disc_eff, 365, cl)
   edisc_adj <- rescale_discount_rate(settings$disc_cost, 365, cl)
   hero_pars <- tibble::tribble(
-    ~parameter,            ~value,                                 ~low, ~high, ~psa,
-    "cycle_length_days",   cl_d_formula,                           NA,   NA, NA,
-    "cycle_length_weeks",  "cycle_length_days / 7",                NA,   NA, NA,
-    "cycle_length_months", "cycle_length_days * 12 / 365",         NA,   NA, NA,
-    "cycle_length_years",  "cycle_length_days / 365",              NA,   NA, NA,
-    "model_day",           "markov_cycle * cycle_length_days",     NA,   NA, NA,
-    "model_week",          "markov_cycle * cycle_length_weeks",    NA,   NA, NA,
-    "model_month",         "markov_cycle * cycle_length_months",   NA,   NA, NA,
-    "model_year",          "markov_cycle * cycle_length_years",    NA,   NA, NA,
-    "state_day",           "state_time * cycle_length_days",       NA,   NA, NA,
-    "state_week",          "state_time * cycle_length_weeks",      NA,   NA, NA,
-    "state_month",         "state_time * cycle_length_months",     NA,   NA, NA,
-    "state_year",          "state_time * cycle_length_years",      NA,   NA, NA,
-    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,   NA, NA,
-    "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,   NA, NA
+    ~parameter,            ~value,                               ~low, ~high, ~psa,
+    "cycle_length_days",   cl_d_formula,                           NA,    NA,   NA,
+    "cycle_length_weeks",  cl_w_formula,                           NA,    NA,   NA,
+    "cycle_length_months", cl_m_formula,                           NA,    NA,   NA,
+    "cycle_length_years",  cl_y_formula,                           NA,    NA,   NA,
+    "model_day",           "markov_cycle * cycle_length_days",     NA,    NA,   NA,
+    "model_week",          "markov_cycle * cycle_length_weeks",    NA,    NA,   NA,
+    "model_month",         "markov_cycle * cycle_length_months",   NA,    NA,   NA,
+    "model_year",          "markov_cycle * cycle_length_years",    NA,    NA,   NA,
+    "state_day",           "state_time * cycle_length_days",       NA,    NA,   NA,
+    "state_week",          "state_time * cycle_length_weeks",      NA,    NA,   NA,
+    "state_month",         "state_time * cycle_length_months",     NA,    NA,   NA,
+    "state_year",          "state_time * cycle_length_years",      NA,    NA,   NA,
+    "disc_h",              paste0("discount(1, ", hdisc_adj, ")"), NA,    NA,   NA,
+    "disc_e",              paste0("discount(1, ", edisc_adj, ")"), NA,    NA,   NA
   )
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%

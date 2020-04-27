@@ -115,6 +115,8 @@
 #'   
 #' @importFrom tibble tibble
 #' @importFrom tibble tibble_
+#' 
+#' @importFrom stringr str_interp
 NULL
 
 #' @export
