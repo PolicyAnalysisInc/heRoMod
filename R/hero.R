@@ -11,15 +11,20 @@ parse_hero_settings <- function(settings) {
   }
   
   if (!is.null(settings$CycleLength)) {
+    if (!is.null(settings$days_per_year)) {
+      dpy <- settings$days_per_year
+    } else {
+      dpy <- 365
+    }
     # Caclulate cycle length
     cl_n <- settings$CycleLength
     cl_u <- settings$CycleLengthUnits
-    cl <- time_in_days(cl_u, 365) * cl_n
+    cl <- time_in_days(cl_u, dpy) * cl_n
     
     # Calculate timeframe
     tf_n <- settings$ModelTimeframe
     tf_u <- settings$ModelTimeframeUnits
-    tf <- time_in_days(tf_u, 365) * tf_n
+    tf <- time_in_days(tf_u, dpy) * tf_n
     
     # Populate settings object with number of cycles
     settings$n_cycles <- max(1, round(tf / cl))
