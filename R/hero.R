@@ -1916,6 +1916,9 @@ export_hero_xlsx <- function(...) {
     )
   param_res <- compile_parameters(heemod_res)
   trans_res <- compile_transitions(heemod_res)
+  if (nrow(trans_res) == 0) {
+    trans_res <- trace_res
+  }
   unit_values_res <- compile_unit_values(heemod_res)
   values_res <- compile_values(heemod_res)
   if(length(dots$tables) > 0) {

@@ -202,7 +202,7 @@ eval_starting_values <- function(x, parameters) {
   
   start_df <- parameters %>%
     filter(state_time == 1) %>%
-    mutate_(.dots = x) %>%
+    safe_eval(., .dots = x) %>%
     .[to_keep]
   
   start_df[nrow(start_df), ] <- 0
