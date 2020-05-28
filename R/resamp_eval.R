@@ -221,5 +221,15 @@ eval_resample <- function(psa, N, model = NULL) {
       mutate(!!!lazy_eval(list_expr, data = .)) %>% 
       select(- .denom)
   }
+  na_cols <- apply(res, 2, function(x) any(is.na(x)))
+  if (any(na_cols)) {
+    err_cols <- colnames(res)[na_cols]
+    err_msg <- paste0(
+      'Sampling distribution resulted in missing values for variables: ',
+      paste(err_cols, collapse = ', '),
+      '.'
+    )
+    stop(err_msg, call. = F)
+  }
   res
 }
