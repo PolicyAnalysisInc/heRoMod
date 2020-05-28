@@ -133,7 +133,9 @@ parse_hero_values <- function(data, health, strategies, states) {
   
   state_vals <- data %>%
     filter(!grepl(trans_string, state, fixed = T), state != "Model Start")
-  
+  if (nrow(state_vals) == 0) {
+    return(tibble(name = character(), .model = character(), .state = character(), value = character()))
+  }
   states_undisc <- state_vals %>%
     rowwise() %>%
     do({
