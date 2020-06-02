@@ -74,7 +74,7 @@ run_hero_scen_ <- function(...) {
 run_hero_scen <- function(...) {
   dots <- list(...)
   if (!'data.frame' %in% class(dots$scenario)) {
-    stop('Cannot run scenario analysis: no scenarios were defined.', call. = F)
+    stop('No scenarios were defined in Scenario Analysis Inputs.', call. = F)
   }
   scen_param_count <- dots$scenario %>%
     group_by(scenario_name, param_name) %>%

@@ -1594,10 +1594,33 @@ run_hero_vbp <- function(...) {
   
 }
 
+check_dsa_vars <- function(x) {
+  empty_low <- x$low == '' | is.na(x$low)
+  empty_high <- x$high == '' | is.na(x$high)
+  all_missing <- all(empty_low) || all(empty_high)
+  if (all_missing) {
+    err_msg <- 'You must vary at least one parameter in DSA Inputs in order to run DSA.'
+    stop(err_msg, call. = F)
+  }
+  missing_low_or_high <- empty_low != empty_high
+  if (any(missing_low_or_high)) {
+    err_msg <- paste0('Parameter')
+    stop(
+      paste0(
+        'Parameters varied in DSA must have both low and high values defined in DSA Inputs. The following parameters were missing low/high values: ',
+        paste('"', x$name[missing_low_or_high], '"', sep =, collapse = ", ")
+      ),
+      call. = F
+    )
+  }
+}
+
 run_hero_dsa_ <- function(...) {
   
   # Capture arguments
   dots <- list(...)
+  check_dsa_vars(dots$variables)
+  # Check that DSA inputs have been filled out
   
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
@@ -1682,6 +1705,7 @@ run_hero_dsa_ <- function(...) {
 run_hero_dsa <- function(...) {
   # Run the DSA
   res <- run_hero_dsa_(...)
+  
   # Compress the results
   res$nmb <- res$nmb  %>%
     group_by(health_outcome, econ_outcome, series) %>%
