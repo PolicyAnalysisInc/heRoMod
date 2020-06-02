@@ -1091,7 +1091,7 @@ compile_parameters <- function(x) {
     # Homogenous model
     lapply(x$model_runs$eval_strategy_list, function(x) x$parameters) %>%
       do.call(rbind, .) %>%
-      as.tbl()
+      as_tibble()
   } else {
     # Heterogeneous model
     lapply(x$demographics$model_list, function(x) {
@@ -1099,7 +1099,7 @@ compile_parameters <- function(x) {
     }) %>%
       unlist(recursive=F) %>%
       do.call(rbind, .) %>%
-      as.tbl()
+      as_tibble()
   }
 }
 
@@ -1292,7 +1292,7 @@ compile_transitions <- function(x) {
         )
       }, .id = "strategy") %>%
         select(!!!syms(c("strategy", "cycle", "pfs", "os"))) %>%
-        as.tbl()
+        as_tibble()
     } else {
       if("eval_part_surv_custom" %in% the_class) {
         data.frame()
@@ -1309,7 +1309,7 @@ compile_transitions <- function(x) {
             )
         }, .id = "strategy") %>%
           select(!!!syms(c("strategy", "cycle", "from", state_names))) %>%
-          as.tbl()
+          as_tibble()
       }
     }
   } else {
@@ -1332,7 +1332,7 @@ compile_transitions <- function(x) {
         }, .id = "group")
       }, .id = "strategy") %>%
         select(!!!syms(c("strategy", "group", "cycle", "pfs", "os"))) %>%
-        as.tbl()
+        as_tibble()
       
     } else {
       if ("eval_part_surv_custom" %in% the_class) {
@@ -1355,7 +1355,7 @@ compile_transitions <- function(x) {
           }, .id = "group")
         }, .id = "strategy") %>%
           select(!!!syms(c("strategy", "group", "cycle", "from", state_names))) %>%
-          as.tbl()
+          as_tibble()
       }
     }
   }

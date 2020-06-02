@@ -230,7 +230,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   count_table_agg <- plyr::dlply(
     expand_table %>% mutate(.state = factor(.state, unique(.state))),
     ".state",
-    function(st) rowSums(count_table[st$.full_state])
+    function(st) unname(rowSums(count_table[st$.full_state]))
   ) %>%
     do.call(tibble::tibble, .)
   
@@ -349,7 +349,7 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   trans_counts <- uncond_trans * (1 - zero_diag)
   
   # Convert counts to data_frames
-  counts_df <- as.tbl(as.data.frame(counts_array))
+  counts_df <- as_tibble(as.data.frame(counts_array))
   colnames(counts_df) <- state_names
   
   # Set dimnames on transition counts
