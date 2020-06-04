@@ -502,8 +502,8 @@ test_that(
       dsa_res_test$cost
     )
     
-    print(tibble::as_tibble(dsa_res$cost))
-    print(tibble::as_tibble(dsa_res_test$cost))
+    print(dsa_res$cost)
+    print(dsa_res_test$cost)
     
     expect_equal(
       dsa_res$nmb,
