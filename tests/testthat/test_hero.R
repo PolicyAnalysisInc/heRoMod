@@ -493,21 +493,18 @@ test_that(
     dsa_res_test <- do.call(run_hero_dsa,model)
     
     expect_equal(
-      dsa_res$outcomes,
-      dsa_res_test$outcomes
-    )
-    
-    print(dsa_res$outcomes)
-    print(dsa_res_test$outcomes)
-    
-    expect_equal(
-      dsa_res$cost,
-      dsa_res_test$cost
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res$outcomes, function(x) dplyr::mutate(outcome = x$outcome, disc = x$disc, series = x$series, x$data))), outcome, disc, series, param),
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res_test$outcomes, function(x) dplyr::mutate(outcome = x$outcome, disc = x$disc, series = x$series, x$data))), outcome, disc, series, param)
     )
     
     expect_equal(
-      dsa_res$nmb,
-      dsa_res_test$nmb
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res$cost, function(x) dplyr::mutate(outcome = x$outcome, disc = x$disc, series = x$series, x$data))), outcome, disc, series, param),
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res_test$cost, function(x) dplyr::mutate(outcome = x$outcome, disc = x$disc, series = x$series, x$data))), outcome, disc, series, param)
+    )
+    
+    expect_equal(
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res$nmb, function(x) dplyr::mutate(health_outcome = x$health_outcome, econ_outcome = x$econ_outcome, series = x$series, x$data))), health_outcome, econ_outcome, series, param),
+      dplyr::arrange(dplyr::bind_rows(lapply(dsa_res_test$nmb, function(x) dplyr::mutate(health_outcome = x$health_outcome, econ_outcome = x$econ_outcome, series = x$series, x$data))), health_outcome, econ_outcome, series, param)
     )
     
     withr::with_dir(new = tempdir(), {
