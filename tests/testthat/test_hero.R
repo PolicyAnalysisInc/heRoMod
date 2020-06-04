@@ -465,9 +465,6 @@ test_that(
       bc_res_test$costs
     )
     
-    print(tibble::as_tibble(bc_res$costs))
-    print(tibble::as_tibble(bc_res_test$costs))
-    
     expect_equal(
       bc_res$nmb,
       bc_res_test$nmb
@@ -504,6 +501,9 @@ test_that(
       dsa_res$cost,
       dsa_res_test$cost
     )
+    
+    print(tibble::as_tibble(dsa_res$cost))
+    print(tibble::as_tibble(dsa_res_test$cost))
     
     expect_equal(
       dsa_res$nmb,
