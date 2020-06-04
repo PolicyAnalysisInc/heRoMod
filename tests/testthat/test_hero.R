@@ -492,10 +492,10 @@ test_that(
     dsa_res <- readRDS(system.file("hero","ta447", "dsa_res.rds", package="heRomod"))
     dsa_res_test <- do.call(run_hero_dsa,model)
     
-    # expect_equal(
-    #   dsa_res$outcomes,
-    #   dsa_res_test$outcomes
-    # )
+    expect_equal(
+      dsa_res$outcomes,
+      dsa_res_test$outcomes
+    )
     
     expect_equal(
       dsa_res$cost,
