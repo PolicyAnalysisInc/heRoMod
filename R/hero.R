@@ -1715,7 +1715,7 @@ run_hero_dsa <- function(...) {
         health_outcome = x$health_outcome[1],
         econ_outcome = x$econ_outcome[1],
         series = x$series[1],
-        data = arrange(select(x, -health_outcome, -econ_outcome, -series), param)
+        data = arrange(select(x, -health_outcome, -econ_outcome, -series), tolower(param))
       )
     }) 
   res$cost <- res$cost %>%
@@ -1726,7 +1726,7 @@ run_hero_dsa <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = arrange(select(x, -outcome, -disc, -series), param)
+        data = arrange(select(x, -outcome, -disc, -series), tolower(param))
       )
     }) 
   res$outcomes <- res$outcomes %>%
@@ -1737,7 +1737,7 @@ run_hero_dsa <- function(...) {
         outcome = x$outcome[1],
         disc = x$disc[1],
         series = x$series[1],
-        data = arrange(select(x, -outcome, -disc, -series), param)
+        data = arrange(select(x, -outcome, -disc, -series), tolower(param))
       )
     }) 
   
