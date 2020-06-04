@@ -497,13 +497,13 @@ test_that(
       dsa_res_test$outcomes
     )
     
+    print(dsa_res$outcomes)
+    print(dsa_res_test$outcomes)
+    
     expect_equal(
       dsa_res$cost,
       dsa_res_test$cost
     )
-    
-    print(dsa_res$cost)
-    print(dsa_res_test$cost)
     
     expect_equal(
       dsa_res$nmb,
