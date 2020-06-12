@@ -45,16 +45,17 @@ parse_hero_vars <- function(data, settings, groups) {
     cl_w_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("weeks", ${dpy}) ')
     cl_m_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("months", ${dpy}) ')
     cl_y_formula <- str_interp('cycle_length_days * time_in_days("days", ${dpy}) / time_in_days("years", ${dpy}) ')
-    cl <- time_in_days(cl_u, 365) * cl_n
+    cl <- time_in_days(cl_u, dpy) * cl_n
   } else {
+    dpy <- 365
     cl <- settings$cycle_length
     cl_d_formula <- as.character(cl)
     cl_w_formula <- "cycle_length_days / 7"
     cl_m_formula <- "cycle_length_days * 12 / 365"
     cl_y_formula <- "cycle_length_days / 365"
   }
-  hdisc_adj <- rescale_discount_rate(settings$disc_eff, 365, cl)
-  edisc_adj <- rescale_discount_rate(settings$disc_cost, 365, cl)
+  hdisc_adj <- rescale_discount_rate(settings$disc_eff, dpy, cl)
+  edisc_adj <- rescale_discount_rate(settings$disc_cost, dpy, cl)
   hero_pars <- tibble::tribble(
     ~parameter,            ~value,                               ~low, ~high, ~psa,
     "cycle_length_days",   cl_d_formula,                           NA,    NA,   NA,

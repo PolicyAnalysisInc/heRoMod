@@ -374,10 +374,12 @@ define_surv_lifetable.data.frame <- function(x, start_age, percent_male, output_
   lambdas_male <- (-log(1 - x[[male_col]]) / agediff)[indices_to_use]
   lambdas_female <- (-log(1 - x[[female_col]]) / agediff)[indices_to_use]
   
+  dpy <- get_dpy()
+
   func_male <- function(time) msm::ppexp(time,  rate = lambdas_male, t = cut_points, lower.tail = F)
   func_female <- function(time) msm::ppexp(time,  rate = lambdas_female, t = cut_points, lower.tail = F)
   the_surv_func <- function(time) {
-    converted_time <- time * time_in_days(output_unit, 365) / 365
+    converted_time <- time * time_in_days(output_unit, dpy) / dpy
     func_male(converted_time) * percent_male[1] + func_female(converted_time) * (1 - percent_male[1])
   }
   
