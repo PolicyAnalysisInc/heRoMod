@@ -693,3 +693,14 @@ clean_err_msg <- function(x) {
     x
   }
 }
+
+is_zero <- function(current) {
+  target <- rep(0L, length(current))
+  tolerance <- sqrt(.Machine$double.eps)
+    
+  target <- as.vector(target)
+  current <- as.vector(current)
+  N <- length(target)
+  xy <- abs(target - current)
+  xy <= tolerance
+}

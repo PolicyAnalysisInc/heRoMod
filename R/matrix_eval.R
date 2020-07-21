@@ -318,9 +318,15 @@ replace_C <- function(x, state_names) {
   
   x[posC] <- 0
   
-  # Do not allow complementary probabilities to be less than zero. This will cause
-  # problems due to fp imprecision.
-  valC <- pmax(0, 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]] )
+  valC <- 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]]
+  
+  # Sometimes the 1 - sum(trans_probs) is equal to a negative value arbitrarily close to
+  # zero due to floating point wierdness. In these cases, we should use zero as the complementary
+  # probability because otherwise the matrix will be treated as invalid because the completementary
+  # probability is negtive.
+  near_zero <- is_zero(valC)
+  neg <- valC < 0
+  valC[near_zero & neg] <- 0
   x[posC] <- valC
   x
 }
