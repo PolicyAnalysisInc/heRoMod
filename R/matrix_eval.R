@@ -318,7 +318,9 @@ replace_C <- function(x, state_names) {
   
   x[posC] <- 0
   
-  valC <- 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]] 
+  # Do not allow complementary probabilities to be less than zero. This will cause
+  # problems due to fp imprecision.
+  valC <- pmax(0, 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]] )
   x[posC] <- valC
   x
 }
