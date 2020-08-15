@@ -124,7 +124,8 @@ run_dsa.run_model <- function(model, dsa, cores = 1) {
     list(
       dsa = res,
       variables = dsa$variables,
-      model = model
+      model = model,
+      dsa_vars_table = dsa_table
     ),
     class = c("dsa", "list")
   )

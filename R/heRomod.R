@@ -45,6 +45,7 @@
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr funs
 #' @importFrom dplyr n row_number
+#' @importFrom dplyr group_by_at
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
@@ -115,6 +116,14 @@
 #'   
 #' @importFrom tibble tibble
 #' @importFrom tibble tibble_
+#' 
+#' @importFrom tidyr crossing
+#' @importFrom tidyr spread
+#' 
+#' @importFrom purrr walk
+#' @importFrom purrr walk2
+#' @importFrom purrr map
+#' @importFrom purrr map2
 #' 
 #' @importFrom stringr str_interp
 NULL
