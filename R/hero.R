@@ -1520,9 +1520,9 @@ run_hero_psa <- function(...) {
         mean = mean(value),
         sd = sd(value),
         min = min(value),
-        lowerq = quantile(value, 0.25),
+        lowerq = unname(quantile(value, 0.25)),
         median = median(value),
-        upperq = quantile(value, 0.75),
+        upperq = unname(quantile(value, 0.75)),
         max = max(value)
       ) %>%
       ungroup() %>%
@@ -1535,9 +1535,9 @@ run_hero_psa <- function(...) {
         mean = mean(value),
         sd = sd(value),
         min = min(value),
-        lowerq = quantile(value, 0.25),
+        lowerq = unname(quantile(value, 0.25)),
         median = median(value),
-        upperq = quantile(value, 0.75),
+        upperq = unname(quantile(value, 0.75)),
         max = max(value)
       ) %>%
       ungroup() %>%

@@ -6,7 +6,8 @@ test_model_results <- function(name, path, bc, vbp, dsa, scen, psa, export) {
     model <- readRDS(system.file("hero", path, "model.rds", package="heRomod"))
     if (bc) test_bc_results(model, name, path)
     if (vbp) test_vbp_results(model, name, path)
-    if (dsa) test_dsa_results(model, name, path)
+    if (dsa) test_dsa_results(model, name, path, vbp = F)
+    if (dsa && vbp) test_dsa_results(model, name, path, vbp = T)
     if (scen) test_scen_results(model, name, path)
     if (psa) test_psa_results(model, name, path)
   })
@@ -44,7 +45,11 @@ test_vbp_results <- function(model, name, path) {
 }
 
 #' Test DSA Results
-test_dsa_results <- function(model, name, path) {
+test_dsa_results <- function(model, name, path, vbp = F) {
+  
+  if (vbp) {
+    model$dsa_settings$run_vbp <- T
+  }
   
   # Setup helper functions to compare equivalent results formats
   convert_dsa_res_format <- function(res) {
@@ -66,8 +71,11 @@ test_dsa_results <- function(model, name, path) {
   dsa_res <- readRDS(system.file("hero", path, "dsa_res.rds", package="heRomod"))
   
   # Run model
-  bc_res_test <- do.call(run_hero_bc, model)
   dsa_res_test <- do.call(run_hero_dsa, model)
+  
+  # Load base case and vbp results for comparison
+  bc_res <- readRDS(system.file("hero", path, "bc_res.rds", package="heRomod"))
+  vbp_res <- readRDS(system.file("hero", path, "vbp_res.rds", package="heRomod"))
   
   ##########
   # OUTCOMES
@@ -79,7 +87,7 @@ test_dsa_results <- function(model, name, path) {
     convert_dsa_res_format(dsa_res_test$outcomes)
   )
   # Check against base case
-  bc_outcome_res <-  filter(bc_res_test$outcomes, !grepl(' vs. ', series, fixed = T)) %>%
+  bc_outcome_res <-  filter(bc_res$outcomes, !grepl(' vs. ', series, fixed = T)) %>%
     group_by(series, outcome, disc) %>%
     summarize(bc_res = sum(value))
   dsa_bc_outcome_res <- convert_dsa_res_format(dsa_res_test$outcomes) %>%
@@ -99,7 +107,7 @@ test_dsa_results <- function(model, name, path) {
   )
   
   # Check against base case
-  bc_cost_res <-  filter(bc_res_test$cost, !grepl(' vs. ', series, fixed = T)) %>%
+  bc_cost_res <-  filter(bc_res$cost, !grepl(' vs. ', series, fixed = T)) %>%
     group_by(series, outcome, disc) %>%
     summarize(bc_res = sum(value))
   dsa_bc_cost_res <- convert_dsa_res_format(dsa_res_test$cost) %>%
@@ -119,10 +127,10 @@ test_dsa_results <- function(model, name, path) {
   )
   
   # Check that NMB Results Match Base Case
-  bc_nmb_cost_res <-  filter(bc_res_test$nmb, type == 'economic') %>%
+  bc_nmb_cost_res <-  filter(bc_res$nmb, type == 'economic') %>%
     group_by(series, outcome) %>%
     summarize(bc_outcome_res = sum(value))
-  bc_nmb_outcome_res <-  filter(bc_res_test$nmb, type == 'health') %>%
+  bc_nmb_outcome_res <-  filter(bc_res$nmb, type == 'health') %>%
     group_by(series, outcome) %>%
     summarize(bc_cost_res = sum(value))
   dsa_bc_nmb_res <- convert_dsa_nmb_res_format(dsa_res_test$nmb) %>%
@@ -147,6 +155,37 @@ test_dsa_results <- function(model, name, path) {
     ) 
   
   expect_equal(combined_nmb_res$bc_res, combined_nmb_res$dsa_bc_res)
+  
+  ##########
+  # VBP
+  ##########
+  
+  # If not running VBP, then expect result to be null
+  if (!vbp) {
+    expect_equal(dsa_res_test$vbp, NULL)
+  } else {
+    
+    # Check that result hasn't changed
+    #expect_equal(dsa_res$vbp, dsa_res_test$vbp)
+    
+    # Check that against base case VBP
+    wtp <- filter(model$hsumm, name == model$vbp$effect)$wtp[1]
+    bc_vbp_res <- vbp_res$eq %>%
+      mutate(value = a * wtp + b) %>%
+      select(strat, value) %>%
+      arrange(strat)
+    
+    dsa_bc_vbp_res <-  purrr::map(
+      dsa_res_test$vbp,
+      function(x) transmute(x$data[1, ], strat = x$series, value =  base)
+    ) %>%
+      bind_rows() %>%
+      arrange(strat)
+    
+    expect_equal(bc_vbp_res, dsa_bc_vbp_res)
+  }
+  
+  
 }
 
 #' Test Scenario Analysis Results

@@ -60,7 +60,9 @@ calculate_vbp_equation <- function(price, delta_cost, delta_outcome) {
   vbp_intercept = -linear_model$intercept / linear_model$slope
   return(list(
     slope = vbp_slope,
-    intercept = vbp_intercept
+    intercept = vbp_intercept,
+    cost_slope = linear_model$slope,
+    cost_intercept = linear_model$intercept
   ))
 }
 
@@ -73,7 +75,7 @@ calculate_vbp <- function(wtp, intercept, slope) {
 get_linear_model_and_check <- function(x, y) {
   # Run linear model
   linear_model <- lm(y ~ x)
-  coef <- linear_model$coefficient
+  coef <- unname(linear_model$coefficient)
   
   # Check if perfectly linear. Note that all.equal returns TRUE if the condition
   # is true but a string if the condition is false.

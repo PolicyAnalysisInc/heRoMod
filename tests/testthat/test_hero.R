@@ -6,8 +6,8 @@ models_to_test <- tibble::tribble(
   'Custom PSM',                 'psm_responders',         T,   T,    T,    F,     T,    T,
   'Groups Model',               'groups',                 T,   T,    T,    T,     T,    T,
   'Simple Markov Model',        'markov_model',           T,   T,    T,    T,     T,    T,
-  'Advanced Survival Modeling', 'advanced_surv_modeling', T,   T,    T,    F,     T,    T,
-  'TA447 Replication',          'ta447',                  T,   T,    T,    F,     T,    T
+  'Advanced Survival Modeling', 'advanced_surv_modeling', T,   T,    T,    F,     F,    T,
+  'TA447 Replication',          'ta447',                  T,   T,    T,    F,     F,    T
 )
 
 models_to_test %>%

@@ -39,7 +39,7 @@ run_hero_dsa <- function(...) {
   costs_res <- extract_sa_summary_res(res, dots$esumms)
   nmb_res <- extract_sa_nmb(outcomes_res, costs_res, dots$hsumms, dots$esumms)
   if (run_vbp) {
-    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, c('.dsa_param', '.dsa_side'))
+    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))
   }
   
   # Format and Return
@@ -117,12 +117,13 @@ extract_sa_nmb <- function(outcomes, costs, health_summaries, economic_summaries
   return(nmb_res)
 }
 
-extract_sa_vbp <- function(outcomes, costs, vbp, group_vars) {
+extract_sa_vbp <- function(outcomes, costs, vbp, hsumm, group_vars) {
   
   # Pull out parameters of VBP analysis
   vbp_strat <- vbp$strat
   vbp_hsumm <- vbp$effect
   vbp_esumm <- vbp$cost
+  wtp <- as.numeric(filter(hsumm, name == vbp_hsumm)$wtp[1])
   
   # Calculate the difference in outcomes for each scenario
   outcome_res_vs_ref <- filter(outcomes, disc, outcome == vbp_hsumm, !is.na(.vbp_scen)) %>%
@@ -150,7 +151,7 @@ extract_sa_vbp <- function(outcomes, costs, vbp, group_vars) {
     group_by_at(c(group_vars, 'series')) %>%
     do({
       vbp_eq <- calculate_vbp_equation(.$.vbp_price, .$delta_cost, .$delta_outcome)
-      vbp_value <- calculate_vbp(as.numeric(vbp$wtp), vbp_eq$intercept, vbp_eq$slope)
+      vbp_value <- calculate_vbp(wtp, vbp_eq$intercept, vbp_eq$slope)
       res_df <- tibble(
         value = vbp_value,
         slope = vbp_eq$slope,
@@ -176,7 +177,7 @@ calc_dsa_deltas_vs_ref <- function(results, referent, id_vars) {
   outcome_res_ref_vs_comp <- outcome_res_comp %>%
     left_join(outcome_res_ref, by = id_vars) %>%
     mutate(
-      series = paste0(referent, ' vs. ', comp_name),
+      series = comp_name,
       value = ref_value - comp_value
     )
 }
