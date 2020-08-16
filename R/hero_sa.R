@@ -1,56 +1,3 @@
-#' @export
-run_hero_dsa <- function(...) {
-  
-  # Build model object
-  dots <- list(...)
-  check_dsa_vars(dots$variables)
-  args <- do.call(build_hero_model, dots)
-  
-  # Initial model run
-  heemod_res <- do.call(run_model_api, args)
-  vbp_name <- dots$vbp$par_name
-  
-  # Generate sensitvity analysis input table
-  dsa_table <- gen_dsa_table(dots$variables)
-  groups_table <- gen_groups_table(dots$groups)
-  if (is.null(dots$dsa_settings) || !dots$dsa_settings$run_vbp) {
-    vbp_table <- tibble(.vbp_scen = NA, .vbp_price = NA, .vbp_param = list(NA))
-    run_vbp <- FALSE
-  } else {
-    vbp_table <- gen_vbp_table()
-    run_vbp <- TRUE
-  }
-  sa_table <- crossing(groups_table, dsa_table, vbp_table)
-  n_row <- nrow(sa_table)
-  indices <- rep(T, n_row)
-  if (vbp_name %in% colnames(sa_table)) {
-    indices <- !is.na(sa_table$.vbp_param)
-  }
-  sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
-  sa_table <- select(sa_table, -.vbp_param) %>%
-    dplyr::relocate(.dsa_param, .dsa_side, .group_scen, .group_weight, .vbp_scen, .vbp_price)
-  
-  # Run sensitivity Analyses
-  n_cores <- 16#max(1, round((parallel::detectCores() - 2)/3, 0))
-  res <- run_sa(heemod_res$model_runs, sa_table, n_cores)
-  
-  # Pull out results for each scenario
-  outcomes_res <- extract_sa_summary_res(res, dots$hsumms)
-  costs_res <- extract_sa_summary_res(res, dots$esumms)
-  nmb_res <- extract_sa_nmb(outcomes_res, costs_res, dots$hsumms, dots$esumms)
-  if (run_vbp) {
-    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))
-  }
-  
-  # Format and Return
-  list(
-    outcomes = dsa_reformat_res(outcomes_res),
-    cost = dsa_reformat_res(costs_res),
-    nmb = dsa_reformat_res(nmb_res, id_vars = c('health_outcome', 'econ_outcome', 'series')),
-    vbp = if (run_vbp) dsa_reformat_res(vbp_res, c('series')) else NULL
-  )
-}
-
 extract_sa_outcome <- function(y, summaries) {
   totals <- as.numeric(colSums(y$values[ , -1]))
   total_df <- tibble(
@@ -60,34 +7,7 @@ extract_sa_outcome <- function(y, summaries) {
   return(total_df)
 }
 
-dsa_reformat_res <- function(res, id_vars = NULL) {
-  if (is.null(id_vars)) {
-    id_vars <- c('outcome', 'disc', 'series')
-  }
-  if ('.vbp_scen' %in% colnames(res)) {
-    res <- filter(res, is.na(.vbp_scen))
-  }
-  bc_res <- filter(res, is.na(.dsa_param)) %>%
-    mutate(base = value) %>%
-    select(!!id_vars, base)
-  dsa_res <- filter(res, !is.na(.dsa_param)) %>%
-    spread(.dsa_side, value) %>%
-    left_join(bc_res, by = id_vars) %>%
-    mutate(param = .dsa_param) %>%
-    select(!!id_vars, param, high, low, base) %>%
-    group_by_at(vars(one_of(id_vars))) %>%
-    group_split() %>%
-    purrr::map(function(x) {
-      res_list <- select(x[1,], !!id_vars) %>%
-        as.list()
-      res_list$data <- select(x, !!-id_vars)
-      return(res_list)
-    })
-  
-  return(dsa_res)
-}
-
-extract_sa_nmb <- function(outcomes, costs, health_summaries, economic_summaries) {
+extract_sa_nmb <- function(outcomes, costs, health_summaries, economic_summaries, group_vars) {
   hsumm_unique <- distinct(health_summaries, name, .keep_all = T) %>%
     select(name, wtp)
   outcomes_summ <- filter(outcomes, outcome %in% health_summaries$name, disc) %>%
@@ -96,23 +16,23 @@ extract_sa_nmb <- function(outcomes, costs, health_summaries, economic_summaries
       health_outcome = outcome,
       health_nmb = value * wtp
     ) %>%
-    select(series, .dsa_param, .dsa_side, .vbp_scen, .vbp_price, health_outcome, health_nmb)
+    select(series, !!group_vars, .vbp_scen, .vbp_price, health_outcome, health_nmb)
 
   costs_summ <- filter(costs, outcome %in% economic_summaries$name, disc) %>%
     mutate(
       econ_outcome = outcome,
       econ_nmb = -value
     ) %>%
-    select(series, .dsa_param, .dsa_side, .vbp_scen, .vbp_price, econ_outcome, econ_nmb)
+    select(series, !!group_vars, .vbp_scen, .vbp_price, econ_outcome, econ_nmb)
   
   nmb_res <- crossing(
     health_outcome = unique(health_summaries$name),
     econ_outcome = unique(economic_summaries$name)
   ) %>%
     inner_join(outcomes_summ, by = "health_outcome") %>%
-    left_join(costs_summ, by = c("econ_outcome", "series", ".dsa_param", ".dsa_side", ".vbp_scen", ".vbp_price")) %>%
+    left_join(costs_summ, by = c("econ_outcome", "series", group_vars, ".vbp_scen", ".vbp_price")) %>%
     mutate(value = health_nmb + econ_nmb) %>%
-    select(series, .dsa_param, .dsa_side, .vbp_scen, .vbp_price, health_outcome, econ_outcome, value)
+    select(series, !!group_vars, .vbp_scen, .vbp_price, health_outcome, econ_outcome, value)
   
   return(nmb_res)
 }
@@ -182,9 +102,8 @@ calc_dsa_deltas_vs_ref <- function(results, referent, id_vars) {
     )
 }
 
-extract_sa_summary_res <- function(results, summaries) {
+extract_sa_summary_res <- function(results, summaries, group_vars) {
   summary_res <- results %>%
-    #filter(is.na(.vbp_scen)) %>%    # Don't need the VBP scenarios to calculate outcomes
     rowwise() %>%
     group_split() %>%
     map(function(x) bind_cols(x, extract_sa_outcome(x$.mod[[1]], summaries))) %>%  # Extract outcomes results
@@ -194,41 +113,11 @@ extract_sa_summary_res <- function(results, summaries) {
       outcome = ifelse(disc, substring(outcome, 7), outcome)
     ) %>% # Properly label discounted results
     filter(outcome %in% c(summaries$name, summaries$value)) %>% # only keep results related to relevant values/summaries
-    group_by(series, .dsa_param, .dsa_side, .vbp_scen, .vbp_price, outcome, disc) %>%
+    group_by_at(c('series', group_vars, '.vbp_scen', '.vbp_price', 'outcome', 'disc')) %>%
     summarize(value = sum(value * .group_weight/sum(.group_weight))) %>% # aggregate by group
     ungroup()
   
   return(summary_res)
-}
-gen_dsa_table <- function(params) {
-  
-  # Extract only parameters that are varied in DSA
-  dsa_params <- params[params$low != '' & params$high != '', ]
-  param_names <- dsa_params$name
-  n_params <- length(param_names)
-  
-  # Create a table to store the parameter values to use in each iteration
-  dsa_table <- create_sa_table((n_params * 2) + 1, n_params, param_names)
-  
-  # Populate the table with low/high parameter values
-  for (i in seq_len(n_params)) {
-    high_row <- (i * 2) + 1
-    low_row <- high_row - 1
-    
-    # Need to add error handling here
-    dsa_table[[i]][[low_row]] <- as.lazy(dsa_params$low[i])
-    dsa_table[[i]][[high_row]] <- as.lazy(dsa_params$high[i])
-  }
-  
-  dsa_table <- mutate(
-    dsa_table,
-    .dsa_param = c(NA, rep(param_names, each = 2)),
-    .dsa_side = c(NA, rep(c("low", "high"), n_params))
-  ) %>%
-    dplyr::relocate(.dsa_param, .dsa_side)
-  
-  return(dsa_table)
-  
 }
 
 gen_groups_table <- function(groups) {
@@ -265,7 +154,6 @@ gen_groups_table <- function(groups) {
   return(groups_table)
 }
 
-
 create_sa_table <- function(n_scen, n_par, par_names) {
   blank_col <- tibble(rep(list(NA), length = n_scen))
   sa_table <- blank_col[ , rep(1, n_par)]
@@ -273,14 +161,10 @@ create_sa_table <- function(n_scen, n_par, par_names) {
   return(sa_table)
 }
 
-combine_sa_tables <- function(sa, groups, vbp) {
+run_sa <- function(model, scenarios, cores, group_vars) {
   
-}
-
-run_sa <- function(model, scenarios, cores) {
-  
-  answer_key <- select(scenarios, .dsa_param, .dsa_side, .group_scen, .group_weight, .vbp_scen, .vbp_price)
-  inputs <- select(scenarios, -.dsa_param, -.dsa_side, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
+  answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
+  inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
   
   strategy_names <- get_strategy_names(model)
   var_names <- colnames(scenarios)
