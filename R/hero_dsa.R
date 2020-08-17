@@ -31,8 +31,7 @@ run_hero_dsa <- function(...) {
     dplyr::relocate(.dsa_param, .dsa_side, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   
   # Run sensitivity Analyses
-  n_cores <- 16#max(1, round((parallel::detectCores() - 2)/3, 0))
-  res <- run_sa(heemod_res$model_runs, sa_table, n_cores, c('.dsa_param', '.dsa_side'))
+  res <- run_sa(heemod_res$model_runs, sa_table, c('.dsa_param', '.dsa_side'))
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.dsa_param', '.dsa_side'))

@@ -161,7 +161,7 @@ create_sa_table <- function(n_scen, n_par, par_names) {
   return(sa_table)
 }
 
-run_sa <- function(model, scenarios, cores, group_vars) {
+run_sa <- function(model, scenarios, group_vars) {
   
   answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
@@ -178,7 +178,7 @@ run_sa <- function(model, scenarios, cores, group_vars) {
       model,
       strategy = strat_name,
       newdata = strat_scenarios,
-      cores = cores
+      cores = cores_to_use()
     )
     res$series <- strat_name
     bind_cols(answer_key, res)

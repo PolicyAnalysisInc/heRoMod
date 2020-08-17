@@ -31,8 +31,7 @@ run_hero_scen <- function(...) {
     dplyr::relocate(.scenario, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   
   # Run sensitivity Analyses
-  n_cores <- 16#max(1, round((parallel::detectCores() - 2)/3, 0))
-  res <- run_sa(heemod_res$model_runs, sa_table, n_cores, c('.scenario'))
+  res <- run_sa(heemod_res$model_runs, sa_table, c('.scenario'))
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))

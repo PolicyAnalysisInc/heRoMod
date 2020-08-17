@@ -1297,7 +1297,7 @@ build_hero_model <- function(...) {
 
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
+    cores <- cores_to_use()
   }
   
   # Return model object
@@ -1791,4 +1791,8 @@ writeWorkbook <- function(dflist, path, ...){
     openxlsx::freezePane(wb, sheet_names[i], firstActiveRow = 2, firstActiveCol = 1)
   }
   openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
+}
+
+cores_to_use <- function() {
+  max(1, round((parallel::detectCores() - 2)/3, 0))
 }
