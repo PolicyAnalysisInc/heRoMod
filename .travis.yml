@@ -10,8 +10,8 @@ install:
   - R -e 'devtools::install_github("cran/rgho")'
   - R -e 'devtools::install_deps(dep = T)'
 script:
-  - travis_wait R CMD build .
+  - R CMD build .
   -  R -e 'devtools::test()'
-  - travis_wait R CMD check *tar.gz
+  - R CMD check *tar.gz
 after_success:
-  - travis_wait Rscript -e 'library(covr); codecov()'
+  - Rscript -e 'library(covr); codecov()'
