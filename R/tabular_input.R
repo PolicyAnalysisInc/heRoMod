@@ -22,25 +22,24 @@
 run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
-                          run_scen = FALSE, run_demo = FALSE, state_time_limit = NULL,
-                          aux_params = NULL, psa = NULL, scen = NULL, start = NULL) {
+                          run_demo = FALSE, state_time_limit = NULL,
+                          aux_params = NULL, psa = NULL, start = NULL) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
-                                  source, data, aux_params = aux_params, psa = psa, scen = scen, start = start)
+                                  source, data, aux_params = aux_params, psa = psa, start = start)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
                                       run_dsa = run_dsa,
                                       run_psa = run_psa,
                                       run_demo = run_demo, 
-                                      run_scen = run_scen,
                                       parallel = psa$parallel)
   outputs
 }
 
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
-                                  data = NULL, aux_params = NULL, psa = NULL, scen = NULL, start = NULL) {
+                                  data = NULL, aux_params = NULL, psa = NULL, start = NULL) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -80,24 +79,6 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   aux_param_info <- NULL
   if(!is.null(aux_params)) {
     aux_param_info <- create_parameters_from_tabular(aux_params, df_env)
-  }
-  
-  # Setup scenarios
-  scen_info <- NULL
-  if ('data.frame' %in% class(scen)) {
-    param_info$scen <- scen %>%
-      mutate(
-        formula = lapply(seq_len(n()), function(i) {
-          tryCatch({
-            lazyeval::as.lazy(formula[i])
-          }, error = function(e) {
-            stop(
-              paste0('Error in scenario "', scenario_name[i], '", invalid formula.'),
-              call. = F
-            )
-          })
-        })
-      )
   }
   
   # Setup demographics
@@ -462,7 +443,6 @@ eval_models_from_tabular <- function(inputs,
                                      run_dsa = TRUE,
                                      run_psa = TRUE,
                                      run_demo = TRUE,
-                                     run_scen = FALSE,
                                      parallel = FALSE) {
   
   if (options()$heRomod.verbose) message("* Running files...")
@@ -479,7 +459,7 @@ eval_models_from_tabular <- function(inputs,
       cycles = inputs$model_options$cycles,
       state_time_limit = inputs$state_time_limit,
       aux_params = inputs$aux_param_info$params,
-      parallel = !(run_dsa | run_psa | run_demo | run_scen),
+      parallel = !(run_dsa | run_psa | run_demo),
       cores = inputs$model_options$num_cores,
       disc_method = inputs$model_options$disc_method
     )
@@ -509,16 +489,6 @@ eval_models_from_tabular <- function(inputs,
     )
   }
   
-  model_scen <- NULL
-  if (run_scen & !is.null(inputs$param_info$scen)) {
-    if (options()$heRomod.verbose) message("** Running Scenario Analysis...")
-    model_scen <- run_scen(
-      model_runs,
-      inputs$param_info$scen,
-      cores = inputs$model_options$num_cores
-    )
-  }
-  
   model_psa <- NULL
   if (!is.null(inputs$param_info$psa_params) & run_psa) {
     if (options()$heRomod.verbose) message("** Running PSA...")
@@ -541,7 +511,6 @@ eval_models_from_tabular <- function(inputs,
     models = inputs$models,
     model_runs = model_runs,
     dsa = model_dsa,
-    scen = model_scen,
     psa = model_psa,
     demographics = demo_res
   )
@@ -599,17 +568,6 @@ create_model_list_from_tabular <- function(ref, df_env = globalenv()) {
     one_way <- setdiff(names(state_info), names(tm_info))
     other_way <- setdiff(names(tm_info), names(state_info))
   }
-  
-  
-  if(trans_type == "part_surv"){
-    use_fits_file <- ref[ref$data == "use_fits", "full_file"]
-    use_fits <- read_file(use_fits_file)
-    tm_info <- construct_part_surv_tib(use_fits, ref, env = df_env,
-                                    state_names = state_names)
-    one_way <- setdiff(names(state_info), unique(tm_info$.strategy))
-    other_way <- setdiff(unique(tm_info$.strategy), names(state_info))
-  }
-
 
   one_way <- setdiff(names(state_info), names(tm_info))
   other_way <- setdiff(names(tm_info), names(state_info))
@@ -1837,116 +1795,6 @@ modify_param_defs_for_multinomials <- function(param_defs, psa) {
   }
   
   param_defs
-}
-
-
-## make sure that survival fit specifications are 
-##   properly formatted and have reasonable data
-check_survival_specs <- 
-  function(surv_specs){
-    ## if there are troubles with absolute file paths, 
-    ##   might want to add an "absolute" column to surv_specs
-    ##   to be explicit (if, possibly, a little redundant)
-    if(!is.data.frame(surv_specs) || nrow(surv_specs) == 0)
-      stop("surv_specs must be a data frame with at least one row")
-    if(!("event_code" %in% names(surv_specs))){
-      warning("event_code not defined in surv_specs; setting to 1 for all rows")
-      surv_specs$event_code <- 1
-    }
-    if(!("censor_code" %in% names(surv_specs))){
-      warning("censor_code not defined in surv_specs; setting to 0 for all rows")
-      surv_specs$censor_code <- 0
-    }
-      
-    surv_spec_col_names <- c("type", "treatment", "data_directory", "data_file",
-                             "fit_directory", "fit_name", "fit_file",
-                             "time_col", "treatment_col", "censor_col",
-                             "event_code", "censor_code"
-                             )
-    if(! identical(sort(names(surv_specs)), sort(surv_spec_col_names))){
-      extra_names <- setdiff(names(surv_specs), surv_spec_col_names)
-      missing_names <- setdiff(surv_spec_col_names, names(surv_specs))
-      names_message <- paste("surv_ref must have column names:\n",
-                             paste(surv_spec_col_names, collapse = ", "), 
-                             sep = "")
-      if(length(extra_names) > 0)
-        names_message <- paste(names_message, "\n", "extra names: ",
-                               paste(extra_names, collapse = ", "),
-                               sep = "")
-      if(length(missing_names) > 0)
-        names_message <- paste(names_message, "\n", "missing names: ",
-                               paste(missing_names, collapse = ", "),
-                               sep = "")
-      stop(names_message)
-    }
-    
-    if(any(is.na(surv_specs) | surv_specs == ""))
-      stop("all elements of surv_specs must be filled in")
-    
-    ## sort survival specs by treatment, then PFS and OS
-    ## our checks will make sure that we have the right entries,
-    ##   and that they are in the right order
-    surv_specs <- 
-      surv_specs %>% arrange(treatment, desc(type))
-    
-    os_ind <- grep("os", surv_specs$type, ignore.case = TRUE)
-    pfs_ind <- grep("pfs", surv_specs$type, ignore.case = TRUE)
-    all_even_os <- identical(as.numeric(os_ind), 
-                             seq(from = 2, 
-                                 to = nrow(surv_specs),
-                                 by = 2))
-    all_odd_pfs <- identical(as.numeric(pfs_ind), 
-                             seq(from = 1, 
-                                 to = nrow(surv_specs),
-                                 by = 2))
-    same_treatments <- 
-      identical(surv_specs$treatment[os_ind],
-                surv_specs$treatment[pfs_ind])
-    if(!all_even_os | !all_odd_pfs | !same_treatments)
-      stop("each treatment must have exactly one PFS and one OS entry")
-    
-    if(any(dups <- duplicated(surv_specs[, c("type", "treatment")]))){
-      print(surv_specs[dups,])
-      stop("survival fit specification can only have one row for fitting ",
-           "OS or PFS for a given treatment\n")
-    }
-    if(any(dups <- duplicated(surv_specs[, c("fit_directory", "fit_file", 
-                                             "time_col", "censor_col")]))){
-      print(surv_specs[dups,])
-      stop("can only specify a given data file in a given directory with ",
-           "the same time column and censoring column for one fit")
-    }
-    surv_specs
-  }
-
-#' Load a set of survival fits
-#'
-#' @param location base directory
-#' @param survival_specs information about fits
-#' @param use_envir an environment
-#'
-#' @return A list with two elements:  \itemize{
-#'    \item{`best_models`, 
-#'    a list with the fits for each data file passed in; and} 
-#'    \item{`envir`, 
-#'    an environment containing the models so they can be referenced to 
-#'    get probabilities.}
-#'    }
-#' @export
-#'
-load_surv_models <- function(location, survival_specs, use_envir){
-  fit_files <- file.path(location,
-                         survival_specs$fit_directory,
-                         survival_specs$fit_file)
-  for(index in seq(along = fit_files)){
-    this_fit_file <- fit_files[index]
-    this_fit_name <- survival_specs$fit_name[index]
-    load(paste(this_fit_file, ".RData", sep = ""))
-  }
-  surv_models <- mget(survival_specs$fit_name)
-  names(surv_models) <- survival_specs$fit_name
-  list(do.call("rbind", mget(survival_specs$fit_name)),
-       env = use_envir)
 }
 
 safe_lazy_dots <- function(exprs, names, env, type = "parameter") {

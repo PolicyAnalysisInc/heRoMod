@@ -1323,8 +1323,7 @@ build_hero_model <- function(...) {
     state_time_limit = limits,
     source = dots$scripts,
     aux_params = surv,
-    psa = dots$psa,
-    scen = dots$scenario
+    psa = dots$psa
   )
 }
 
