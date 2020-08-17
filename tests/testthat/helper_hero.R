@@ -11,6 +11,7 @@ test_model_results <- function(name, path, bc, vbp, dsa, scen, psa, export) {
     if (scen) test_scen_results(model, name, path)
     if (scen && vbp) test_scen_results(model, name, path, vbp = T)
     if (psa) test_psa_results(model, name, path)
+    if (export) test_export_results(model, name, path)
   })
 }
 
