@@ -11,7 +11,7 @@ install:
   - R -e 'devtools::install_deps(dep = T)'
 script:
   - R CMD build .
-  -  R -e 'devtools::test()'
-  - R CMD check *tar.gz
+  - R -e 'devtools::test()'
+  - travis_wait R CMD check *tar.gz
 after_success:
   - Rscript -e 'library(covr); codecov()'
