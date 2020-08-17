@@ -14,4 +14,4 @@ script:
   - R -e 'devtools::test()'
   - travis_wait R CMD check *tar.gz
 after_success:
-  - Rscript -e 'library(covr); codecov()'
+  - travis_wait 1 Rscript -e 'library(covr); codecov()'
