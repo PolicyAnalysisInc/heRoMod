@@ -9,6 +9,7 @@ test_model_results <- function(name, path, bc, vbp, dsa, scen, psa, export) {
     if (dsa) test_dsa_results(model, name, path, vbp = F)
     if (dsa && vbp) test_dsa_results(model, name, path, vbp = T)
     if (scen) test_scen_results(model, name, path)
+    if (scen && vbp) test_scen_results(model, name, path, vbp = T)
     if (psa) test_psa_results(model, name, path)
   })
 }
@@ -189,10 +190,15 @@ test_dsa_results <- function(model, name, path, vbp = F) {
 }
 
 #' Test Scenario Analysis Results
-test_scen_results <- function(model, name, path) {
-  
+test_scen_results <- function(model, name, path, vbp = F) {
+
   # Load previous results
-  scen_res <- readRDS(system.file("hero", path, "scen_res.rds", package="heRomod"))
+  if (vbp) {
+    model$scenario_settings$run_vbp <- T
+    scen_res <- readRDS(system.file("hero", path, "scen_vbp_res.rds", package="heRomod"))
+  } else {
+    scen_res <- readRDS(system.file("hero", path, "scen_res.rds", package="heRomod"))
+  }
   
   # Run model
   scen_res_test <- do.call(run_hero_scen, model)
@@ -201,6 +207,9 @@ test_scen_results <- function(model, name, path) {
   expect_equal(scen_res$outcomes, scen_res_test$outcomes)
   expect_equal(scen_res$cost, scen_res_test$cost)
   expect_equal(scen_res$nmb, scen_res_test$nmb)
+  if (vbp) {
+    expect_equal(scen_res$vbp, scen_res_test$vbp)
+  }
 }
 
 #' Test PSA Results
