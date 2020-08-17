@@ -1,13 +1,83 @@
+#' @export
+run_hero_vbp <- function(...) {
+  
+  
+  # Build model object
+  dots <- list(...)
+  args <- do.call(build_hero_model, dots)
+  
+  # Initial model run
+  heemod_res <- do.call(run_model_api, args)
+  vbp_name <- dots$vbp$par_name
+  
+  # Generate sensitvity analysis input table
+  groups_table <- gen_groups_table(dots$groups)
+  if (is.null(dots$vbp)) {
+    dots$vbp <- list()
+  }
+  dots$vbp$vbp_only <- T
+  vbp_table <- gen_vbp_table(dots$vbp)
+  sa_table <- crossing(groups_table, vbp_table)
+  n_row <- nrow(sa_table)
+  indices <- rep(T, n_row)
+  if (vbp_name %in% colnames(sa_table)) {
+    indices <- !is.na(sa_table$.vbp_param)
+  }
+  sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
+  sa_table <- select(sa_table, -.vbp_param) %>%
+    dplyr::relocate(.group_scen, .group_weight, .vbp_scen, .vbp_price)
+  
+  # Run sensitivity Analyses
+  res <- run_sa(heemod_res$model_runs, sa_table, c())
+  
+  # Pull out results for each scenario
+  outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c())
+  costs_res <- extract_sa_summary_res(res, dots$esumms, c())
+  vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c())
+  
+  # Format and Return
+  list(
+    eq = vbp_format_lin_eq(vbp_res, dots$strategies),
+    vbp = vbp_format_vbp(vbp_res, dots$strategies)
+  )
+}
+
+vbp_format_lin_eq <- function(res, strategies) {
+  res %>%
+    mutate(strat = series, a = slope, b = intercept) %>%
+    select(strat, a, b) %>%
+    arrange(factor(strat, levels = strategies$name))
+}
+
+vbp_format_vbp <- function(res, strategies) {
+  res %>%
+    mutate(strat = series) %>%
+    select(strat, series, value) %>%
+    arrange(factor(strat, levels = strategies$name))
+}
+
+
 # Generate a table containing parameter values to use in each simulation
 # of VBP analysis.
-gen_vbp_table <- function() {
+gen_vbp_table <- function(vbp = NULL) {
   vbp_prices <- c(0, 1, 2)
+  vbp_only <- F
+  if (!is.null(vbp)) {
+    if (!is.null(vbp$prices)) {
+      vbp_prices <- vbp$prices
+    }
+    if (!is.null(vbp$vbp_only)) {
+      vbp_only <- vbp$vbp_only
+    }
+  }
+  
   vbp_scen_names <- c('low', 'middle', 'high')
   vbp_table <- create_sa_table(4, 1, '.vbp_param')
   vbp_table$.vbp_param <- c(list(NA), vbp_prices)
   vbp_table$.vbp_scen <- c(NA, vbp_scen_names)
   vbp_table$.vbp_price <- c(NA, vbp_prices)
-  vbp_table <- dplyr::relocate(vbp_table, .vbp_scen, .vbp_price)
+  vbp_table <- dplyr::relocate(vbp_table, .vbp_scen, .vbp_price) %>%
+    filter(!vbp_only | !is.na(.vbp_param))
   return(vbp_table)
 }
 

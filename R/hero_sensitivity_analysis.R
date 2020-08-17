@@ -1,3 +1,30 @@
+
+run_sa <- function(model, scenarios, group_vars) {
+  
+  answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
+  inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
+  
+  strategy_names <- get_strategy_names(model)
+  var_names <- colnames(scenarios)
+  n_strategies <- length(strategy_names)
+  n_scen <- nrow(scenarios)
+  n_param <- ncol(scenarios)
+  res <- map(seq_len(n_strategies), function(i) {
+    strat_name <- strategy_names[i]
+    strat_scenarios <- populate_bc(model$eval_strategy_list[[i]], inputs)
+    res <- eval_strategy_newdata(
+      model,
+      strategy = strat_name,
+      newdata = strat_scenarios,
+      cores = cores_to_use()
+    )
+    res$series <- strat_name
+    bind_cols(answer_key, res)
+  }) %>%
+    bind_rows()
+  res
+}
+
 extract_sa_outcome <- function(y, summaries) {
   totals <- as.numeric(colSums(y$values[ , -1]))
   total_df <- tibble(
@@ -80,7 +107,7 @@ extract_sa_vbp <- function(outcomes, costs, vbp, hsumm, group_vars) {
       res_df
     }) %>%
     ungroup() %>%
-    select(!!group_vars, series, value)
+    select(!!group_vars, series, value, slope, intercept)
   
   return(vbp_res)
 }
@@ -161,31 +188,6 @@ create_sa_table <- function(n_scen, n_par, par_names) {
   return(sa_table)
 }
 
-run_sa <- function(model, scenarios, group_vars) {
-  
-  answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
-  inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
-  
-  strategy_names <- get_strategy_names(model)
-  var_names <- colnames(scenarios)
-  n_strategies <- length(strategy_names)
-  n_scen <- nrow(scenarios)
-  n_param <- ncol(scenarios)
-  res <- map(seq_len(n_strategies), function(i) {
-    strat_name <- strategy_names[i]
-    strat_scenarios <- populate_bc(model$eval_strategy_list[[i]], inputs)
-    res <- eval_strategy_newdata(
-      model,
-      strategy = strat_name,
-      newdata = strat_scenarios,
-      cores = cores_to_use()
-    )
-    res$series <- strat_name
-    bind_cols(answer_key, res)
-  }) %>%
-    bind_rows()
-  res
-}
 
 populate_bc <- function(strat, scenarios) {
   n_scen <- nrow(scenarios)

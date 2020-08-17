@@ -54,18 +54,18 @@ test_dsa_results <- function(model, name, path, vbp = F) {
   
   # Setup helper functions to compare equivalent results formats
   convert_dsa_res_format <- function(res) {
-    plyr::ldply(res, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome))
+    plyr::ldply(res, function(x) mutate(x$data, series = x$series, disc = x$disc, outcome = x$outcome)) %>%
+      arrange(series, disc, outcome, param)
   }
   convert_dsa_nmb_res_format <- function(res) {
-    select(
-      plyr::ldply(res, function(x) mutate(
-        x$data, 
-        series = x$series,
-        health_outcome = x$health_outcome,
-        econ_outcome = x$econ_outcome
-      )),
-      series, health_outcome, econ_outcome, param, base, low, high
-    )
+    plyr::ldply(res, function(x) mutate(
+      x$data, 
+      series = x$series,
+      health_outcome = x$health_outcome,
+      econ_outcome = x$econ_outcome
+    )) %>%
+    select(series, health_outcome, econ_outcome, param, base, low, high) %>%
+    arrange(series, health_outcome, econ_outcome, param)
   }
   
   # Load previous results

@@ -17,7 +17,7 @@ run_hero_dsa <- function(...) {
     vbp_table <- tibble(.vbp_scen = NA, .vbp_price = NA, .vbp_param = list(NA))
     run_vbp <- FALSE
   } else {
-    vbp_table <- gen_vbp_table()
+    vbp_table <- gen_vbp_table(dots$vbp)
     run_vbp <- TRUE
   }
   sa_table <- crossing(groups_table, dsa_table, vbp_table)

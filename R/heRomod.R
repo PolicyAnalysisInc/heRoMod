@@ -124,6 +124,7 @@
 #' @importFrom purrr walk2
 #' @importFrom purrr map
 #' @importFrom purrr map2
+#' @importFrom purrr map_dbl
 #' 
 #' @importFrom stringr str_interp
 NULL
