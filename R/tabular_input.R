@@ -1103,7 +1103,7 @@ create_part_surv_custom_from_tabular <- function(trace_info, state_names,
     stop(sprintf(
       "Some states do not have a probability: %s.",
       paste(
-        unique(state_names)[! state_names %in% v$state],
+        unique(state_names)[! state_names %in% trace_info$state],
         sep = ", "
       )
     ))
