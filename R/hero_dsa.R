@@ -62,6 +62,7 @@ dsa_reformat_res <- function(res, id_vars = NULL) {
     mutate(base = value) %>%
     select(!!id_vars, base)
   dsa_res <- filter(res, !is.na(.dsa_param)) %>%
+    select(!!id_vars, .dsa_side, value, .dsa_param) %>%
     spread(.dsa_side, value) %>%
     left_join(bc_res, by = id_vars) %>%
     mutate(param = .dsa_param) %>%
