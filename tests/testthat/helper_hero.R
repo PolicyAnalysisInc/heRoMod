@@ -178,7 +178,7 @@ test_dsa_results <- function(model, name, path, vbp = F) {
       arrange(strat)
     
     dsa_bc_vbp_res <-  purrr::map(
-      dsa_res_test$vbp,
+      dsa_res_test$vbp$prices,
       function(x) transmute(x$data[1, ], strat = x$series, value =  base)
     ) %>%
       bind_rows() %>%
@@ -209,7 +209,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
   expect_equal(scen_res$cost, scen_res_test$cost)
   expect_equal(scen_res$nmb, scen_res_test$nmb)
   if (vbp) {
-    expect_equal(scen_res$vbp, scen_res_test$vbp)
+    expect_equal(scen_res$vbp, scen_res_test$vbp$prices)
   }
 }
 

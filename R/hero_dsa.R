@@ -46,7 +46,10 @@ run_hero_dsa <- function(...) {
     outcomes = dsa_reformat_res(outcomes_res),
     cost = dsa_reformat_res(costs_res),
     nmb = dsa_reformat_res(nmb_res, id_vars = c('health_outcome', 'econ_outcome', 'series')),
-    vbp = if (run_vbp) dsa_reformat_res(vbp_res, c('series')) else NULL,
+    vbp = if (run_vbp) list(
+            prices = dsa_reformat_res(vbp_res, c('series')),
+            referent = dots$vbp$strat
+          ) else NULL,
     api_ver = '2.0'
   )
 }

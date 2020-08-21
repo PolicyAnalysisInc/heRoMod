@@ -46,7 +46,10 @@ run_hero_scen <- function(...) {
     outcomes = scenario_format_res(outcomes_res, dots$scenario),
     cost = scenario_format_res(costs_res, dots$scenario),
     nmb = scenario_format_res(nmb_res, dots$scenario, id_vars = c('health_outcome', 'econ_outcome', 'series')),
-    vbp = if (run_vbp) scenario_format_res(vbp_res, dots$scenario, id_vars = c('series')) else NULL,
+    vbp = if (run_vbp) list(
+        prices = scenario_format_res(vbp_res, dots$scenario, id_vars = c('series')),
+        referent = dots$vbp$strat
+      ) else NULL,
     api_ver = '2.0'
   )
   
@@ -96,7 +99,11 @@ check_scenarios <- function(scenarios) {
   
   # Check that it is a dataframe
   if (!('data.frame' %in% class(scenarios))) {
-    stop(error_codes$scenario_wrong_datatype, call. = F)
+    if (('list' %in% class(scenarios)) && (length(scenarios) == 0)) {
+      stop(error_codes$scenario_null, call. = F)
+    } else {
+      stop(error_codes$scenario_wrong_datatype, call. = F)
+    }
   }
   
   # Check that it has at least one row

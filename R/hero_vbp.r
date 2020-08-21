@@ -38,7 +38,8 @@ run_hero_vbp <- function(...) {
   # Format and Return
   list(
     eq = vbp_format_lin_eq(vbp_res, dots$strategies),
-    vbp = vbp_format_vbp(vbp_res, dots$strategies)
+    vbp = vbp_format_vbp(vbp_res, dots$strategies),
+    referent = dots$vbp$strat
   )
 }
 
