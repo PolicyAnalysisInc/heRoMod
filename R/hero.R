@@ -815,162 +815,6 @@ hero_extract_trace <- function(res, corrected = F) {
   cbind(time, trace)
 }
 
-hero_extract_dsa_summ <- function(res, bc_res, summ) {
-  
-  bc_res_summs <- bc_res %>%
-    group_by(outcome,series, disc) %>%
-    summarise(value = sum(value)) %>%
-    ungroup()
-    
-  bc_res_all <- plyr::rbind.fill(
-    bc_res %>% mutate(outcome=group),
-    bc_res_summs
-  ) %>%
-  transmute(
-    outcome,
-    series,
-    disc,
-    base = value
-  )
-
-  value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
-  value_res$.type <- rep(c("low", "high"), nrow(value_res)/2)
-  
-  strategies <- unique(value_res$.strategy_names)
-  n_strat <- length(strategies)
-  value_names <- setdiff(colnames(value_res), c(".strategy_names", ".par_names", ".par_value", ".par_value_eval", ".type"))
-  
-  all_res <- value_res %>%
-    reshape2::melt(id.vars = c(".strategy_names", ".par_names", ".type", ".par_value", ".par_value_eval")) %>%
-    mutate(variable = as.character(variable))
-  
-  summ_unique <- tibble::tibble(outcome = unique(c(summ$value, summ$name)))
-  
-  undisc <- inner_join(
-    rename(summ_unique,variable = outcome),
-    all_res,
-    by = "variable"
-  ) %>%
-    mutate(
-      param = .par_names,
-      type = .type,
-      param_value = .par_value,
-      outcome = variable,
-      series = .strategy_names,
-      disc = F
-    ) %>%
-    select(param, type, param_value, outcome, series, disc, value)
-  
-  disc <- inner_join(
-    mutate(
-      summ_unique,
-      variable1 = paste0(".disc_", outcome),
-      variable = outcome
-    ) %>%
-      select(-outcome),
-    all_res,
-    by = c("variable1" = "variable")
-  ) %>%
-    mutate(
-      param = .par_names,
-      type = .type,
-      param_value = .par_value,
-      outcome = variable,
-      series = .strategy_names,
-      group = variable,
-      disc = T
-    ) %>%
-    select(param, type, param_value, outcome, series, disc, value)
-  rbind(disc, undisc) %>%
-    reshape2::dcast(param+outcome+series+disc~type, value.var = "value") %>%
-    left_join(bc_res_all, by = c("outcome", "series", "disc"))
-}
-hero_extract_dsa_ce <- function(res, hsumms, esumms) {
-  
-  value_res <- as.data.frame(res$dsa, stringsAsFactors=F)
-  value_res$.type <- rep(c("low", "high"), nrow(value_res)/2)
-  
-  unique_hsumms <- paste0(".disc_", unique(hsumms$name))
-  unique_esumms <- paste0(".disc_", unique(esumms$name))
-  
-  expand.grid(
-    hsumm = unique_hsumms,
-    esumm = unique_esumms,
-    stringsAsFactors = F
-  ) %>%
-    plyr::ddply(c("hsumm","esumm"), function(x){
-      temp_res <- value_res
-      temp_res$.cost <- value_res[[x$esumm]]
-      temp_res$.effect <- value_res[[x$hsumm]]
-      thresh <- hsumms %>% filter(name == substring(x$hsumm, 7)) %>% .$wtp %>% .[1]
-      plyr::ddply(temp_res, c(".par_names", ".type"), function(x) {
-        compute_icer(x, threshold = thresh)
-      })
-    }) %>%
-    transmute(
-      param = .par_names,
-      type = .type,
-      param_value = .par_value,
-      health_outcome = hsumm,
-      econ_outcome = esumm,
-      series = .strategy_names,
-      cost = .cost,
-      eff = .effect,
-      dcost = .dcost,
-      deffect = .deffect,
-      dref = .dref,
-      icer = .icer,
-      nmb = .nmb
-    )
-  
-}
-hero_extract_dsa_nmb <- function(hsumm_res, esumm_res, bc_res, hsumms, esumms) {
-  
-  distinct_hsumms <- distinct(hsumms, name, wtp)
-  distinct_esumms <- distinct(esumms, name)
-  
-  # Get NMBs for each DSA scenario
-  h_nmb <- hsumm_res %>%
-    filter(disc) %>%
-    inner_join(distinct_hsumms, by = c("outcome" = "name")) %>%
-    transmute(
-      param,
-      outcome,
-      series,
-      low = low * wtp,
-      high = high * wtp,
-      base = base * wtp
-    )
-  
-  e_nmb <- esumm_res %>%
-    filter(disc) %>%
-    inner_join(distinct_esumms, by = c("outcome" = "name")) %>%
-    transmute(
-      param,
-      outcome,
-      series,
-      low = -low,
-      high = -high,
-      base = -base
-    )
-  
-  expand.grid(
-    health_outcome = unique(hsumms$name),
-    econ_outcome = unique(esumms$name),
-    stringsAsFactors = F
-  ) %>%
-    plyr::ddply(c("health_outcome", "econ_outcome"), function(x) {
-      rbind(
-        h_nmb %>% filter(outcome == x$health_outcome),
-        e_nmb %>% filter(outcome == x$econ_outcome)
-      )
-    }) %>%
-    group_by(param, series, health_outcome, econ_outcome) %>%
-    summarise(low = sum(low), high = sum(high), base = sum(base))
-  
-}
-
-
 hero_extract_psa_summ <- function(res, summ) {
   
   all_res <- rbind(res) %>%
@@ -1453,7 +1297,7 @@ build_hero_model <- function(...) {
 
   cores <- 1
   if (dots$psa$parallel) {
-    cores <- max(1, round((parallel::detectCores() - 2)/3, 0))
+    cores <- cores_to_use()
   }
   
   # Return model object
@@ -1479,8 +1323,7 @@ build_hero_model <- function(...) {
     state_time_limit = limits,
     source = dots$scripts,
     aux_params = surv,
-    psa = dots$psa,
-    scen = dots$scenario
+    psa = dots$psa
   )
 }
 
@@ -1524,77 +1367,6 @@ run_hero_bc <- function(...) {
   )
 }
 
-#' @export
-run_hero_vbp <- function(...) {
-  
-  # Capture arguments
-  dots <- list(...)
-  
-  if(nrow(as.data.frame(dots$groups)) <= 1) {
-    # Homogenous model
-    # Compile model object
-    args <- do.call(build_hero_model, dots)
-    
-    # Use cost/effect specified by vbp config
-    args$options$value[args$options$option == "cost"] <- paste0(".disc_", dots$vbp$cost)
-    args$options$value[args$options$option == "effect"] <- paste0(".disc_", dots$vbp$effect)
-    
-    # Run base case
-    heemod_res <- do.call(run_model_api, args)
-    
-    # Extract Main Results
-    main_res <- heemod_res$model_runs
-    
-    # Run VBP
-    vbp_low <-  as.lazy_dots(setNames(list(0), dots$vbp$par_name), environment())
-    vbp_med <-  as.lazy_dots(setNames(list(dots$vbp$wtp/2), dots$vbp$par_name), environment())
-    vbp_high <-  as.lazy_dots(setNames(list(dots$vbp$wtp), dots$vbp$par_name), environment())
-    vbp_settings <- define_vbp_(dots$vbp$par_name, vbp_low, vbp_med, vbp_high)
-    vbp_res <- run_vbp(
-      model = main_res,
-      vbp = vbp_settings,
-      strategy_vbp = dots$vbp$strat,
-      wtp_thresholds = c(0, 100000)
-    )
-    eq <- vbp_res$lin_eq
-    lin_df <- vbp_res$lin_df
-    lambdas <- vbp_res$lambdas
-    vbp_strat <- vbp_res$vbp_strat
-    
-  } else {
-    # Heterogeneous model
-    # Run VBP analysis for each group
-    vbps <- plyr::alply(dots$groups, 1, function(x) {
-      
-      # Run model for given group
-      group_args <- dots
-      group_args$groups <- x
-      group_model <- do.call(run_hero_vbp, group_args)
-      
-      # Extract dataframes and apply weight
-      group_model$weight <- as.numeric(x$weight)
-      group_model
-    })
-    
-    # Aggregate results over all groups
-    lambdas <- vbps[[1]]$lambdas
-    vbp_strat <- vbps[[1]]$vbp_strat
-    weights <- as.numeric(dots$groups$weight)
-    lin_df <- vbps[[1]]$lin_df
-    lin_df[ ,-1] <- Reduce(`+`, purrr::map(vbps, ~.$lin_df[ ,-1] * .$weight)) / sum(weights)
-    eq <- calc_vbp(lin_df, lambdas, vbp_strat)$lin_eqs
-  }
-  
-  # Return Result
-  list(
-    eq = eq,
-    lin_df = lin_df,
-    vbp_strat = vbp_strat,
-    lambdas = lambdas
-  )
-  
-}
-
 check_dsa_vars <- function(x) {
   empty_low <- x$low == '' | is.na(x$low)
   empty_high <- x$high == '' | is.na(x$high)
@@ -1615,140 +1387,6 @@ check_dsa_vars <- function(x) {
     )
   }
 }
-
-run_hero_dsa_ <- function(...) {
-  
-  # Capture arguments
-  dots <- list(...)
-  check_dsa_vars(dots$variables)
-  # Check that DSA inputs have been filled out
-  
-  if(nrow(as.data.frame(dots$groups)) <= 1) {
-    # Homogenous model
-    # Compile model object
-    args <- do.call(build_hero_model, dots)
-    args$run_dsa = TRUE
-    
-    # Run Model
-    heemod_res <- do.call(run_model_api, args)
-    
-    # Extract BC results
-    
-    bc_outcome_res <- hero_extract_summ(heemod_res$model_runs, dots$hsumms)
-    bc_cost_res <- hero_extract_summ(heemod_res$model_runs, dots$esumms)
-    bc_nmb_res <- hero_extract_nmb(bc_outcome_res, bc_cost_res, dots$hsumms)
-    bc_ce_res <- hero_extract_ce(heemod_res$model_runs, dots$hsumms, dots$esumms)
- 
-    # Extract DSA results
-    outcome_res <- hero_extract_dsa_summ(heemod_res$dsa, bc_outcome_res, dots$hsumms)
-    cost_res <- hero_extract_dsa_summ(heemod_res$dsa, bc_cost_res, dots$esumms)
-    ce_res <- hero_extract_dsa_ce(heemod_res$dsa, dots$hsumms, dots$esumms)
-    nmb_res <- hero_extract_dsa_nmb(outcome_res, cost_res, bc_nmb_res, dots$hsumms, dots$esumms)
-    
-    ret <- list(
-      outcomes = outcome_res,
-      cost = cost_res,
-      nmb = nmb_res
-    )
-    
-  } else {
-    # Heterogeneous model
-    # Run DSA analysis for each group
-    dsas <- plyr::alply(dots$groups, 1, function(x) {
-      
-      # Run model for given group
-      group_args <- dots
-      group_args$groups <- x
-      group_model <- do.call(run_hero_dsa_, group_args)
-      
-      # Extract results and apply weights
-      group_model$outcomes$base <- group_model$outcomes$base * as.numeric(x$weight)
-      group_model$outcomes$low <- group_model$outcomes$low * as.numeric(x$weight)
-      group_model$outcomes$high <- group_model$outcomes$high * as.numeric(x$weight)
-      group_model$cost$base <- group_model$cost$base * as.numeric(x$weight)
-      group_model$cost$low <- group_model$cost$low * as.numeric(x$weight)
-      group_model$cost$high <- group_model$cost$high * as.numeric(x$weight)
-      group_model$nmb$base <- group_model$nmb$base * as.numeric(x$weight)
-      group_model$nmb$low <- group_model$nmb$low * as.numeric(x$weight)
-      group_model$nmb$high <- group_model$nmb$high * as.numeric(x$weight)
-      group_model
-    })
-    
-    # Aggregate results over all groups
-    
-    weights <- as.numeric(dots$groups$weight)
-    nmb_res <- dsas[[1]]$nmb
-    nmb_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$low)) / sum(weights)
-    nmb_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$high)) / sum(weights)
-    nmb_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$nmb$base)) / sum(weights)
-    
-    outcomes_res <- dsas[[1]]$outcomes
-    outcomes_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$low)) / sum(weights)
-    outcomes_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$high)) / sum(weights)
-    outcomes_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$outcomes$base)) / sum(weights)
-    
-    cost_res <- dsas[[1]]$cost
-    cost_res$low <- Reduce(`+`, purrr::map(dsas, ~ .$cost$low)) / sum(weights)
-    cost_res$high <- Reduce(`+`, purrr::map(dsas, ~ .$cost$high)) / sum(weights)
-    cost_res$base <- Reduce(`+`, purrr::map(dsas, ~ .$cost$base)) / sum(weights)
-    
-    ret <- list(
-      outcomes = outcomes_res,
-      cost = cost_res,
-      nmb = nmb_res
-    )
-
-  }
-  ret
-}
-
-#' @export
-run_hero_dsa <- function(...) {
-  # Run the DSA
-  res <- run_hero_dsa_(...)
-  
-  # Compress the results
-  res$nmb <- res$nmb  %>%
-    group_by(health_outcome, econ_outcome, series) %>%
-    group_split() %>%
-    purrr::map(function(x) {
-      list(
-        health_outcome = x$health_outcome[1],
-        econ_outcome = x$econ_outcome[1],
-        series = x$series[1],
-        data = select(x, -health_outcome, -econ_outcome, -series)
-      )
-    }) 
-  res$cost <- res$cost %>%
-    group_by(outcome, disc, series) %>%
-    group_split() %>%
-    purrr::map(function(x) {
-      list(
-        outcome = x$outcome[1],
-        disc = x$disc[1],
-        series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
-      )
-    }) 
-  res$outcomes <- res$outcomes %>%
-    group_by(outcome, disc, series) %>%
-    group_split() %>%
-    purrr::map(function(x) {
-      list(
-        outcome = x$outcome[1],
-        disc = x$disc[1],
-        series = x$series[1],
-        data = select(x, -outcome, -disc, -series)
-      )
-    }) 
-  
-  res$api_ver <- '2.0'
-  
-  res
-}
-
-
-
 
 #' @export
 run_hero_psa <- function(...) {
@@ -1810,9 +1448,9 @@ run_hero_psa <- function(...) {
         mean = mean(value),
         sd = sd(value),
         min = min(value),
-        lowerq = quantile(value, 0.25),
+        lowerq = unname(quantile(value, 0.25)),
         median = median(value),
-        upperq = quantile(value, 0.75),
+        upperq = unname(quantile(value, 0.75)),
         max = max(value)
       ) %>%
       ungroup() %>%
@@ -1825,9 +1463,9 @@ run_hero_psa <- function(...) {
         mean = mean(value),
         sd = sd(value),
         min = min(value),
-        lowerq = quantile(value, 0.25),
+        lowerq = unname(quantile(value, 0.25)),
         median = median(value),
-        upperq = quantile(value, 0.75),
+        upperq = unname(quantile(value, 0.75)),
         max = max(value)
       ) %>%
       ungroup() %>%
@@ -2081,4 +1719,8 @@ writeWorkbook <- function(dflist, path, ...){
     openxlsx::freezePane(wb, sheet_names[i], firstActiveRow = 2, firstActiveCol = 1)
   }
   openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
+}
+
+cores_to_use <- function() {
+  max(1, round((parallel::detectCores() - 2)/3, 0))
 }
