@@ -424,7 +424,7 @@ parse_hero_trans <- function(data, strategies, states) {
       summarise(n = n()) %>%
       filter(n > 1)
     if (nrow(dupe_trans) > 0) {
-      dupe_str <- paste(unique(paste0(dupe_trans$from, ' → ', dupe_trans$to)), collapse = ', ')
+      dupe_str <- paste(unique(paste0(dupe_trans$from, ' \u2192 ', dupe_trans$to)), collapse = ', ')
       stop(paste0('Error in transitions, duplicate entries for: ', dupe_str), call. = F)
     }
     trans_table <- reshape2::dcast(trans_table_lf, .model + from ~ to, value.var = "prob", fill = 0) %>%
