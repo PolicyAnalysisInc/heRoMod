@@ -124,7 +124,7 @@ parse_hero_groups <- function(data) {
 }
 parse_hero_values <- function(data, health, strategies, states) {
   
-  trans_string <- "\U2192"
+  trans_string <- "\u2192"
   if(health) {
     disc_var <- "disc_h"
   } else {
@@ -244,7 +244,7 @@ parse_hero_values_start <- function(data, strategies) {
 }
 parse_hero_values_st <- function(data, health, strategies) {
   
-  trans_string <- "\U2192"
+  trans_string <- "\u2192"
   
   if(health) {
     disc_var <- "disc_h"
@@ -563,7 +563,7 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
     all_value_names,
     paste0(".disc_", all_value_names)
   )
-  trans_string <- "\U2192"
+  trans_string <- "\u2192"
   values <- rbind(
     parse_hero_values_st(hvalues, TRUE, strategies),
     parse_hero_values_st(evalues, FALSE, strategies)
@@ -986,7 +986,7 @@ compile_unit_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
+        mutate(state = paste0(.from_name_expanded, "\u2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+state+markov_cycle~variable, value.var = "value")
     } else {
@@ -1041,7 +1041,7 @@ compile_unit_values <- function(x) {
     trans_df <- data.table::rbindlist(trans_list)
     if(nrow(trans_df) > 0) {
       trans_df <- trans_df %>%
-        mutate(state = paste0(.from_name_expanded, "\U2192", .to_name_expanded)) %>%
+        mutate(state = paste0(.from_name_expanded, "\u2192", .to_name_expanded)) %>%
         data.table::data.table() %>%
         data.table::dcast(strategy+group+state+markov_cycle~variable, value.var = "value")
     } else {
@@ -1562,8 +1562,8 @@ export_hero_xlsx <- function(...) {
       "Strategy" = series,
       "Cost" = cost,
       "Effect" = eff,
-      "\U0394 Cost" = dcost,
-      "\U0394 Effect" = deffect,
+      "\u0394 Cost" = dcost,
+      "\u0394 Effect" = deffect,
       "Reference" = dref,
       "ICER" = icer
     ) %>%
