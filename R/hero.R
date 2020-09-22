@@ -1562,8 +1562,8 @@ export_hero_xlsx <- function(...) {
       "Strategy" = series,
       "Cost" = cost,
       "Effect" = eff,
-      "\U394 Cost" = dcost,
-      "\U394 Effect" = deffect,
+      "\U0394 Cost" = dcost,
+      "\U0394 Effect" = deffect,
       "Reference" = dref,
       "ICER" = icer
     ) %>%
