@@ -929,7 +929,7 @@ create_matrix_from_tabular <- function(trans_probs, state_names,
   trans_names <- paste(
     rep(state_names, each = num_states),
     rep(state_names, num_states),
-    sep = " → "
+    sep = " \u2192 "
   )
   res <- define_transition_(
     safe_lazy_dots(

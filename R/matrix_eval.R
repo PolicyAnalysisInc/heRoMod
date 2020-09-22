@@ -162,7 +162,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
       rep(state_names, each = length(state_names)),
-      ' → ',
+      ' \u2192 ',
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
@@ -214,7 +214,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
       rep(state_names, each = length(state_names)),
-      ' → ',
+      ' \u2192 ',
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
