@@ -55,7 +55,8 @@ Imports:
     stringr,
     survival,
     testthat,
-    triangle
+    triangle,
+    glue
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

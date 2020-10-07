@@ -6,5 +6,6 @@ error_codes <- list(
   scenario_null = 'Error in scenario analysis, no scenarios were defined.',
   scenario_missing_name = 'Error in scenario analysis, scenario was missing name.',
   scenario_missing_param_name = 'Error in scenario "{scenario_name}", missing parameter name.',
-  scenario_missing_value = 'Error in scenario "{scenario_name}", parameter "{parameter_name}" is missing value.'
+  scenario_missing_value = 'Error in scenario "{scenario_name}", parameter "{parameter_name}" is missing value.',
+  syntax_error = 'Syntax error in {context}.'
 )

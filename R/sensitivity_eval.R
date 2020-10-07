@@ -63,6 +63,7 @@ run_dsa.run_model <- function(model, dsa, cores = 1) {
         lazy_param <- dsa$dsa[[i]][[j]]
         if ("lazy" %in% class(dsa$dsa[[i]][[j]])) {
           lazy_param$env <- new.env(parent = dsa$dsa[[i]][[j]]$env)
+          parent.env(lazy_param$env) <- parent.env(globalenv())
           lazy_param$env$bc <- bc_param[[var_names[i]]]
         }
         lazy_param

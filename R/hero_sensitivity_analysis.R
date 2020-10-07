@@ -206,3 +206,13 @@ populate_bc <- function(strat, scenarios) {
   }
   return(strat_scenarios)
 }
+
+create_sa_lazy_param <- function(x, context = '') {
+  tryCatch({
+    lazy <- as.lazy(x)
+  }, error = function(err) {
+    stop(glue(error_codes$syntax_error, context = context), call. = FALSE)
+  })
+  lazy$env <- new.env(parent = parent.env(globalenv()))
+  lazy
+}

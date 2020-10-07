@@ -126,6 +126,8 @@
 #' @importFrom purrr map2
 #' @importFrom purrr map_dbl
 #' 
+#' @importFrom glue glue
+#' 
 #' @importFrom stringr str_interp
 NULL
 

@@ -98,8 +98,14 @@ gen_dsa_table <- function(params) {
     low_row <- high_row - 1
     
     # Need to add error handling here
-    dsa_table[[i]][[low_row]] <- as.lazy(dsa_params$low[i])
-    dsa_table[[i]][[high_row]] <- as.lazy(dsa_params$high[i])
+    dsa_table[[i]][[low_row]] <- create_sa_lazy_param(
+      dsa_params$low[i],
+      context = glue('low value for parameter "{name}"', name = dsa_params$name[i])
+    )
+    dsa_table[[i]][[high_row]] <- create_sa_lazy_param(
+      dsa_params$high[i],
+      context = glue('high value for parameter "{name}"', name = dsa_params$name[i])
+    )
   }
   
   dsa_table <- mutate(

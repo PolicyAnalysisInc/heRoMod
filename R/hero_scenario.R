@@ -76,7 +76,10 @@ gen_scenario_table <- function(scenarios) {
     for (i in seq_len(n_scen_params)) {
       param_name <- scen_params$param_name[i]
       param_formula <- scen_params$formula[i]
-      scen_table[[param_name]][[scen_index]] <- as.lazy(param_formula)
+      scen_table[[param_name]][[scen_index]] <- create_sa_lazy_param(
+        param_formula,
+        context = glue('formula for parameter "{param_name}" in scenario "{scen_name}"', param_name = param_name, scen_name = scen_name)
+      )
     }
   }
   
