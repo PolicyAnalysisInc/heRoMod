@@ -11,6 +11,7 @@ You can install the latest released version from github with:
 if(!require(remotes)) {
   install.packages('remotes')
 }
+Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
 remotes::install_github("PolicyAnalysisInc/heRomod")
 ```
 
