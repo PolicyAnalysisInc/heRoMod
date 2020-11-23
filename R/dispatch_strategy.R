@@ -58,7 +58,7 @@ vswitch.default <- function(x, ...) {
 #' Returns different values depending on the strategy.
 #' 
 #' @param .strategy Optional strategy name. If not specified
-#'   it is implicitely added.
+#'   it is implicitly added.
 #' @param ... Values of the parameter named depending on the
 #'   strategy.
 #'   
@@ -94,7 +94,7 @@ dispatch_strategy <- function(.strategy, ...) {
 #' Returns different values depending on the strategy.
 #' 
 #' @param .strategy Optional strategy name. If not specified
-#'   it is implicitely added.
+#'   it is implicitly added.
 #' @param ... Values of the parameter named depending on the
 #'   strategy.
 #'   
@@ -132,7 +132,7 @@ by_strategy <- function(.strategy, ...) {
 #' Returns different values depending on the group
 #' 
 #' @param .group Optional group name. If not specified
-#'   it is implicitely added.
+#'   it is implicitly added.
 #' @param ... Values of the parameter named depending on the
 #'   group
 #'   
