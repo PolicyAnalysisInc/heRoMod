@@ -1,26 +1,25 @@
 #' @export
 run_analysis <- function(...) {
   data <- list(...)
+  manifest <- create_manifest()
+  data$.manifest <- manifest
   n_iter <- do.call(get_n_iterations, data)
-  data$report_max_progress(n_iter)
-  res <- try({
-    if (data$analysis == 'psa') {
-      res <- do.call(run_hero_psa, data)
-    } else if (data$analysis == 'dsa') {
-      res <- do.call(run_hero_dsa, data)
-    } else if (data$analysis == 'vbp') {
-      res <- do.call(run_hero_vbp, data)
-    } else if (data$analysis == 'bc') {
-      res <- do.call(run_hero_bc, data)
-    } else if (data$analysis == 'scen') {
-        res <- do.call(run_hero_scen, data)
-    } else if (data$analysis == "excel") {
-      res <- do.call(export_hero_xlsx, data)
-    } else if (data$analysis == "code_preview") {
-      res <- do.call(run_markdown, data)
-    }
-    res
-  })
+  if (!is.null(data$report_max_progress)) {
+    data$report_max_progress(n_iter)
+  }
+  runner <- switch(
+    data$analysis,
+    'psa' = run_hero_psa,
+    'dsa' = run_hero_dsa,
+    'vbp' = run_hero_vbp,
+    'bc' = run_hero_bc,
+    'scen' = run_hero_scen,
+    'excel' = export_hero_xlsx,
+    'code_preview' = run_markdown,
+    'r_project' = package_hero_model,
+    stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
+  )
+  res <- try({ do.call(runner, data) })
   if (inherits(res, "try-error")) {
     msg <- gsub('Error : ', fixed = T, '', res)
     res <- list(
@@ -28,7 +27,31 @@ run_analysis <- function(...) {
     )
   }
   res$warnings <- paste(capture.output(warnings()), collapse = '\n')
-  res
+
+  # Write Results to JSON
+  filename <- 'results.json'
+  jsonlite::write_json(res, filename)
+  no_default <- is.na(manifest$get_manifest()$default)
+  manifest$register_file('main_results', filename, 'Main results of running analysis', default = no_default)
+  
+  list(
+    content = res,
+    manifest = manifest$get_manifest()
+  )
+}
+
+create_manifest <- function() {
+  manifest <- list(default = NA, files = list())
+  list(
+    get_manifest = function() manifest,
+    register_file = function(id, path, description, default = F) {
+      item <- list(path = path, description = description)
+      manifest$files[[id]] <<- item
+      if (default) {
+        manifest$default <<- id
+      }
+    }
+  )
 }
 
 get_n_iterations <- function(...) {
@@ -46,22 +69,17 @@ get_n_iterations <- function(...) {
   iter_psa <- (iter_init * (1 + n_psa_sim)) * n_group
   iter_scen <- (iter_init * (1 + n_scen)) * n_group
   iter_vbp <- (iter_init * 4) * n_group
-  
-  if (data$analysis == 'psa') {
-    iter <- iter_psa
-  } else if (data$analysis == 'dsa') {
-    iter <- iter_dsa
-  } else if (data$analysis == 'vbp') {
-    iter <- iter_vbp
-  } else if (data$analysis == 'bc') {
-    iter <- iter_bc
-  } else if (data$analysis == 'scen') {
-    iter <- iter_scen
-  } else if (data$analysis == "excel") {
-    iter <- iter_bc
-  } else if (data$analysis == "code_preview") {
-    iter <- 5
-  }
+  iter <- switch(
+    data$analysis,
+    'psa' = iter_psa,
+    'dsa' = iter_dsa,
+    'vbp' = iter_vbp,
+    'bc' = iter_bc,
+    'scen' = iter_scen,
+    'excel' = iter_bc,
+    'code_preview' = 5,
+    'r_project' = 5
+  )
   return(iter)
 }
 
@@ -2014,7 +2032,11 @@ export_hero_xlsx <- function(...) {
       dimensions <- c(nrow(x), ncol(x))
       !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
     })
-  writeWorkbook(lapply(wb_list, as.data.frame), paste0(dots$name, ".xlsx"))
+  filename <- paste0(dots$name, ".xlsx")
+  writeWorkbook(lapply(wb_list, as.data.frame), filename)
+  if (!is.null(dots$.manifest)) {
+    dots$.manifest$register_file('excel_output', filename, 'Export to excel output', default = T)
+  }
   ret <- wb_list
   
 }
@@ -2033,14 +2055,22 @@ run_markdown <- function(...) {
     )
   }
   try(data$report_progress(1L))
+  r_filename <- paste0(dots$name, ".r")
+  md_filename <- paste0(dots$name, ".md")
+  html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
   try(data$report_progress(1L))
-  knitr::spin(paste0(dots$name, ".r"), knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
+  knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
   try(data$report_progress(1L))
-  file.remove(paste0(dots$name, ".md"))
-  file.remove(paste0(dots$name, ".r"))
+  file.remove(md_filename)
+  file.remove(r_filename)
   try(data$report_progress(1L))
-  ls(eval_env)
+  if (!is.null(dots$.manifest)) {
+    dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
+  }
+  list(
+    vars = ls(eval_env)
+  )
 }
 
 #' @export
@@ -2087,14 +2117,16 @@ LaTeX: pdfLaTeX"
 model <- readRDS('./model.rds')
 results <- do.call(run_hero_bc, model)
 "
+  filename <- paste0(dots$name, ".zip")
   write(rproj_string, paste0(dots$name, ".rproj"))
   write(rcode_string, "run.R")
   saveRDS(model_object, "model.rds")
   utils::zip(
-    paste0(dots$name, ".zip"),
+    filename,
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
     flags="-q"
   )
+  dots$.manifest$register_file('r_model_export', html_filename, 'R Export', default = T)
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
   file.remove("model.rds")
