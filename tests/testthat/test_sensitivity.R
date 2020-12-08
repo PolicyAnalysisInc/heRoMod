@@ -247,7 +247,9 @@ test_that(
     
     expect_identical(round(x$res_comp$.icer), .icer)
 
-    plot(x0, resolve_labels = TRUE)
-    plot(x0, resolve_labels = TRUE, shorten_labels = TRUE)
+    suppressWarnings({
+      plot(x0, resolve_labels = TRUE)
+      plot(x0, resolve_labels = TRUE, shorten_labels = TRUE)
+    })
   }
 )

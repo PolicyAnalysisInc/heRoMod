@@ -693,3 +693,30 @@ clean_err_msg <- function(x) {
     x
   }
 }
+
+is_zero <- function(current) {
+  target <- rep(0L, length(current))
+  tolerance <- sqrt(.Machine$double.eps)
+    
+  target <- as.vector(target)
+  current <- as.vector(current)
+  N <- length(target)
+  xy <- abs(target - current)
+  xy <= tolerance
+}
+
+get_dpy <- function() {
+  dpy <- 365
+  for(i in 1:10) {
+    try({
+      pf <- parent.frame(i)
+      cl_d <- pf$cycle_length_days
+      cl_y <- pf$cycle_length_years
+      if (!is.null(cl_d) && !is.null(cl_y)) {
+        dpy <- (cl_d / cl_y)[1]
+        break
+      }
+    })
+  }
+  return(dpy)
+}

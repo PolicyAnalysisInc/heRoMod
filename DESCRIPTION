@@ -56,7 +56,8 @@ Imports:
     survival,
     testthat,
     triangle,
-    jsonlite
+    jsonlite,
+    glue
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

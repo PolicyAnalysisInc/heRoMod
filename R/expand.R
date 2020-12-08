@@ -17,7 +17,7 @@
 #* You should have received a copy of the GNU General Public License
 #* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #**************************************************************************
-
+state_time_vars <- c("state_time", "state_day", "state_week", "state_month", "state_year")
 
 has_state_time <- function(x, ...) {
   UseMethod("has_state_time")
@@ -25,7 +25,7 @@ has_state_time <- function(x, ...) {
 
 #' @export
 has_state_time.uneval_matrix <- function(x, ...) {
-  unlist(lapply(x, function(y) "state_time" %in% all.vars(y$expr)))
+  unlist(lapply(x, function(y) any(state_time_vars %in% all.vars(y$expr))))
 }
 
 #' @export
@@ -79,12 +79,12 @@ has_state_time.uneval_state_transition_list <- function(x, ...) {
 
 #' @export
 has_state_time.state <- function(x, ...) {
-  any(unlist(lapply(x, function(y) "state_time" %in% all.vars(y$expr))))
+  any(unlist(lapply(x, function(y) any(state_time_vars %in% all.vars(y$expr)))))
 }
 
 #' @export
 has_state_time.state_transition <- function(x, ...) {
-  any(unlist(lapply(x, function(y) "state_time" %in% all.vars(y$expr))))
+  any(unlist(lapply(x, function(y) any(state_time_vars %in% all.vars(y$expr)))))
 }
 
 #' Convert Lazy Dots to Expression List

@@ -162,7 +162,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
       rep(state_names, each = length(state_names)),
-      ' → ',
+      ' \u2192 ',
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
@@ -214,7 +214,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     matrix_pos_names <- names(x)
     state_trans_names <- paste0(
       rep(state_names, each = length(state_names)),
-      ' → ',
+      ' \u2192 ',
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
@@ -318,7 +318,15 @@ replace_C <- function(x, state_names) {
   
   x[posC] <- 0
   
-  valC <- 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]] 
+  valC <- 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]]
+  
+  # Sometimes the 1 - sum(trans_probs) is equal to a negative value arbitrarily close to
+  # zero due to floating point wierdness. In these cases, we should use zero as the complementary
+  # probability because otherwise the matrix will be treated as invalid because the completementary
+  # probability is negtive.
+  near_zero <- is_zero(valC)
+  neg <- valC < 0
+  valC[near_zero & neg] <- 0
   x[posC] <- valC
   x
 }

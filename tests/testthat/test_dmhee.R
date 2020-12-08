@@ -290,7 +290,7 @@ test_that("Exactly match THR model",
               dimnames = list(1:8, c("SuccessP",	"RevisionTHR",	"SuccessR", "Death")))
             expect_equal(round(get_counts(thr$eval_strategy_list$standard)[2:9, -1],
                                8),
-                         briggs_std_counts)
+                         as_tibble(briggs_std_counts))
             
             briggs_new_counts <- 
               matrix(c(
@@ -306,7 +306,7 @@ test_that("Exactly match THR model",
               dimnames = list(1:8, c("SuccessP",	"RevisionTHR",	"SuccessR", "Death")))
             expect_equal(round(get_counts(thr$eval_strategy_list$np1)[2:9, -1],
                                8),
-                         briggs_new_counts)
+                         as_tibble(briggs_new_counts))
             
             
             vals_briggs_std <- 

@@ -202,7 +202,7 @@ eval_starting_values <- function(x, parameters) {
   
   start_df <- parameters %>%
     filter(state_time == 1) %>%
-    mutate_(.dots = x) %>%
+    safe_eval(., .dots = x) %>%
     .[to_keep]
   
   start_df[nrow(start_df), ] <- 0
@@ -337,7 +337,7 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
   if (any(is.na(res))) {
     index <- which(apply(res, 2, function(x) any(is.na(x)))==T)[1]
     param_name <- colnames(res)[index]
-    text_error <- 'Caclulation resulted in missing values.'
+    text_error <- 'Calculation resulted in missing values.'
     stop(sprintf(
         "Error in %s '%s', %s", expression_text, param_name, text_error),
         call. = FALSE)

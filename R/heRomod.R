@@ -34,7 +34,7 @@
 #' @importFrom dplyr do_
 #' @importFrom dplyr group_by_
 #' @importFrom dplyr summarise_
-#' @importFrom dplyr as.tbl
+#' @importFrom tibble as_tibble
 #' @importFrom dplyr data_frame
 #' @importFrom dplyr as_data_frame
 #' @importFrom dplyr bind_rows
@@ -45,6 +45,7 @@
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr funs
 #' @importFrom dplyr n row_number
+#' @importFrom dplyr group_by_at
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
@@ -115,6 +116,19 @@
 #'   
 #' @importFrom tibble tibble
 #' @importFrom tibble tibble_
+#' 
+#' @importFrom tidyr crossing
+#' @importFrom tidyr spread
+#' 
+#' @importFrom purrr walk
+#' @importFrom purrr walk2
+#' @importFrom purrr map
+#' @importFrom purrr map2
+#' @importFrom purrr map_dbl
+#' 
+#' @importFrom glue glue
+#' 
+#' @importFrom stringr str_interp
 NULL
 
 #' @export
