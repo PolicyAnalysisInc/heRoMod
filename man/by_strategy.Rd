@@ -8,7 +8,7 @@ by_strategy(.strategy, ...)
 }
 \arguments{
 \item{.strategy}{Optional strategy name. If not specified
-it is implicitely added.}
+it is implicitly added.}
 
 \item{...}{Values of the parameter named depending on the
 strategy.}

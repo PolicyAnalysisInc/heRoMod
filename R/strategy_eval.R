@@ -53,11 +53,7 @@
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
                           inflow, strategy_name, aux_params = NULL,
-                          disc_method = 'start', report_progress = NULL) {
-  
-  if (is.null(report_progress)) {
-    report_progress <- function(x) {}
-  }
+                          disc_method = 'start', report_progress = identity) {
   
   .state <- .full_state <- .expand <- NULL
   

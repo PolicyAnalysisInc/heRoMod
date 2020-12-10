@@ -8,7 +8,7 @@ by_group(.group, ...)
 }
 \arguments{
 \item{.group}{Optional group name. If not specified
-it is implicitely added.}
+it is implicitly added.}
 
 \item{...}{Values of the parameter named depending on the
 group}

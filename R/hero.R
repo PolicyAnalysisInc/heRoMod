@@ -3,7 +3,7 @@ run_analysis <- function(...) {
   data <- list(...)
   manifest <- create_manifest()
   data$.manifest <- manifest
-  n_iter <- do.call(get_n_iterations, data)
+  try(n_iter <- do.call(get_n_iterations, data))
   if (!is.null(data$report_max_progress)) {
     data$report_max_progress(n_iter)
   }
@@ -1406,7 +1406,7 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progres
+    report_progress = dots$report_progress
   )
 }
 
@@ -1808,7 +1808,9 @@ results <- do.call(run_hero_bc, model)
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
     flags="-q"
   )
-  dots$.manifest$register_file('r_model_export', html_filename, 'R Export', default = T)
+  if(!is.null(dots$.manifest)) {
+     dots$.manifest$register_file('r_model_export', html_filename, 'R Export', default = T)
+  }
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
   file.remove("model.rds")
