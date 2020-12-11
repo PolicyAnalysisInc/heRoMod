@@ -67,11 +67,6 @@
 #'   
 update.run_model <- function(object, newdata, ...) {
   
-  dots <- list(...)
-  if (is.null(dots$cores)) {
-    dots$cores <- 1
-  }
-  
   if (!any(class(object) %in% "run_model")) {
     stop("'object' must be the result of 'run_model()'.")
   }
@@ -98,8 +93,7 @@ update.run_model <- function(object, newdata, ...) {
         list(eval_strategy_newdata(
           object, strategy = n, 
           newdata = newdata,
-          cores = dots$cores,
-          report_progress = dots$report_progress
+          ...
         ))
       )
     })

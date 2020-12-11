@@ -4,7 +4,7 @@
 \alias{run_psa}
 \title{Run Probabilistic Uncertainty Analysis}
 \usage{
-run_psa(model, psa, N, resample, cores = 1, report_progress = NULL)
+run_psa(model, psa, N, resample, cores = 1, report_progress = identity)
 }
 \arguments{
 \item{model}{The result of \code{\link[=run_model]{run_model()}}.}

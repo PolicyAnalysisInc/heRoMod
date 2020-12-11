@@ -87,7 +87,7 @@ run_model <- function(...,
                       parallel = F,
                       cores = 1,
                       disc_method = 'start',
-                      report_progress = NULL) {
+                      report_progress = identity) {
   
   uneval_strategy_list <- list(...)
   

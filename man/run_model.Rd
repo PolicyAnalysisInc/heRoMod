@@ -20,7 +20,7 @@ run_model(
   parallel = F,
   cores = 1,
   disc_method = "start",
-  report_progress = NULL
+  report_progress = identity
 )
 
 run_model_(

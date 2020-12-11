@@ -3,7 +3,7 @@ run_hero_vbp <- function(...) {
   
   
   # Build model object
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)
   
   max_prog <- get_vbp_max_progress(dots)

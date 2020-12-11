@@ -32,7 +32,7 @@
 #' 
 #' @example inst/examples/example_run_psa.R
 #'   
-run_psa <- function(model, psa, N, resample, cores = 1, report_progress = NULL) {
+run_psa <- function(model, psa, N, resample, cores = 1, report_progress = identity) {
   if (! missing(resample)) {
     warning("Argument 'resample' is deprecated, use 'psa' instead.")
     psa <- resample

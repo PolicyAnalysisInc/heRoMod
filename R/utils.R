@@ -720,3 +720,13 @@ get_dpy <- function() {
   }
   return(dpy)
 }
+
+patch_progress_funcs <- function(model) {
+  if (is.null(model$report_progress)) {
+    model$report_progress <- identity
+  }
+  if (is.null(model$report_max_progress)) {
+    model$report_max_progress <- identity
+  }
+  model
+}

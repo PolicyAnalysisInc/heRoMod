@@ -110,7 +110,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
                          strategy_name, expand_limit, aux_params = NULL,
-                         disc_method = 'start', iteration = NULL, report_progress = NULL) {
+                         disc_method = 'start', iteration = NULL, report_progress = identity) {
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
     new_parameters

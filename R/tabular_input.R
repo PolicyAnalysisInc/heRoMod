@@ -449,7 +449,10 @@ eval_models_from_tabular <- function(inputs,
                                      parallel = FALSE) {
   
   if (options()$heRomod.verbose) message("* Running files...")
-  
+  report_progress <- inputs$report_progress
+  if (is.null(report_progress)) {
+    report_progress <- identity
+  }
   list_args <- c(
     inputs$models,
     list(
@@ -465,7 +468,7 @@ eval_models_from_tabular <- function(inputs,
       parallel = !(run_dsa | run_psa | run_demo),
       cores = inputs$model_options$num_cores,
       disc_method = inputs$model_options$disc_method,
-      report_progress = inputs$report_progress
+      report_progress = report_progress
     )
   )
   
@@ -490,7 +493,7 @@ eval_models_from_tabular <- function(inputs,
       model_runs,
       inputs$param_info$dsa_params,
       cores = inputs$model_options$num_cores,
-      report_progress = inputs$report_progress
+      report_progress = report_progress
     )
   }
   
@@ -502,7 +505,7 @@ eval_models_from_tabular <- function(inputs,
       psa = inputs$param_info$psa_params,
       N = inputs$model_options$n,
       cores = inputs$model_options$num_cores,
-      report_progress = inputs$report_progress
+      report_progress = report_progress
     )
   }
   
@@ -510,7 +513,7 @@ eval_models_from_tabular <- function(inputs,
   if (!is.null(inputs$demographic_file) & run_demo) {
     if (options()$heRomod.verbose) message("** Running demographic analysis...")
     demo_res <- stats::update(model_runs, inputs$demographic_file,
-                              cores = inputs$model_options$num_cores, report_progress = inputs$report_progress)
+                              cores = inputs$model_options$num_cores, report_progress = report_progress)
   }
   
   list(

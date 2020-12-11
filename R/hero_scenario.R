@@ -2,7 +2,7 @@
 run_hero_scen <- function(...) {
   
   # Build model object
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   check_scenarios(dots$scenario)
   args <- do.call(build_hero_model, dots)
   

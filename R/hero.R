@@ -1381,7 +1381,7 @@ build_hero_model <- function(...) {
 run_hero_bc <- function(...) {
   
   # Capture arguments
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   
   # Compile model object
   args <- do.call(build_hero_model, dots)
@@ -1444,7 +1444,7 @@ check_dsa_vars <- function(x) {
 #' @export
 run_hero_psa <- function(...) {
   # Capture arguments
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   n_groups <- max(1, nrow(as.data.frame(dots$groups)))
   n_strats <- nrow(dots$strategies)
   n_sims <- n_strats * n_groups * dots$psa$n
@@ -1567,7 +1567,7 @@ run_hero_psa <- function(...) {
 #' @export
 export_hero_xlsx <- function(...) {
   # Capture arguments
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   
   # Compile model object
   args <- do.call(build_hero_model, dots)
@@ -1702,7 +1702,7 @@ export_hero_xlsx <- function(...) {
 
 #' @export
 run_markdown <- function(...) {
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   
   max_prog <- get_code_preview_max_progress(dots)
   try(dots$report_max_progress(max_prog))
@@ -1737,7 +1737,7 @@ run_markdown <- function(...) {
 
 #' @export
 package_hero_model <- function(...) {
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
 
   max_prog <- get_r_project_max_progress(dots)
   try(dots$report_max_progress(max_prog))

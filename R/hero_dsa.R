@@ -2,7 +2,7 @@
 run_hero_dsa <- function(...) {
   
   # Build model object
-  dots <- list(...)
+  dots <- patch_progress_funcs(list(...))
   check_dsa_vars(dots$variables)
   args <- do.call(build_hero_model, dots)
   
