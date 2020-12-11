@@ -3,10 +3,6 @@ run_analysis <- function(...) {
   data <- list(...)
   manifest <- create_manifest()
   data$.manifest <- manifest
-  try(n_iter <- do.call(get_n_iterations, data))
-  if (!is.null(data$report_max_progress)) {
-    data$report_max_progress(n_iter)
-  }
   runner <- switch(
     data$analysis,
     'psa' = run_hero_psa,
@@ -52,35 +48,6 @@ create_manifest <- function() {
       }
     }
   )
-}
-
-get_n_iterations <- function(...) {
-  data <- list(...)
-  n_group <- max(nrow(data$groups), 1)
-  n_strat <- nrow(data$strategies)
-  n_dsa_param <- sum(!(is.na(data$variables$low) | data$variables$low == ''))
-  n_scen <- length(unique(data$scenario$scenario_name))
-  n_psa_sim <- data$psa$n
-  
-  iter_init <- n_strat
-  iter_demo <- n_strat * n_group
-  iter_bc <- iter_init + ifelse(n_group > 1, iter_demo, 0)
-  iter_dsa <- (iter_init * (1 + n_dsa_param * 2)) * n_group
-  iter_psa <- (iter_init * (1 + n_psa_sim)) * n_group
-  iter_scen <- (iter_init * (1 + n_scen)) * n_group
-  iter_vbp <- (iter_init * 4) * n_group
-  iter <- switch(
-    data$analysis,
-    'psa' = iter_psa,
-    'dsa' = iter_dsa,
-    'vbp' = iter_vbp,
-    'bc' = iter_bc,
-    'scen' = iter_scen,
-    'excel' = iter_bc,
-    'code_preview' = 5,
-    'r_project' = 5
-  )
-  return(iter)
 }
 
 parse_hero_settings <- function(settings) {
@@ -1420,6 +1387,9 @@ run_hero_bc <- function(...) {
   args <- do.call(build_hero_model, dots)
   args$run_demo = !(is.null(args$demo))
   
+  max_prog <- get_bc_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
+  
   # Run model
   heemod_res <- do.call(run_model_api, args)
   
@@ -1478,6 +1448,9 @@ run_hero_psa <- function(...) {
   n_groups <- max(1, nrow(as.data.frame(dots$groups)))
   n_strats <- nrow(dots$strategies)
   n_sims <- n_strats * n_groups * dots$psa$n
+  
+  max_prog <- get_psa_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1600,6 +1573,9 @@ export_hero_xlsx <- function(...) {
   args <- do.call(build_hero_model, dots)
   args$run_demo = !(is.null(args$demo))
   
+  max_prog <- get_excel_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
+  
   # Run model
   heemod_res <- do.call(run_model_api, args)
   
@@ -1714,6 +1690,7 @@ export_hero_xlsx <- function(...) {
       dimensions <- c(nrow(x), ncol(x))
       !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
     })
+  dots$report_progress(1L)
   filename <- paste0(dots$name, ".xlsx")
   writeWorkbook(lapply(wb_list, as.data.frame), filename)
   if (!is.null(dots$.manifest)) {
@@ -1726,27 +1703,30 @@ export_hero_xlsx <- function(...) {
 #' @export
 run_markdown <- function(...) {
   dots <- list(...)
+  
+  max_prog <- get_code_preview_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
-  try(data$report_progress(1L))
+  try(dots$report_progress(1L))
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
-  try(data$report_progress(1L))
+  try(dots$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
   md_filename <- paste0(dots$name, ".md")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
-  try(data$report_progress(1L))
+  try(dots$report_progress(1L))
   knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
-  try(data$report_progress(1L))
+  try(dots$report_progress(1L))
   file.remove(md_filename)
   file.remove(r_filename)
-  try(data$report_progress(1L))
+  try(dots$report_progress(1L))
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
   }
@@ -1758,6 +1738,10 @@ run_markdown <- function(...) {
 #' @export
 package_hero_model <- function(...) {
   dots <- list(...)
+
+  max_prog <- get_r_project_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
+  
   model_object <- list(
     decision = dots$decision,
     settings = dots$settings,
@@ -1801,19 +1785,25 @@ results <- do.call(run_hero_bc, model)
 "
   filename <- paste0(dots$name, ".zip")
   write(rproj_string, paste0(dots$name, ".rproj"))
+  try(dots$report_progress(1L))
   write(rcode_string, "run.R")
+  try(dots$report_progress(1L))
   saveRDS(model_object, "model.rds")
+  try(dots$report_progress(1L))
   utils::zip(
     filename,
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
     flags="-q"
   )
+  try(dots$report_progress(1L))
   if(!is.null(dots$.manifest)) {
-     dots$.manifest$register_file('r_model_export', html_filename, 'R Export', default = T)
+     dots$.manifest$register_file('r_model_export', filename, 'R Export', default = T)
   }
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
   file.remove("model.rds")
+  try(dots$report_progress(1L))
+  list(success = T)
 }
 
 writeWorkbook <- function(dflist, path, ...){

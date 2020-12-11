@@ -29,7 +29,7 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_vbp.R
-run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds, report_progress = NULL) {
+run_vbp <- function(model, vbp, strategy_vbp, wtp_thresholds, report_progress = identity) {
   
   # Run some checks
   check_vbp(model, vbp, strategy_vbp)

@@ -6,6 +6,9 @@ run_hero_vbp <- function(...) {
   dots <- list(...)
   args <- do.call(build_hero_model, dots)
   
+  max_prog <- get_vbp_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
+  
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name
@@ -28,7 +31,7 @@ run_hero_vbp <- function(...) {
     dplyr::relocate(.group_scen, .group_weight, .vbp_scen, .vbp_price)
   
   # Run sensitivity Analyses
-  res <- run_sa(heemod_res$model_runs, sa_table, c())
+  res <- run_sa(heemod_res$model_runs, sa_table, c(), report_progress = dots$report_progress)
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c())

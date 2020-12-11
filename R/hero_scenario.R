@@ -6,6 +6,9 @@ run_hero_scen <- function(...) {
   check_scenarios(dots$scenario)
   args <- do.call(build_hero_model, dots)
   
+  max_prog <- get_scen_max_progress(dots)
+  try(dots$report_max_progress(max_prog))
+  
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name

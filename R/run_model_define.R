@@ -128,7 +128,7 @@ run_model_ <- function(uneval_strategy_list,
                        parallel = F,
                        cores = 1,
                        disc_method = 'start',
-                       report_progress = NULL) {
+                       report_progress = identity) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }

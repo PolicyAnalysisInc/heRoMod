@@ -61,8 +61,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
   suppressMessages(
-    pieces <- #parallel::mclapply(pnewdata, function(newdata) {
-      lapply(pnewdata, function(newdata) {
+    pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      #lapply(pnewdata, function(newdata) {
       newdata %>% 
         rowwise() %>% 
         do({
@@ -91,8 +91,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
         bind_cols(
           newdata
         )
-    })
-    #}, mc.cores = cores)
+    #})
+    }, mc.cores = cores)
   )
   plyr::l_ply(
     pieces,
