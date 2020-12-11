@@ -1,5 +1,5 @@
 ---
-title: "An Introduction to `heRomod`"
+title: "An Introduction to heRomod"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
