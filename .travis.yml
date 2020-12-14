@@ -6,6 +6,8 @@ cache: packages
 r_packages:
   - covr
 install:
+  - sudo apt-get update
+  - sudo apt-get -y install libgit2
   - R -e 'install.packages("devtools")'
   - R -e 'devtools::install_github("cran/rgho")'
   - R -e 'devtools::install_deps(dep = T)'
