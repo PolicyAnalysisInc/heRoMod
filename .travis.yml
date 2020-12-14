@@ -3,6 +3,9 @@
 language: R
 sudo: false
 cache: packages
+r_binary_packages:
+  - libgit2
+  - magick
 r_packages:
   - covr
 install:
