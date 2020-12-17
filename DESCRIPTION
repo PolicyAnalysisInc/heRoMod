@@ -42,7 +42,6 @@ Imports:
     openxlsx,
     BCEA,
     diagram,
-    Hmisc,
     knitr,
     logitnorm,
     lpSolve,
