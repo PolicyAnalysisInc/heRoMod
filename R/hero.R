@@ -659,7 +659,7 @@ parse_hero_states_st <- function(hvalues, evalues, hsumms, esumms, strategies, s
 #' @export
 time_in_days <- function(x, days_per_year) {
   switch(
-    x,
+    tolower(x),
     "days" = 1,
     "weeks" = 7,
     "months" = days_per_year / 12,

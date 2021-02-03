@@ -125,6 +125,9 @@
 #' @importFrom purrr map
 #' @importFrom purrr map2
 #' @importFrom purrr map_dbl
+#' @importFrom purrr list_modify
+#' @importFrom purrr discard
+#' @importFrom purrr map2_chr
 #' 
 #' @importFrom glue glue
 #' 

@@ -3,15 +3,15 @@ Title: Health Economic Modeling
 Version: 0.0.1
 Encoding: UTF-8
 Authors@R: c(
-    person("Jordan", "Amdahl", email = "jrdnmdhl@gmail.com", role = c("cre")),
-    person("Antoine", "Filipovic-Pierucci", role = c("aut")),
-    person("Kevin", "Zarca", role = "aut"),
-    person("Matthew", "Wiener", role = "ctb"),
-    person("Zdenek", "Kabat", role = "ctb"),
-    person("Vojtech", "Filipec", role = "ctb"),
-	  person("Yonatan", "Carranza Alarcon", role=c("ctb")),
-	  person("Vince", "Daniels", role=c("ctb")),
-	  person("Fernando", "Alarid-Escudero", role=c("ctb"))
+        person("Jordan", "Amdahl", email = "jrdnmdhl@gmail.com", role = c("cre")),
+        person("Antoine", "Filipovic-Pierucci", role = c("aut")),
+        person("Kevin", "Zarca", role = "aut"),
+        person("Matthew", "Wiener", role = "ctb"),
+        person("Zdenek", "Kabat", role = "ctb"),
+        person("Vojtech", "Filipec", role = "ctb"),
+        person("Yonatan", "Carranza Alarcon", role=c("ctb")),
+        person("Vince", "Daniels", role=c("ctb")),
+        person("Fernando", "Alarid-Escudero", role=c("ctb"))
     )
 Description: A package for developing and running cost-effectiveness
     models in R.  Forked from the HEEMOD package.
