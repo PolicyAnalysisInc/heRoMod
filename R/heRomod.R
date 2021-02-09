@@ -46,6 +46,9 @@
 #' @importFrom dplyr funs
 #' @importFrom dplyr n row_number
 #' @importFrom dplyr group_by_at
+#' @importFrom dplyr mutate_all
+#' @importFrom dplyr filter_all
+#' @importFrom dplyr select_if
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
@@ -128,6 +131,7 @@
 #' @importFrom purrr list_modify
 #' @importFrom purrr discard
 #' @importFrom purrr map2_chr
+#' @importFrom purrr set_names
 #' 
 #' @importFrom glue glue
 #' 

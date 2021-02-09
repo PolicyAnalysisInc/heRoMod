@@ -1742,26 +1742,7 @@ package_hero_model <- function(...) {
   max_prog <- get_r_project_max_progress(dots)
   try(dots$report_max_progress(max_prog))
   
-  model_object <- list(
-    decision = dots$decision,
-    settings = dots$settings,
-    groups = dots$groups,
-    strategies = dots$strategies,
-    states = dots$states,
-    transitions = dots$transitions,
-    hvalues = dots$hvalues,
-    evalues = dots$evalues,
-    hsumms = dots$hsumms,
-    esumms = dots$esumms,
-    variables = dots$variables,
-    tables = dots$tables,
-    scripts = dots$scripts,
-    surv_dists = dots$surv_dists,
-    type = dots$type,
-    vbp = dots$vbp,
-    psa = dots$psa,
-    scenario = dots$scenario
-  )
+  model_object <- list(...)
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
 SaveWorkspace: Default
