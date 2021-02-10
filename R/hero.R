@@ -1340,8 +1340,8 @@ build_hero_model <- function(...) {
   names(limits) <- dots$states$name
   limits <- limits[!is.na(limits) & !(limits == 0)]
   
-  if (!is.null(dots$docker) && dots$docker) cores <- as.numeric(system('nproc',intern = T))
-  else cores <- parallel::detectCores()
+  if (!is.null(dots$cores)) cores <- dots$cores
+  else cores <- cores_to_use()
 
   # Fix column names
   dots$tables <- lapply(dots$tables, function(x) {

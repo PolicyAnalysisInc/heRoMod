@@ -20,8 +20,14 @@ convert_model <- function(model) {
         psa = convert_psa(model$psa, model$psa_correlations),
         dsa_settings = model$dsa_settings,
         scenario_settings = model$scenario_settings,
-        scenario = convert_scenarios(model$scenarios)
+        scenario = convert_scenarios(model$scenarios),
+        cores = get_n_cores(model$cores)
     )
+}
+
+get_n_cores <- function(cores) {
+    if (is.null(cores)) return(as.numeric(system('nproc',intern = T)))
+    cores
 }
 
 convert_settings <- function(settings, overrides) {

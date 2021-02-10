@@ -1,5 +1,5 @@
 
-run_sa <- function(model, scenarios, group_vars, report_progress = identity) {
+run_sa <- function(model, scenarios, group_vars, report_progress = identity, cores = cores_to_use()) {
   
   answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
@@ -16,7 +16,7 @@ run_sa <- function(model, scenarios, group_vars, report_progress = identity) {
       model,
       strategy = strat_name,
       newdata = strat_scenarios,
-      cores = cores_to_use(),
+      cores = cores,
       report_progress = report_progress
     )
     res$series <- strat_name
