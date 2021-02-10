@@ -15,7 +15,7 @@ run_analysis <- function(...) {
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
-  res <- try({ do.call(runner, data) })
+  res <- try({ do.call(runner, convert_model(data)) })
   if (inherits(res, "try-error")) {
     msg <- gsub('Error : ', fixed = T, '', res)
     res <- list(
