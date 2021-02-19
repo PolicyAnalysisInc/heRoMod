@@ -22,9 +22,26 @@ convert_model <- function(model) {
         scenario_settings = model$scenario_settings,
         scenario = convert_scenarios(model$scenarios),
         cores = get_n_cores(model$cores),
+        script_to_run = model$script_to_run,
         report_max_progress = model$report_max_progress,
         report_progress = model$report_progress,
-        .manifest = model$.manifest
+        .manifest = model$.manifest,
+        name = safe_filename(model$modelheader$filename)
+    )
+}
+
+run_code_preview_compat <- function(...) {
+    data <- list(...)
+    do.call(
+        run_markdown,
+        list(
+            text = data$scripts[[data$script_to_run]],
+            data = data$tables,
+            report_max_progress = data$report_max_progress,
+            report_progress = data$report_progress,
+            .manifest = data$.manifest,
+            name = data$name
+        )
     )
 }
 

@@ -11,7 +11,7 @@ run_analysis <- function(...) {
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
     'excel' = export_hero_xlsx,
-    'code_preview' = run_markdown,
+    'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )

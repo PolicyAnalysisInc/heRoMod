@@ -730,3 +730,8 @@ patch_progress_funcs <- function(model) {
   }
   model
 }
+
+
+safe_filename <- function(filename) {
+  gsub('[^[:alnum:][:space:]_]', '', filename)
+}
