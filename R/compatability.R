@@ -21,7 +21,10 @@ convert_model <- function(model) {
         dsa_settings = model$dsa_settings,
         scenario_settings = model$scenario_settings,
         scenario = convert_scenarios(model$scenarios),
-        cores = get_n_cores(model$cores)
+        cores = get_n_cores(model$cores),
+        report_max_progress = model$report_max_progress,
+        report_progress = model$report_progress,
+        .manifest = model$.manifest
     )
 }
 
