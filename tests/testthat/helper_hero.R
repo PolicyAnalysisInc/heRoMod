@@ -215,7 +215,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
 
 #' Test PSA Results
 test_psa_results <- function(model, name, path) {
-  model$psa$n <- 10
+  model$psa$n <- 5
   psa_res <- do.call(run_hero_psa,model)
 }
 

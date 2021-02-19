@@ -7,5 +7,10 @@ error_codes <- list(
   scenario_missing_name = 'Error in scenario analysis, scenario was missing name.',
   scenario_missing_param_name = 'Error in scenario "{scenario_name}", missing parameter name.',
   scenario_missing_value = 'Error in scenario "{scenario_name}", parameter "{parameter_name}" is missing value.',
-  syntax_error = 'Syntax error in {context}.'
+  syntax_error = 'Syntax error in {context}.',
+  state_group_wrong_col_type = 'Error in state group specification. Column "{col}" must be of type {type}.',
+  state_group_wrong_type = 'Error in state group specification, must be provided as data.frame.',
+  state_group_bad_names = 'Error in state group specification, invalid states referenced: {names}.',
+  patch_model_bad_key = 'Error in patch_model, key "{key}" already exists on model.',
+  zero_initial_prob = 'Initial state probabilities must be defined.'
 )

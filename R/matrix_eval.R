@@ -114,7 +114,8 @@ eval_transition <- function(x, ...) {
   UseMethod("eval_transition")
 }
 
-eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
+eval_transition.uneval_matrix <- function(x, parameters, expand = NULL, state_groups = NULL) {
+
   
   # Assinging NULLS to avoid CMD Check issues
   .from <- .to <- .limit <- .from_lim <- .to_state_time <- NULL
@@ -148,9 +149,26 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     )
   }
   
+  # Handle state groups
+  if (is.null(state_groups)) {
+    state_groups <- tibble(
+      name = state_names,
+      group = state_names,
+      share = F
+    )
+  } else {
+    state_groups <- rbind(
+      tibble(
+        name = state_names,
+        group = state_names,
+        share = 0
+      ) %>%
+        filter(!(name %in% state_groups$name)),
+      select(state_groups, -mts)
+    )
+  }
+  
   expanding <- any(expand$.expand)
-  
-  
   
   n_cycles <- length(unique(parameters$markov_cycle))
   n_full_state <- nrow(expand)
@@ -180,6 +198,14 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
     ) %>%
       left_join(
+        rename(state_groups, .from_state_group = group),
+        by = c(.from = "name")
+      ) %>%
+      left_join(
+        rename(state_groups, .to_state_group = group, .share = share),
+        by = c(.to = "name")
+      ) %>%
+      left_join(
         transmute(
           expand,
           .state = .state,
@@ -191,7 +217,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       ) %>%
       filter(.from_lim >= state_time) %>%
       mutate(
-        .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
+        .to_state_time = ifelse(.from == .to | (.from_state_group == .to_state_group & .share), pmin(state_time + 1, .from_lim), 1)
       ) %>%
       left_join(
         transmute(
@@ -270,7 +296,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   structure(
     split_array(trans_matrix),
     class = c("eval_matrix", "list"),
-    state_names = colnames(trans_matrix[1,,]),
+    state_names = dimnames(trans_matrix)[[2]],
     entry = expand$state_time == 1
   )
 }
@@ -279,7 +305,9 @@ split_array <- function(a) {
   iter <- dim(a)[1]
   the_list <- vector(iter, mode = "list")
   for(i in seq_len(iter)) {
-    the_list[[i]] <-a[i,,]
+    the_list[[i]] <- matrix(a[i,,,drop = F], ncol = dim(a)[2], dim(a)[3])
+    colnames(the_list[[i]]) <- dimnames(a)[[3]]
+    rownames(the_list[[i]]) <- dimnames(a)[[2]]
   }
   names(the_list) <- dimnames(a)[[1]]
   return(the_list)

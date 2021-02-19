@@ -1345,6 +1345,7 @@ build_hero_model <- function(...) {
 
   # Fix column names
   dots$tables <- lapply(dots$tables, function(x) {
+    if(class(x) == 'list') return(x)
     colnames(x) <- gsub("[\r\n]", "", colnames(x))
     x
   })
@@ -1692,7 +1693,7 @@ export_hero_xlsx <- function(...) {
     })
   dots$report_progress(1L)
   filename <- paste0(dots$name, ".xlsx")
-  writeWorkbook(lapply(wb_list, as.data.frame), filename)
+  writeWorkbook(lapply(wb_list, sanitize_df), filename)
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('excel_output', filename, 'Export to excel output', default = T)
   }
