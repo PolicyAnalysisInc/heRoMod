@@ -238,6 +238,24 @@ define_spline_survival <- function(scale = c("hazard", "odds",
   )
 }
 
+#' Define a survival distribution based on a function
+#'
+#' @param f a function that generates a vector of survival probabilities 
+#'
+#' @return a `surv_function` object, which can be used with [compute_surv()].
+#' @export
+define_surv_function <- function(f, ...) {
+  
+  structure(
+    list(
+      func = f,
+      arguments = list(...)
+    ),
+    class = c("surv_object", "surv_function")
+  )
+  
+}
+
 #' Define a survival distribution based on explicit survival probabilities
 #'
 #' @param x a data frame with columns `time` and `survival` 

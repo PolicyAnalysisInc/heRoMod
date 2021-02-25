@@ -388,6 +388,14 @@ eval_surv.default <- function(x, time,  ...) {
   stop(msg, call. = F)
 }
 
+
+#' @rdname eval_surv
+#' @export
+eval_surv.surv_function <- function(x, time, ...) {
+  arg_list <- append(list(time), x$arguments)
+  do.call(x$func, arg_list)
+}
+
 #' @rdname eval_surv
 #' @export
 eval_surv.survfit <- function(x, time,  ...) {

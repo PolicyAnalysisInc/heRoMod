@@ -6,6 +6,7 @@
 \alias{surv_prob_}
 \alias{event_prob_}
 \alias{eval_surv.default}
+\alias{eval_surv.surv_function}
 \alias{eval_surv.survfit}
 \alias{eval_surv.flexsurvreg}
 \alias{eval_surv.surv_model}
@@ -32,6 +33,8 @@ surv_prob_(x, time, ...)
 event_prob_(x, start, end, ...)
 
 \method{eval_surv}{default}(x, time, ...)
+
+\method{eval_surv}{surv_function}(x, time, ...)
 
 \method{eval_surv}{survfit}(x, time, ...)
 
