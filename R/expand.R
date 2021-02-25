@@ -229,14 +229,23 @@ complete_stl <- function(scl, state_names,
   } else {
     # Handle limiting of state time using state groups if specified
     if (!is.null(state_groups)) {
+        
       scl_table <- tibble(
         name = names(scl),
         limit = unname(scl)
       ) %>%
-        left_join(state_groups, by = c('name'))
-
+        full_join(state_groups, by = c('name')) %>%
+        group_by(group) %>%
+        mutate(limit = ifelse(all(is.na(limit)), NA, max(limit, na.rm = T))) %>%
+        ungroup() %>%
+        filter(!is.na(limit))
+      
+      if (nrow(scl_table) == 0) {
+        scl <- cycles + 1
+      }
+      
       scl <- set_names(
-        as.numeric(ifelse(is.na(scl_table$mts), scl_table$limit, scl_table$mts)),
+        as.numeric(scl_table$limit),
         scl_table$name
       )
     }
@@ -318,7 +327,7 @@ check_state_groups <- function(state_groups, state_names) {
   
   # Check that its a data frame and has right columns
   is_df <- "data.frame" %in% class(state_groups)
-  has_right_cols <- c('name', 'group', 'share', 'mts') %in% colnames(state_groups)
+  has_right_cols <- c('name', 'group', 'share') %in% colnames(state_groups)
   
   if (!all(is_df, has_right_cols)) {
     stop(error_codes$state_group_wrong_type, call. = F)
@@ -345,14 +354,6 @@ check_state_groups <- function(state_groups, state_names) {
   if (!share_right_type) {
     stop(
       glue(error_codes$state_group_wrong_col_type, col = 'share', type = 'logical, integer, or numeric'),
-      call. = F
-    )
-  }
-  
-  mts_right_type <- class(state_groups$mts) %in% c('integer', 'numeric')
-  if (!mts_right_type) {
-    stop(
-      glue(error_codes$state_group_wrong_col_type, col = 'mts', type = 'integer or numeric'),
       call. = F
     )
   }
