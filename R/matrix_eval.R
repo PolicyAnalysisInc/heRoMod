@@ -257,9 +257,29 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     )
   
   # Make sure C is used only once per state per cycle
-  if (any(trans_table$.is_complement > 1)) {
-    # FIXIT
-    stop('Cannot use "C" more than once per cycle', call. = F)
+  if (any(trans_table$.n_complement > 1)) {
+    problem_rows <- trans_table %>%
+      filter(.n_complement > 1) %>%
+      group_by(.from_e) %>%
+      group_split() %>%
+      map(function(x) {
+        first_cycle <- min(x$model_time)
+        last_cycle <- max(x$model_time)
+        if (first_cycle == last_cycle) {
+          cycles = as.character(first_cycle)
+        } else if (all(x$model_time == seq(from = first_cycle, to = last_cycle, by = 1))) {
+          cycles = paste0(first_cycle, "-", last_cycle)
+        } else {
+          cycles = paste(x$cycle,collapse=",")
+        }
+        data.frame(state = x$.from_e[1], cycles = cycles, stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    message <- paste0(
+      'Error in transition matrix, keyword "C" used more than once per state:\n\n',
+      paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
+    )
+    stop(message, call. = F)
   }
   
   # Make sure that values are numeric, or integer which would be odd but would technically be valid
@@ -291,62 +311,6 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
     state_names = expand$.full_state,
     entry = expand$state_time == 1
   )
-}
-
-split_array <- function(a) {
-  iter <- dim(a)[1]
-  the_list <- vector(iter, mode = "list")
-  for(i in seq_len(iter)) {
-    the_list[[i]] <-a[i,,]
-  }
-  names(the_list) <- dimnames(a)[[1]]
-  return(the_list)
-}
-
-replace_C <- function(x, state_names) {
-  posC <- x == -pi
-  
-  c_counts <- rowSums(posC, dims = 2)
-  colnames(c_counts) <- state_names
-  if (!all(c_counts <= 1)) {
-    problem_states <- c_counts[, as.logical(apply(c_counts, 2, function(z) any(z > 1))), drop = F]
-    problems <- lapply(seq_len(ncol(problem_states)), function(i) {
-      cycles <- problem_states[ , i]
-      problem_cycles <- which(cycles > 1)
-      min_cycle <- min(problem_cycles)
-      max_cycle <- max(problem_cycles)
-      if (all(problem_cycles == min_cycle:max_cycle)) {
-        problem_cycles = paste0(min_cycle, '-', max_cycle)
-      }
-      data.frame(
-        state = colnames(problem_states)[i],
-        cycles = paste(problem_cycles, collapse = ', '),
-        stringsAsFactors = F
-      )
-    }) %>%
-      bind_rows() %>%
-      as.data.frame()
-    
-    message <- paste0(
-      'Error in transition matrix, keyword "C" used more than once per state:\n\n',
-      paste(capture.output(print(problems, row.names = F)), collapse = "\n")
-    )
-    stop(message, call. = F)
-  }
-  
-  x[posC] <- 0
-  
-  valC <- 1 - rowSums(x, dims = 2)[which(posC, arr.ind = TRUE)[, -3]]
-  
-  # Sometimes the 1 - sum(trans_probs) is equal to a negative value arbitrarily close to
-  # zero due to floating point wierdness. In these cases, we should use zero as the complementary
-  # probability because otherwise the matrix will be treated as invalid because the completementary
-  # probability is negtive.
-  near_zero <- is_zero(valC)
-  neg <- valC < 0
-  valC[near_zero & neg] <- 0
-  x[posC] <- valC
-  x
 }
 
 get_state_names.eval_matrix <- function(x, ...){
