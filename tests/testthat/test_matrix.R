@@ -84,27 +84,30 @@ test_that(
       get_state_names(mat1),
       c("X1", "X2")
     )
+    # 
+    # test_array <- array(0, dim = c(2, 2, 2))
+    # test_array[1,,] <- c(1, -1, 0, 2)
+    # test_array[2,,] <- c(1, 0, 1, 1)
+    # attr(test_array, "state_names") <- c("A", "B")
     
-    test_array <- array(0, dim = c(2, 2, 2))
-    test_array[1,,] <- c(1, -1, 0, 2)
-    test_array[2,,] <- c(1, 0, 1, 1)
-    attr(test_array, "state_names") <- c("A", "B")
+    test_array <- tibble(
+      model_time = c(1,1,1,1,2,2,2,2),
+      .from = c("A", "A", "B", "B", "A", "A", "B", "B"),
+      .from_e = c("A", "A", "B", "B", "A", "A", "B", "B"),
+      .to = c("A", "B", "A", "B", "A", "B", "A", "B"),
+      .to_e = c("A", "B", "A", "B", "A", "B", "A", "B"),
+      .value = c(1,1,-1,0,0,1,2,1)
+    )
     
     expect_error(
       check_matrix(test_array),
       "rows sum to 1"
     )
-    test_array[2,1, 2] <- 0
+    
+    test_array$.value <- c(2, -1, -1, 2, -30, 31, 0, 1)
     expect_error(
       check_matrix(test_array),
       "outside the interval [0 - 1]",
-      fixed = TRUE
-    )
-    
-    class(test_array) <- "not an array"
-    expect_error(
-      check_matrix(test_array),
-      'inherits(x, "array")',
       fixed = TRUE
     )
     
@@ -161,48 +164,99 @@ test_that(
     expect_output(
       str(e_mat),
       'List of 10
- $ 1 : num [1:2, 1:2] 0.9 0.5 0.1 0.5
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 2 : num [1:2, 1:2] 0.9 0.667 0.1 0.333
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 3 : num [1:2, 1:2] 0.9 0.75 0.1 0.25
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 4 : num [1:2, 1:2] 0.9 0.8 0.1 0.2
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 5 : num [1:2, 1:2] 0.9 0.833 0.1 0.167
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 6 : num [1:2, 1:2] 0.9 0.857 0.1 0.143
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 7 : num [1:2, 1:2] 0.9 0.875 0.1 0.125
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 8 : num [1:2, 1:2] 0.9 0.889 0.1 0.111
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 9 : num [1:2, 1:2] 0.9 0.9 0.1 0.1
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
- $ 10: num [1:2, 1:2] 0.9 0.9091 0.1 0.0909
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : chr [1:2] "X1" "X2"
-  .. ..$ : chr [1:2] "X1" "X2"
+ $ 1 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.5 0.1 0.5
+  .. ..@ factors : list()
+ $ 2 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.667 0.1 0.333
+  .. ..@ factors : list()
+ $ 3 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.75 0.1 0.25
+  .. ..@ factors : list()
+ $ 4 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.8 0.1 0.2
+  .. ..@ factors : list()
+ $ 5 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.833 0.1 0.167
+  .. ..@ factors : list()
+ $ 6 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.857 0.1 0.143
+  .. ..@ factors : list()
+ $ 7 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.875 0.1 0.125
+  .. ..@ factors : list()
+ $ 8 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.889 0.1 0.111
+  .. ..@ factors : list()
+ $ 9 :Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.9 0.1 0.1
+  .. ..@ factors : list()
+ $ 10:Formal class \'dgCMatrix\' [package "Matrix"] with 6 slots
+  .. ..@ i       : int [1:4] 0 1 0 1
+  .. ..@ p       : int [1:3] 0 2 4
+  .. ..@ Dim     : int [1:2] 2 2
+  .. ..@ Dimnames:List of 2
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. .. ..$ : chr [1:2] "X1" "X2"
+  .. ..@ x       : num [1:4] 0.9 0.9091 0.1 0.0909
+  .. ..@ factors : list()
  - attr(*, "class")= chr [1:2] "eval_matrix" "list"
- - attr(*, "state_names")= chr [1:2] "X1" "X2"',
+ - attr(*, "state_names")= chr [1:2] "X1" "X2"
+ - attr(*, "entry")= logi [1:2] TRUE TRUE',
       fixed = TRUE
     )
     expect_output(

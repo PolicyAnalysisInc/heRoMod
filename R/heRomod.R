@@ -135,6 +135,8 @@
 #' 
 #' @importFrom glue glue
 #' 
+#' @importFrom Matrix sparseMatrix
+#' 
 #' @importFrom stringr str_interp
 NULL
 

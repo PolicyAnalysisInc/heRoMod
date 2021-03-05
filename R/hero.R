@@ -1198,7 +1198,7 @@ compile_transitions <- function(x) {
         n_states <- length(state_names)
         n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
         plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
-          do.call(rbind, y$transition) %>%
+          do.call(rbind, map(y$transition, as.matrix)) %>%
             as.data.frame(stringsAsFactors=F) %>%
             mutate(
               from = rep(state_names, n_cycles),
@@ -1243,7 +1243,7 @@ compile_transitions <- function(x) {
           group_list <- x$.mod
           names(group_list) <- group_names
           plyr::ldply(group_list, function(y) {
-            do.call(rbind, y$transition) %>%
+            do.call(rbind, map(y$transition, as.matrix)) %>%
               as.data.frame(stringsAsFactors=F) %>%
               mutate(
                 from = rep(state_names, n_cycles),
