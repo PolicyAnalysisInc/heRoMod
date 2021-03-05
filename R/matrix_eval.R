@@ -237,40 +237,53 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
         .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
       )
   }
-  # Reshape into 3d matrix and calculate complements
-  # trans_matrix <- trans_table %>%
-  #   reshape2::acast(
-  #     model_time ~
-  #       factor(.from_e, levels = expand$.full_state) ~
-  #       factor(.to_e, levels = expand$.full_state),
-  #     value.var = ".value",
-  #     fill = 0
-  #   ) %>%
-  #   replace_C
-  trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
-  trans_matrix[trans_table$.index] <- trans_table$.value
   
-  # Make sure that the matrix is numeric
-  matrix_type <- class(trans_matrix[1,1,])
-  if (class(trans_matrix[1,1,]) != 'numeric') {
+  trans_table <- trans_table %>%
+    mutate(.is_complement = .value == -pi) %>%
+    group_by(model_time, .from_e) %>%
+    mutate(
+      .n_complement = sum(.is_complement),
+      .complement = 1 - sum(.value) - pi
+    ) %>%
+    ungroup() %>%
+    mutate(
+      .value = if_else(.is_complement, .complement, .value)
+    )
+  
+  # Make sure C is used only once per state per cycle
+  if (any(trans_table$.is_complement > 1)) {
+    # FIXIT
+    stop('Cannot use "C" more than once per cycle', call. = F)
+  }
+  
+  # Make sure that values are numeric, or integer which would be odd but would technically be valid
+  # if all transition probabilities are 1 or 0.
+  matrix_type <- class(trans_table$.value)
+  if (!matrix_type %in% c('numeric', 'integer')) {
     stop(sprintf(
       "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
       call. = FALSE)
   }
-  trans_matrix <- replace_C(trans_matrix, expand$.full_state)
-  dimnames(trans_matrix) <- list(
-    seq_len(n_cycles),
-    expand$.full_state,
-    expand$.full_state
-  )
-  attr(trans_matrix, "state_names") <- expand$.full_state
   
-  check_matrix(trans_matrix)
+  # split into list of sparse matrices
+  matrices <- trans_table %>%
+    group_by(model_time) %>%
+    group_split %>%
+    map(function(matrix_tbl) {
+      sparse <- sparseMatrix(matrix_tbl$.from_e, matrix_tbl$.to_e, x = matrix_tbl$.value)
+      rownames(sparse) <- expand$.full_state
+      colnames(sparse) <- expand$.full_state
+      sparse
+    })
+  
+  
+  #FIXIT Implement matrix checks
+  #check_matrix(trans_matrix)
   
   structure(
-    split_array(trans_matrix),
+    matrices,
     class = c("eval_matrix", "list"),
-    state_names = colnames(trans_matrix[1,,]),
+    state_names = expand$.full_state,
     entry = expand$state_time == 1
   )
 }

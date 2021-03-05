@@ -331,39 +331,23 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   
   # Do element-wise multiplication to get the numbers
   # undergoing each transition
-  uncond_trans <- array(0, c(n_state,n_state,n_cycle+1))
-  uncond_trans[,,1] <- init_mat
+  uncond_trans <- vector(mode = 'list', length =  n_cycle + 1)
+  uncond_trans[[1]] <- init_mat
+  trace_mat <- matrix(nrow = n_cycle + 1, ncol = ncol(x[[1]]))
+  colnames(trace_mat) <- state_names
+  trace_mat[1, ] <- init
   for(i in seq_len(n_cycle)) {
-    uncond_trans[,,i+1] <- (colSums(uncond_trans[,,i]) + diag(unlist(inflow[i, ]))) * x[[i]]
+    mat <- (colSums(as.matrix(uncond_trans[[i]])) + diag(unlist(inflow[i, ]))) * as.matrix(x[[i]])
+    uncond_trans[[i + 1]] <- as_sparse_matrix(mat)
+    trace_mat[i + 1, ] <- colSums(mat)
   }
   
-  # Sum over columns to get trace
-  counts_array <- colSums(uncond_trans, dims=1) %>% t
-  
-  # Create an indicator array for transitions representing inter-state
-  # transitions and multiply by unconditional transition probs
-  zero_diag <- diag(1, n_state)
-  zero_diag[ ,!attr(x,"entry")] <- 1
-  zero_diag <- zero_diag %>%
-    rep(n_cycle + 1) %>%
-    array(c(n_state, n_state, n_cycle + 1))
-  trans_counts <- uncond_trans * (1 - zero_diag)
-  
-  # Convert counts to data_frames
-  counts_df <- as_tibble(as.data.frame(counts_array))
-  colnames(counts_df) <- state_names
-  
-  # Set dimnames on transition counts
-  dimnames(trans_counts) <- list(
-    state_names,
-    state_names,
-    NULL
-  )
+  trace_df <- as_tibble(as.data.frame(trace_mat))
   
   structure(
-    counts_df,
-    class = c("cycle_counts", class(counts_df)),
-    transitions = trans_counts[ , , -1, drop = F]
+    trace_df,
+    class = c("cycle_counts", class(trace_df)),
+    transitions = uncond_trans[-1]
   )
 }
 
@@ -417,12 +401,12 @@ compute_values <- function(states, counts, init, inflow, starting) {
   if(!is.null(attr(states, "transitions"))) {
     
     trans_values_df <- attr(states, "transitions") %>%
+      group_by(markov_cycle) %>%
       mutate(
         .dim1 = as.numeric(.from_name_expanded),
         .dim2 = as.numeric(.to_name_expanded),
-        .dim3 = as.numeric(markov_cycle),
-        .index = .dim1 + ((.dim2 - 1) * n_states) + ((.dim3 - 1) * (n_states ^ 2)),
-        .product = value * as.numeric(attr(counts, "transitions"))[.index]
+        .index = .dim1 + ((.dim2 - 1) * n_states),
+        .product = value * as.numeric(attr(counts, "transitions")[[markov_cycle[1]]])[.index]
       ) %>%
       group_by(markov_cycle, variable) %>%
       summarize(value = sum(.product))

@@ -730,3 +730,16 @@ patch_progress_funcs <- function(model) {
   }
   model
 }
+
+as_sparse_matrix <- function(x) {
+  dimensions <- dim(x)
+  dim_names <- dimnames(x)
+  indices <- which(x != 0, arr.ind = T)
+  sparseMatrix(
+    indices[ , 1],
+    indices[ , 2],
+    x = x[indices],
+    dims = dimensions,
+    dimnames = dim_names
+  )
+}
