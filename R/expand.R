@@ -220,18 +220,41 @@ all.funs <- function(expr) {
 }
 
 complete_stl <- function(scl, state_names,
-                         strategy_names, cycles) {
+                         strategy_names, cycles, state_groups = NULL) {
   uni <- FALSE
   
   
   if(is.null(scl)) {
     scl <- cycles + 1
+  } else {
+    # Handle limiting of state time using state groups if specified
+    if (!is.null(state_groups)) {
+        
+      scl_table <- tibble(
+        name = names(scl),
+        limit = unname(scl)
+      ) %>%
+        full_join(state_groups, by = c('name')) %>%
+        group_by(group) %>%
+        mutate(limit = ifelse(all(is.na(limit)), NA, max(limit, na.rm = T))) %>%
+        ungroup() %>%
+        filter(!is.na(limit))
+      
+      if (nrow(scl_table) == 0) {
+        scl <- cycles + 1
+      }
+      
+      scl <- set_names(
+        as.numeric(scl_table$limit),
+        scl_table$name
+      )
+    }
   }
   
   if (is.numeric(scl) && length(scl) == 1 && is.null(names(scl))) {
     uni <- TRUE
     stopifnot(
-      scl <= (cycles + 1),
+      #scl <= (cycles + 1),
       scl > 0,
       ! is.na(scl),
       is.wholenumber(scl)
@@ -267,7 +290,7 @@ complete_stl <- function(scl, state_names,
     stopifnot(
       ! is.na(scl),
       scl > 0,
-      scl <= cycles + 1,
+      #scl <= cycles + 1,
       is.wholenumber(scl)
     )
   }
@@ -296,4 +319,53 @@ complete_stl <- function(scl, state_names,
   }
   
   stop("'Incorrect 'state_time_limit' type.")
+}
+
+check_state_groups <- function(state_groups, state_names) {
+  
+  if (is.null(state_groups)) return()
+  
+  # Check that its a data frame and has right columns
+  is_df <- "data.frame" %in% class(state_groups)
+  has_right_cols <- c('name', 'group', 'share') %in% colnames(state_groups)
+  
+  if (!all(is_df, has_right_cols)) {
+    stop(error_codes$state_group_wrong_type, call. = F)
+  }
+  
+  # Check the types for each column
+  name_right_type <- class(state_groups$name) == 'character'
+  if (!name_right_type) {
+    stop(
+      glue(error_codes$state_group_wrong_col_type, col = 'name', type = 'character'),
+      call. = F
+    )
+  }
+  
+  group_right_type <- class(state_groups$group) == 'character'
+  if (!group_right_type) {
+    stop(
+      glue(error_codes$state_group_wrong_col_type, col = 'group', type = 'character'),
+      call. = F
+    )
+  }
+  
+  share_right_type <- class(state_groups$share) %in% c('integer', 'numeric', 'logical')
+  if (!share_right_type) {
+    stop(
+      glue(error_codes$state_group_wrong_col_type, col = 'share', type = 'logical, integer, or numeric'),
+      call. = F
+    )
+  }
+  
+  # Check that all state names exist
+  correct_state_names <- state_groups$name %in% state_names
+  if (!all(correct_state_names)) {
+    incorrect_names <- paste0('"', state_groups$name[!correct_state_names], '"', collapse = ', ')
+    stop(
+      glue(error_codes$state_group_bad_names, names = incorrect_names),
+      call. = F
+    )
+  }
+  
 }

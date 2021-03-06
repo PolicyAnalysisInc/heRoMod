@@ -108,7 +108,7 @@ define_part_surv <- function(pfs, os, state_names,
 #' @rdname define_part_surv
 define_part_surv_ <- function(pfs, os, state_names,
                               cycle_length = 1) {
-
+  
   if (is.null(names(state_names))) {
     state_names <- guess_part_surv_state_names(state_names)
   }
@@ -200,7 +200,7 @@ get_state_names.part_surv <- function(x) {
   x$state_names
 }
 
-eval_transition.part_surv <- function(x, parameters, expand) {
+eval_transition.part_surv <- function(x, parameters, expand, state_groups = NULL) {
   
   time_ <- c(0, parameters$markov_cycle)
   
@@ -237,7 +237,7 @@ eval_transition.part_surv <- function(x, parameters, expand) {
     class = "eval_part_surv")
 }
 
-eval_transition.part_surv_custom <- function(x, parameters, expand) {
+eval_transition.part_surv_custom <- function(x, parameters, expand, state_groups = NULL) {
   
   parameters$C <- -pi
   
@@ -310,25 +310,13 @@ compute_counts.eval_part_surv <- function(x, init,
   n_state <- length(x$state_names)
   n_cycle <- nrow(res)
   
-  trans_df <- tibble(
-    cycle = rep(seq_len(n_cycle - 1), 2),
-    from = rep(c(1, 2), each = n_cycle - 1),
-    to = rep(c(2, 3), each = n_cycle - 1),
-    value = c(pfs_surv[-n_cycle] - pfs_surv[-1], x$os_surv[-n_cycle] - x$os_surv[-1])
+  trans_counts <- array(
+    rep(0, n_state * n_state * (n_cycle - 1)),
+    dim = c(n_state, n_state, (n_cycle - 1))
   )
   
-  trans_counts <- trans_df %>%
-    group_by(cycle) %>%
-    group_split() %>%
-    map(function(cycle) {
-      sparseMatrix(
-        cycle$from,
-        cycle$to,
-        x = cycle$value,
-        dimnames = list(x$state_names, x$state_names),
-        dims = c(n_state, n_state)
-      )
-    })
+  trans_counts[1, 2, ] <- pfs_surv[-n_cycle] - pfs_surv[-1]
+  trans_counts[2, 3, ] <- x$os_surv[-n_cycle] - x$os_surv[-1]
   
   structure(
     res,
@@ -340,7 +328,7 @@ compute_counts.eval_part_surv <- function(x, init,
 
 
 compute_counts.eval_part_surv_custom <- function(x, init,
-                                          inflow) {
+                                                 inflow) {
   
   res <- x$trace
   if (any(res < 0)) {

@@ -90,22 +90,39 @@ test_that(
     attr(test_array, "state_names") <- c("A", "B")
     
     expect_error(
-      check_matrix(test_array),
+      check_matrix.array(test_array),
       "rows sum to 1"
     )
     test_array[2,1, 2] <- 0
     expect_error(
-      check_matrix(test_array),
+      check_matrix.array(test_array),
       "outside the interval [0 - 1]",
       fixed = TRUE
     )
     
-    class(test_array) <- "not an array"
+    
+    test_array <- tibble(
+      model_time = c(1,1,1,1,2,2,2,2),
+      .from = c("A", "A", "B", "B", "A", "A", "B", "B"),
+      .from_e = c("A", "A", "B", "B", "A", "A", "B", "B"),
+      .to = c("A", "B", "A", "B", "A", "B", "A", "B"),
+      .to_e = c("A", "B", "A", "B", "A", "B", "A", "B"),
+      .value = c(1,1,-1,0,0,1,2,1)
+    )
+    
     expect_error(
-      check_matrix(test_array),
-      'inherits(x, "array")',
+      check_matrix.data.frame(test_array),
+      "rows sum to 1"
+    )
+    
+    test_array$.value <- c(2, -1, -1, 2, -30, 31, 0, 1)
+    expect_error(
+      check_matrix.data.frame(test_array),
+      "outside the interval [0 - 1]",
       fixed = TRUE
     )
+    
+    
     
     ## test that we get expected error with expanded states
     par1 <- define_parameters(a = ifelse(state_time == 3, 1.1, 0.5))
@@ -208,9 +225,12 @@ test_that(
     expect_output(
       print(e_mat),
       'An evaluated transition matrix, 2 states, 10 markov cycles.
+
 State names:
+
 X1
 X2
+
 $`1`
     X1  X2
 X1 0.9 0.1

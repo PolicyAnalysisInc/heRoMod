@@ -1,8 +1,4 @@
-eval_sparse_matrix <- function(x, parameters, expand = NULL) {
-  
-  # Assinging NULLS to avoid CMD Check issues
-  .from <- .to <- .limit <- .from_lim <- .to_state_time <- NULL
-  .to_state_time <- .value <- .state <- state_time <- .full_state <- NULL
+eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL) {
   
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
@@ -32,101 +28,29 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL) {
     )
   }
   
-  expanding <- any(expand$.expand)
-  
+  # Handle state groups
+  if (is.null(state_groups)) {
+    state_groups <- tibble(
+      name = state_names,
+      group = state_names,
+      share = F
+    )
+  } else {
+    state_groups <- rbind(
+      tibble(
+        name = state_names,
+        group = state_names,
+        share = 0
+      ) %>%
+        filter(!(name %in% state_groups$name)),
+      state_groups
+    )
+  }
   
   
   n_cycles <- length(unique(parameters$markov_cycle))
   n_full_state <- nrow(expand)
   trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
-  
-  nrow_param = nrow(parameters)
-  matrix_pos_names <- names(x)
-  state_trans_names <- paste0(
-    rep(state_names, each = length(state_names)),
-    ' \u2192 ',
-    rep(state_names, length(state_names))
-  )
-  names(x) <- state_trans_names
-  renamer <- state_trans_names
-  names(renamer) <- matrix_pos_names
-  eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
-    rename(!!!syms(renamer))
-  names(x) <- matrix_pos_names
-  
-  trans_table <- tibble::tibble(
-    model_time = rep.int(parameters$model_time, times = n_state^2),
-    state_time = rep.int(parameters$state_time, times = n_state^2),
-    .from = rep(state_names, each = n_state * nrow_param),
-    .to = rep(state_names, times = n_state, each = nrow_param),
-    .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
-  ) %>%
-    left_join(
-      transmute(
-        expand,
-        .state = .state,
-        state_time = state_time,
-        .from_e = .full_state,
-        .from_lim = .limit
-      ),
-      by = c(".from" = ".state", "state_time" = "state_time")
-    ) %>%
-    filter(.from_lim >= state_time) %>%
-    mutate(
-      .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
-    ) %>%
-    left_join(
-      transmute(
-        expand,
-        .state = .state,
-        state_time = state_time,
-        .to_e = .full_state
-      ),
-      by = c(".to" = ".state", ".to_state_time" = "state_time")
-    ) %>%
-    mutate(
-      .from_e_i = as.numeric(factor(.from_e, levels = expand$.full_state)),
-      .to_e_i = as.numeric(factor(.to_e, levels = expand$.full_state)),
-      .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time))))
-    )
-  
-  trans_table <- trans_table %>%
-    mutate(.is_complement = .value == -pi) %>%
-    group_by(model_time, .from_e_i) %>%
-    mutate(
-      .n_complement = sum(.is_complement),
-      .complement = 1 - sum(.value) - pi
-    ) %>%
-    ungroup() %>%
-    mutate(
-      .value = if_else(.is_complement, .complement, .value)
-    )
-  
-  # Make sure C is used only once per state per cycle
-  if (any(trans_table$.n_complement > 1)) {
-    problem_rows <- trans_table %>%
-      filter(.n_complement > 1) %>%
-      group_by(.from_e) %>%
-      group_split() %>%
-      map(function(x) {
-        first_cycle <- min(x$model_time)
-        last_cycle <- max(x$model_time)
-        if (first_cycle == last_cycle) {
-          cycles = as.character(first_cycle)
-        } else if (all(x$model_time == seq(from = first_cycle, to = last_cycle, by = 1))) {
-          cycles = paste0(first_cycle, "-", last_cycle)
-        } else {
-          cycles = paste(x$cycle,collapse=",")
-        }
-        data.frame(state = x$.from_e[1], cycles = cycles, stringsAsFactors=F)
-      }) %>%
-      bind_rows()
-    message <- paste0(
-      'Error in transition matrix, keyword "C" used more than once per state:\n\n',
-      paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
-    )
-    stop(message, call. = F)
-  }
   
   # Make sure that values are numeric, or integer which would be odd but would technically be valid
   # if all transition probabilities are 1 or 0.
@@ -137,7 +61,10 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL) {
       call. = FALSE)
   }
   
-  check_sparse_matrix(trans_table)
+  trans_table <- eval_matrix_table(x, parameters, expand, state_groups) %>%
+    replace_C()
+  
+  check_matrix(trans_table)
   
   # split into list of sparse matrices
   matrices <- trans_table %>%
@@ -159,7 +86,7 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL) {
   )
 }
 
-check_sparse_matrix <- function(x) {
+check_matrix.data.frame <- function(x) {
   
   sums <- x %>%
     group_by(model_time, .from_e) %>%
@@ -171,16 +98,7 @@ check_sparse_matrix <- function(x) {
     group_by(.from_e) %>%
     group_split() %>%
     map(function(x) {
-      first_cycle <- min(x$model_time)
-      last_cycle <- max(x$model_time)
-      if (first_cycle == last_cycle) {
-        cycles = as.character(first_cycle)
-      } else if (all(x$model_time == seq(from = first_cycle, to = last_cycle, by = 1))) {
-        cycles = paste0(first_cycle, "-", last_cycle)
-      } else {
-        cycles = paste(x$cycle,collapse=",")
-      }
-      data.frame(state = x$.from_e[1], cycles = cycles, stringsAsFactors=F)
+      data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
     }) %>%
     bind_rows()
   
@@ -199,16 +117,7 @@ check_sparse_matrix <- function(x) {
     group_by(.from_e, .to_e) %>%
     group_split() %>%
     map(function(x) {
-      first_cycle <- min(x$model_time)
-      last_cycle <- max(x$model_time)
-      if (first_cycle == last_cycle) {
-        cycles = as.character(first_cycle)
-      } else if (all(x$model_time == seq(from = first_cycle, to = last_cycle, by = 1))) {
-        cycles = paste0(first_cycle, "-", last_cycle)
-      } else {
-        cycles = paste(x$cycle,collapse=",")
-      }
-      data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = cycles, stringsAsFactors=F)
+      data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
     }) %>%
     bind_rows()
   
@@ -218,6 +127,38 @@ check_sparse_matrix <- function(x) {
       paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
     ),
     call. = F)
-    
   }
+}
+
+replace_C.data.frame <- function(x, state_names) {
+  res <- x %>%
+    mutate(.is_complement = .value == -pi) %>%
+    group_by(model_time, .from_e_i) %>%
+    mutate(
+      .n_complement = sum(.is_complement),
+      .complement = 1 - sum(.value) - pi
+    ) %>%
+    ungroup() %>%
+    mutate(
+      .value = if_else(.is_complement, .complement, .value)
+    )
+  
+  # Make sure C is used only once per state per cycle
+  if (any(res$.n_complement > 1)) {
+    problem_rows <- res %>%
+      filter(.n_complement > 1) %>%
+      group_by(.from_e) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$cycle), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    message <- paste0(
+      'Error in transition matrix, keyword "C" used more than once per state:\n\n',
+      paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
+    )
+    stop(message, call. = F)
+  }
+  
+  res
 }

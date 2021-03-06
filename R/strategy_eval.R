@@ -53,7 +53,8 @@
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
                           inflow, strategy_name, aux_params = NULL,
-                          disc_method = 'start', report_progress = identity) {
+                          disc_method = 'start', report_progress = identity,
+                          state_groups = NULL) {
   
   .state <- .full_state <- .expand <- NULL
   
@@ -202,7 +203,8 @@ eval_strategy <- function(strategy, parameters, cycles,
   e_transition <- eval_transition(
     get_transition(strategy),
     e_parameters,
-    expand_table
+    expand_table,
+    state_groups = state_groups
   )
   
   # Compute counts
@@ -368,7 +370,7 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   }
   
   # Make a diagonal matrix of inital state vector
-  init_mat = diag(init)
+  init_mat = diag(init, ncol = n_state, nrow = n_state)
   
   # Do element-wise multiplication to get the numbers
   # undergoing each transition
@@ -380,7 +382,7 @@ compute_counts.eval_matrix <- function(x, init, inflow, ...) {
   )
   uncond_trans[,,1] <- init_mat
   for(i in seq_len(n_cycle)) {
-    uncond_trans[,,i+1] <- (colSums(uncond_trans[,,i]) + diag(unlist(inflow[i, ]))) * x[[i]]
+    uncond_trans[,,i+1] <- (colSums(matrix(uncond_trans[,,i], ncol = n_state, nrow = n_state)) + diag(unlist(inflow[i, ]), nrow = n_state, ncol = n_state)) * x[[i]]
   }
   
   # Sum over columns to get trace
