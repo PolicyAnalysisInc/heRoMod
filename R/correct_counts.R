@@ -59,5 +59,7 @@ correct_counts <- function(x, method = c("life-table",
     attr(out, "transitions") <- attr(x, "transitions")
   }
   
+  class(out) <- class(x)
+  
   return(out)
 }
