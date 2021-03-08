@@ -35,3 +35,7 @@ jobs:
           key: r-pkg-cache-{{ arch }}-{{ .Branch }}
           paths:
             - "~/R/Library"
+      - run:
+        name: Build Success
+        when: on_success
+        command: Rscript -e 'library(covr); codecov()'
