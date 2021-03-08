@@ -36,6 +36,6 @@ jobs:
           paths:
             - "~/R/Library"
       - run:
-        name: Build Success
-        when: on_success
-        command: Rscript -e 'library(covr); codecov()'
+          name: Build Success
+          when: on_success
+          command: Rscript -e 'library(covr); codecov()'
