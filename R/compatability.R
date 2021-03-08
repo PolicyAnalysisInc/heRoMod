@@ -223,7 +223,7 @@ convert_tables <- function(tables) {
         map(function(mat) {
             tbl <- mat %>%
                 as.data.frame(stringsAsFactors = F) %>%
-                select_if(function(x) any(x != ''))
+                select_if(function(x) any(x != '' & x != 0 & !is.na(x)))
             colnames <- as.character(tbl[1, ])
             data <- tbl[-1, ] %>%
                 filter_all(any_vars(. != '')) %>%
