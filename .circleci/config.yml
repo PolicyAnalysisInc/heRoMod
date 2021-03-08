@@ -15,8 +15,8 @@ jobs:
           name: Install package dependencies
           command: |
             mkdir -p ~/R/Library
-            Rscript -e 'install.packages("remotes")'
-            Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+            Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
+            Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
       - run:
           name: Session information and installed package versions
           command: |
