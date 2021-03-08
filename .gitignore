@@ -7,3 +7,4 @@ README.html
 heemod-expand.Rproj
 04_progress
 *.RProj
+*.DS_Store

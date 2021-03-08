@@ -52,6 +52,9 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
   n_full_state <- nrow(expand)
   trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
   
+  trans_table <- eval_matrix_table(x, parameters, expand, state_groups) %>%
+    replace_C()
+  
   # Make sure that values are numeric, or integer which would be odd but would technically be valid
   # if all transition probabilities are 1 or 0.
   matrix_type <- class(trans_table$.value)
@@ -60,9 +63,6 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
       "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
       call. = FALSE)
   }
-  
-  trans_table <- eval_matrix_table(x, parameters, expand, state_groups) %>%
-    replace_C()
   
   check_matrix(trans_table)
   
