@@ -824,3 +824,7 @@ to_number_list_string <- function(x) {
   }
   string
 }
+
+safe_filename <- function(filename) {
+  gsub('[^[:alnum:][:space:]_]', '', filename)
+}
