@@ -29,7 +29,7 @@ jobs:
           command: R CMD build .
       - run:
           name: Check package
-          command: R CMD check --as-cran --no-tests --no-manual *tar.gz
+          command: R CMD check --as-cran --no-manual *tar.gz
       - store_artifacts:
           path: heRomod.Rcheck/
       - save_cache:
@@ -39,4 +39,5 @@ jobs:
       - run:
           name: Build Success
           when: on_success
-          command: Rscript -e 'devtools::test_coverage(); covr::codecov();'
+          command: Rscript -e 'library(covr); codecov()'
+          no_output_timeout: 15m
