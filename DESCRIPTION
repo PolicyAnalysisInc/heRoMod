@@ -56,7 +56,8 @@ Imports:
     testthat,
     triangle,
     jsonlite,
-    glue
+    glue,
+    Matrix
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

@@ -94,19 +94,25 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   model_options <- NULL
   if(!is.null(options)) {
-    model_options <- create_options_from_tabular(options, names(models[[1]]$states), df_env)
+    model_options <- create_options_from_tabular(
+      apply_max_cores(options, df_env$.max_cores),
+      names(models[[1]]$states),
+      df_env
+    )
   }
 
   
-  list(
-    models = models,
-    param_info = param_info,
-    aux_param_info = aux_param_info,
-    demographic_file = demographic_file,
-    model_options = model_options,
-    report_progress = report_progress
+  apply_model_patch(
+    list(
+      models = models,
+      param_info = param_info,
+      aux_param_info = aux_param_info,
+      demographic_file = demographic_file,
+      model_options = model_options,
+      report_progress = report_progress
+    ),
+    df_env$.patched_values
   )
-  
 }
 
 create_model_list_from_api <- function(states, tm, st = NULL, start = NULL, df_env = globalenv()) {
@@ -468,7 +474,8 @@ eval_models_from_tabular <- function(inputs,
       parallel = !(run_dsa | run_psa | run_demo),
       cores = inputs$model_options$num_cores,
       disc_method = inputs$model_options$disc_method,
-      report_progress = report_progress
+      report_progress = report_progress,
+      state_groups = inputs$state_groups
     )
   )
   
@@ -709,7 +716,7 @@ parse_state_info <- function(state_info, df_env) {
   values <- setdiff(values, discounts)
   discounts_clean <- gsub("^\\.discount\\.(.+)", "\\1", discounts)
 
-  num_missing_per_column <- colSums(sapply(state_info, is.na))
+  num_missing_per_column <- colSums(as.matrix(sapply(state_info, is.na), ncol = ncol(state_info)))
   missing_col_names <- names(num_missing_per_column)[num_missing_per_column > 0]
   ## missing names are allowed for discount columns
   missing_col_names <- setdiff(missing_col_names, discounts)
@@ -1453,10 +1460,13 @@ parse_multi_spec <- function(multi_spec,
   ## want to make sure everything comes out sorted
   ##   by order of appearance of values of group_vars
   lapply(list_spec, function(x) {
-    match_to_orig <-
-      sapply(group_vars, function(this_var){
-        match(x[, this_var], orig_order[, this_var])})
-    x[do.call("order", as.data.frame(match_to_orig)),]
+    match_to_orig <- sapply(group_vars, function(this_var) {
+      match(x[, this_var], orig_order[, this_var])
+    }) %>%
+      matrix(ncol = length(group_vars), byrow = F) %>%
+      as.data.frame() %>%
+      set_names(names(orig_order))
+    x[do.call("order", as.data.frame(match_to_orig)), ]
   })
 }
 

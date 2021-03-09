@@ -108,7 +108,7 @@ define_part_surv <- function(pfs, os, state_names,
 #' @rdname define_part_surv
 define_part_surv_ <- function(pfs, os, state_names,
                               cycle_length = 1) {
-
+  
   if (is.null(names(state_names))) {
     state_names <- guess_part_surv_state_names(state_names)
   }
@@ -200,7 +200,7 @@ get_state_names.part_surv <- function(x) {
   x$state_names
 }
 
-eval_transition.part_surv <- function(x, parameters, expand) {
+eval_transition.part_surv <- function(x, parameters, expand, state_groups = NULL) {
   
   time_ <- c(0, parameters$markov_cycle)
   
@@ -237,7 +237,7 @@ eval_transition.part_surv <- function(x, parameters, expand) {
     class = "eval_part_surv")
 }
 
-eval_transition.part_surv_custom <- function(x, parameters, expand) {
+eval_transition.part_surv_custom <- function(x, parameters, expand, state_groups = NULL) {
   
   parameters$C <- -pi
   
@@ -328,7 +328,7 @@ compute_counts.eval_part_surv <- function(x, init,
 
 
 compute_counts.eval_part_surv_custom <- function(x, init,
-                                          inflow) {
+                                                 inflow) {
   
   res <- x$trace
   if (any(res < 0)) {

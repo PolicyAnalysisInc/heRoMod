@@ -187,7 +187,9 @@ eval_init <- function(x, parameters, expand) {
   # if(sum(init_vector) != 1) {
   #   stop("Error in initial probabiltiies, values do not sum to 1.", call. = F)
   # }
-  
+  if (sum(init_vector) == 0) {
+    stop(error_codes$zero_initial_prob, call. = F)
+  }
   init_vector
   
 }
