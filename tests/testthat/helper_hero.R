@@ -4,6 +4,7 @@
 test_model_results <- function(name, path, bc, vbp, dsa, scen, psa, export) {
   test_that(paste0(name, ' produces correct results.'), {
     model <- readRDS(system.file("hero", path, "model.rds", package="heRomod"))
+    model$cores <- 1
     if (bc) test_bc_results(model, name, path)
     if (vbp) test_vbp_results(model, name, path)
     if (dsa) test_dsa_results(model, name, path, vbp = F)
