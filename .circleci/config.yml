@@ -8,8 +8,8 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - r-pkg-cache-{{ arch }}-{{ .Branch }}--{{ checksum "DESCRIPTION" }}
-            - r-pkg-cache-{{ arch }}--{{ checksum "DESCRIPTION" }}
+            - r-pkg-cache-{{ arch }}-{{ .Branch }}
+            - r-pkg-cache-{{ arch }}-
       - checkout
       - run:
           name: Install package dependencies
@@ -18,16 +18,15 @@ jobs:
             Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
             Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
             Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
-      - save_cache:
-          key: r-pkg-cache-{{ arch }}-{{ .Branch }}
-          paths:
-            - "~/R/Library"
       - run:
           name: Session information and installed package versions
           command: |
             Rscript -e 'sessionInfo()'
             Rscript -e 'installed.packages()[, c("Package", "Version")]'
             Rscript -e 'rmarkdown::pandoc_version()'
+      - run:
+          name: Run tests
+          command: Rscript -e 'devtools::test()'
       - run:
           name: Build package
           command: R CMD build .
@@ -36,6 +35,10 @@ jobs:
           command: R CMD check --as-cran --no-manual *tar.gz
       - store_artifacts:
           path: heRomod.Rcheck/
+      - save_cache:
+          key: r-pkg-cache-{{ arch }}-{{ .Branch }}
+          paths:
+            - "~/R/Library"
       - run:
           name: Build Success
           when: on_success
