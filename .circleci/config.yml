@@ -8,7 +8,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - r-pkg-cache-{{ arch }}-{{ .Branch }}
+            - r-pkg-cache-{{ arch }}-{{ .Branch }}--{{ checksum "DESCRIPTION" }}
             - r-pkg-cache-{{ arch }}--{{ checksum "DESCRIPTION" }}
       - checkout
       - run:
