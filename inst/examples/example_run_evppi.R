@@ -59,7 +59,7 @@ rsp <- define_psa(
 
 # with run_model result
 # Could take a while to produce 1000 samples per strategy
-ndt1 <- run_psa(res2, psa = rsp, N = 1000)
+ndt1 <- run_psa(res2, psa = rsp, N = 50)
 
 # Plot EVPI
 plot(ndt1, type = "evpi", max_wtp = 50000, log_scale = FALSE)
