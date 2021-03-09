@@ -71,7 +71,12 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
     group_by(model_time) %>%
     group_split %>%
     map(function(matrix_tbl) {
-      sparse <- sparseMatrix(matrix_tbl$.from_e_i, matrix_tbl$.to_e_i, x = matrix_tbl$.value)
+      sparse <- sparseMatrix(
+        matrix_tbl$.from_e_i,
+        matrix_tbl$.to_e_i,
+        x = matrix_tbl$.value,
+        dims = c(n_full_state, n_full_state)
+      )
       rownames(sparse) <- expand$.full_state
       colnames(sparse) <- expand$.full_state
       sparse

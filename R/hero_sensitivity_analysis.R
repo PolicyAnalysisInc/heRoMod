@@ -172,7 +172,7 @@ gen_groups_table <- function(groups) {
   groups_table <- create_sa_table(n_groups, n_params, param_names)
   for (i in seq_len(n_params)) {
     # Needs error handling
-    var_list <- as.lazy_dots(attribs[[i]])
+    var_list <- as.lazy_dots(as.character(attribs[[i]]))
     class(var_list) <- 'list'
     groups_table[[i]] <- var_list
   }

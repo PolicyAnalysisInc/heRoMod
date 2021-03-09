@@ -1,7 +1,6 @@
 #' @export
 run_hero_vbp <- function(...) {
   
-  
   # Build model object
   dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)

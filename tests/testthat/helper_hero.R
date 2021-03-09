@@ -196,7 +196,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
 
   # Load previous results
   if (vbp) {
-    model$scenario_settings$run_vbp <- T
+    model$scenario_settings <- list(run_vbp = T)
     scen_res <- readRDS(system.file("hero", path, "scen_vbp_res.rds", package="heRomod"))
   } else {
     scen_res <- readRDS(system.file("hero", path, "scen_res.rds", package="heRomod"))
@@ -210,7 +210,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
   expect_equal(scen_res$cost, scen_res_test$cost)
   expect_equal(scen_res$nmb, scen_res_test$nmb)
   if (vbp) {
-    expect_equal(scen_res$vbp, scen_res_test$vbp$prices)
+    expect_equal(scen_res$vbp, scen_res_test$vbp)
   }
 }
 

@@ -10,3 +10,5 @@
 ^data-raw$
 ^docs$
 ^_pkgdown\.yml$
+^\.circleci$
+^\.circleci/config\.yml$
