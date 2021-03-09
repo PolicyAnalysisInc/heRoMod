@@ -1,4 +1,8 @@
 version: 2
+build:
+  jobs:
+    - "cran-check"
+    - "code-coverage"
 jobs:
   cran-check:
     docker:
