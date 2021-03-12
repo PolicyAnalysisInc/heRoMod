@@ -103,6 +103,27 @@ eval_strategy <- function(strategy, parameters, cycles,
     }
   }
   
+  state_names <- get_state_names(strategy)
+  
+  # Handle state groups
+  if (is.null(state_groups)) {
+    state_groups <- tibble(
+      name = state_names,
+      group = state_names,
+      share = F
+    )
+  } else {
+    state_groups <- rbind(
+      tibble(
+        name = state_names,
+        group = state_names,
+        share = 0
+      ) %>%
+        filter(!(name %in% state_groups$name)),
+      select(state_groups, name, group, share)
+    )
+  }
+  
   # Build table to determine number of tunnels for each state
   if(any(to_expand)) {
      expand_table <- tibble::tibble(
@@ -116,10 +137,12 @@ eval_strategy <- function(strategy, parameters, cycles,
     group_by(group, share) %>%
     mutate(
       share = ifelse(is.na(share), FALSE, as.logical(share)),
-      .expand = .expand | (any(share) && n() > 1),
-      .limit = ifelse(.expand, expand_limit, 1)
+      .expand = .expand | (any(share) && n() > 1)
     ) %>%
     ungroup() %>%
+    mutate(
+      .limit = ifelse(.expand, expand_limit, 1)
+    ) %>%
     plyr::ddply(
       ".state",
       function(st) {

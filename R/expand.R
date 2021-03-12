@@ -226,29 +226,29 @@ complete_stl <- function(scl, state_names,
   
   if(is.null(scl)) {
     scl <- cycles + 1
-  } else {
-    # Handle limiting of state time using state groups if specified
-    if (!is.null(state_groups)) {
-        
-      scl_table <- tibble(
-        name = names(scl),
-        limit = unname(scl)
-      ) %>%
-        full_join(filter(state_groups, as.logical(share)), by = c('name')) %>%
-        group_by(group) %>%
-        mutate(limit = ifelse(all(is.na(limit)), NA, max(limit, na.rm = T))) %>%
-        ungroup() %>%
-        filter(!is.na(limit))
-      
-      if (nrow(scl_table) == 0) {
-        scl <- cycles + 1
-      }
-      
-      scl <- set_names(
-        as.numeric(scl_table$limit),
-        scl_table$name
-      )
+  }
+  
+  # Handle limiting of state time using state groups if specified
+  if (!is.null(state_groups)) {
+    
+    scl_table <- tibble(
+      name = names(scl),
+      limit = unname(scl)
+    ) %>%
+      full_join(filter(state_groups, as.logical(share)), by = c('name')) %>%
+      group_by(group) %>%
+      mutate(limit = ifelse(all(is.na(limit)), NA, max(limit, na.rm = T))) %>%
+      ungroup() %>%
+      filter(!is.na(limit))
+    
+    if (nrow(scl_table) == 0) {
+      scl <- cycles + 1
     }
+    
+    scl <- set_names(
+      as.numeric(scl_table$limit),
+      scl_table$name
+    )
   }
   
   if (is.numeric(scl) && length(scl) == 1 && is.null(names(scl))) {

@@ -53,6 +53,7 @@
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
+#' @importFrom plyr rbind.fill
 #' 
 #' @importFrom reshape2 dcast
 #' @importFrom reshape2 acast
