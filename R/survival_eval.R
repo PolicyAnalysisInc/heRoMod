@@ -331,7 +331,7 @@ event_prob_ <- function(x, start, end, ...){
 #' 
 #' @param x A survival distribution object
 #' @param start The start time of the interval.
-#' @param start The end time of the interval.
+#' @param end The end time of the interval.
 #' @param ... arguments passed to methods.
 #'   
 #' @return Returns either the survival probalities or
