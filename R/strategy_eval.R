@@ -106,7 +106,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   # Build table to determine number of tunnels for each state
   if(any(to_expand)) {
      expand_table <- tibble::tibble(
-      .state = factor(attr(states, "names"), levels = attr(states, "names")),
+      .state = attr(states, "names"),
       .expand = to_expand
     ) %>%
     left_join(
@@ -133,6 +133,8 @@ eval_strategy <- function(strategy, parameters, cycles,
         )
       }
     ) %>%
+    mutate(.state = factor(.state, levels = attr(states, "names"))) %>%
+    arrange(.state, state_time) %>%
     mutate(
       .state = as.character(.state),
       .full_state = as.character(.full_state)
