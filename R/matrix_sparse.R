@@ -28,25 +28,6 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
     )
   }
   
-  # Handle state groups
-  if (is.null(state_groups)) {
-    state_groups <- tibble(
-      name = state_names,
-      group = state_names,
-      share = F
-    )
-  } else {
-    state_groups <- rbind(
-      tibble(
-        name = state_names,
-        group = state_names,
-        share = 0
-      ) %>%
-        filter(!(name %in% state_groups$name)),
-      state_groups
-    )
-  }
-  
   
   n_cycles <- length(unique(parameters$markov_cycle))
   n_full_state <- nrow(expand)

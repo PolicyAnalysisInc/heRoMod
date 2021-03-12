@@ -130,13 +130,31 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL, state_gr
     )
   }
   
+  # Handle state groups
+  if (is.null(state_groups)) {
+    state_groups <- tibble(
+      name = state_names,
+      group = state_names,
+      share = F
+    )
+  } else {
+    state_groups <- rbind(
+      tibble(
+        name = state_names,
+        group = state_names,
+        share = 0
+      ) %>%
+        filter(!(name %in% state_groups$name)),
+      state_groups
+    )
+  }
   
   # Use sparse matrix evaluation if more than 50 states
   # as it is faster and more memory-efficient
   if (nrow(expand) > 50) {
-    eval_sparse_matrix(x, parameters, expand)
+    eval_sparse_matrix(x, parameters, expand, state_groups)
   } else {
-    eval_matrix(x, parameters, expand)
+    eval_matrix(x, parameters, expand, state_groups)
   }
 }
 
@@ -168,25 +186,6 @@ eval_matrix <- function(x, parameters, expand = NULL, state_groups = NULL) {
       state_time = 1,
       .expand = F,
       .limit = 1
-    )
-  }
-  
-  # Handle state groups
-  if (is.null(state_groups)) {
-    state_groups <- tibble(
-      name = state_names,
-      group = state_names,
-      share = F
-    )
-  } else {
-    state_groups <- rbind(
-      tibble(
-        name = state_names,
-        group = state_names,
-        share = 0
-      ) %>%
-        filter(!(name %in% state_groups$name)),
-      state_groups
     )
   }
   
