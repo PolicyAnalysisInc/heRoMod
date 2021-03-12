@@ -107,26 +107,36 @@ eval_strategy <- function(strategy, parameters, cycles,
   if(any(to_expand)) {
      expand_table <- tibble::tibble(
       .state = factor(attr(states, "names"), levels = attr(states, "names")),
-      .expand = to_expand,
-      .limit = ifelse(to_expand, expand_limit, 1)
+      .expand = to_expand
     ) %>%
-      plyr::ddply(
-        ".state",
-        function(st) {
-          if(st$.expand) full_names <- paste0(".", st$.state, "_", seq_len(st$.limit))
-          else full_names <- st$.state
-          tibble::tibble(
-            state_time = seq_len(st$.limit),
-            .limit = st$.limit,
-            .full_state = full_names,
-            .expand = st$.expand
-          )
-        }
-      ) %>%
-      mutate(
-        .state = as.character(.state),
-        .full_state = as.character(.full_state)
-      )
+    left_join(
+      select(state_groups, name, group, share),
+      by = c('.state' = 'name')
+    ) %>%
+    group_by(group, share) %>%
+    mutate(
+      share = ifelse(is.na(share), FALSE, as.logical(share)),
+      .expand = .expand | (any(share) && n() > 1),
+      .limit = ifelse(.expand, expand_limit, 1)
+    ) %>%
+    ungroup() %>%
+    plyr::ddply(
+      ".state",
+      function(st) {
+        if(st$.expand) full_names <- paste0(".", st$.state, "_", seq_len(st$.limit))
+        else full_names <- st$.state
+        tibble::tibble(
+          state_time = seq_len(st$.limit),
+          .limit = st$.limit,
+          .full_state = full_names,
+          .expand = st$.expand
+        )
+      }
+    ) %>%
+    mutate(
+      .state = as.character(.state),
+      .full_state = as.character(.full_state)
+    )
   } else {
     st_name_vec <- attr(states, "names")
     expand_table <- tibble::tibble(

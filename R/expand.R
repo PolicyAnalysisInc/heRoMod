@@ -234,7 +234,7 @@ complete_stl <- function(scl, state_names,
         name = names(scl),
         limit = unname(scl)
       ) %>%
-        full_join(state_groups, by = c('name')) %>%
+        full_join(filter(state_groups, as.logical(share)), by = c('name')) %>%
         group_by(group) %>%
         mutate(limit = ifelse(all(is.na(limit)), NA, max(limit, na.rm = T))) %>%
         ungroup() %>%
