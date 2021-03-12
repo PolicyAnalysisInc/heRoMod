@@ -145,7 +145,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL, state_gr
         share = 0
       ) %>%
         filter(!(name %in% state_groups$name)),
-      state_groups
+      select(state_groups, name, group, share)
     )
   }
   
