@@ -11,7 +11,7 @@ run_analysis <- function(...) {
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
     'excel' = export_hero_xlsx,
-    'code_preview' = run_markdown,
+    'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
@@ -1198,7 +1198,7 @@ compile_transitions <- function(x) {
         n_states <- length(state_names)
         n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
         plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
-          do.call(rbind, y$transition) %>%
+          do.call(rbind, map(y$transition, as.matrix)) %>%
             as.data.frame(stringsAsFactors=F) %>%
             mutate(
               from = rep(state_names, n_cycles),
@@ -1243,7 +1243,7 @@ compile_transitions <- function(x) {
           group_list <- x$.mod
           names(group_list) <- group_names
           plyr::ldply(group_list, function(y) {
-            do.call(rbind, y$transition) %>%
+            do.call(rbind, map(y$transition, as.matrix)) %>%
               as.data.frame(stringsAsFactors=F) %>%
               mutate(
                 from = rep(state_names, n_cycles),
@@ -1345,6 +1345,7 @@ build_hero_model <- function(...) {
 
   # Fix column names
   dots$tables <- lapply(dots$tables, function(x) {
+    if(class(x) == 'list') return(x)
     colnames(x) <- gsub("[\r\n]", "", colnames(x))
     x
   })
@@ -1692,7 +1693,7 @@ export_hero_xlsx <- function(...) {
     })
   dots$report_progress(1L)
   filename <- paste0(dots$name, ".xlsx")
-  writeWorkbook(lapply(wb_list, as.data.frame), filename)
+  writeWorkbook(lapply(wb_list, sanitize_df), filename)
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('excel_output', filename, 'Export to excel output', default = T)
   }

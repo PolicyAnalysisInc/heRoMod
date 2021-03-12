@@ -15,7 +15,8 @@ eval_strategy(
   strategy_name,
   aux_params = NULL,
   disc_method = "start",
-  report_progress = identity
+  report_progress = identity,
+  state_groups = NULL
 )
 }
 \arguments{

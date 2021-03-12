@@ -20,7 +20,8 @@ run_model(
   parallel = F,
   cores = 1,
   disc_method = "start",
-  report_progress = identity
+  report_progress = identity,
+  state_groups = NULL
 )
 
 run_model_(
@@ -38,7 +39,8 @@ run_model_(
   parallel = F,
   cores = 1,
   disc_method = "start",
-  report_progress = identity
+  report_progress = identity,
+  state_groups = NULL
 )
 }
 \arguments{

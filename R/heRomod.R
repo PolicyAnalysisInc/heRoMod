@@ -44,6 +44,7 @@
 #' @importFrom dplyr ungroup
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr funs
+#' @importFrom dplyr rename
 #' @importFrom dplyr n row_number
 #' @importFrom dplyr group_by_at
 #' @importFrom dplyr mutate_all
@@ -134,6 +135,8 @@
 #' @importFrom purrr set_names
 #' 
 #' @importFrom glue glue
+#' 
+#' @importFrom Matrix sparseMatrix
 #' 
 #' @importFrom stringr str_interp
 NULL

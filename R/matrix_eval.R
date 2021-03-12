@@ -36,7 +36,10 @@
 #'   
 #' @keywords internal
 check_matrix <- function(x) {
-  stopifnot(inherits(x, "array"))
+  UseMethod('check_matrix', x)
+}
+
+check_matrix.array <- function(x) {
   stopifnot(length(dim(x)) == 3)
   
   if (! isTRUE(all.equal(
@@ -44,24 +47,17 @@ check_matrix <- function(x) {
     c(1, 1)))) {
     problem_rows <- which(rowSums(x, dims = 2) != 1, arr.ind = TRUE)
     state_names <- get_state_names(x)
-    problem_rows <- data.frame(
+    problems <- data.frame(
       cycle = problem_rows[,1], 
       state = state_names[problem_rows[,2]]) %>%
       plyr::ddply("state", function(x) {
-        first_cycle <- min(x$cycle)
-        last_cycle <- max(x$cycle)
-        if (all(x$cycles == seq(from = first_cycle, to = last_cycle, by = 1))) {
-          cycles = paste0(first_cycle, "-", last_cycle)
-        } else {
-          cycles = paste(x$cycle,collapse=",")
-        }
-        data.frame(cycles = cycles)
+        data.frame(cycles = to_number_list_string(x$cycle))
       })
     
     stop(
       paste0(
         "Not all transition matrix rows sum to 1.\n\n",
-        paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
+        paste(capture.output(print(problems, row.names = F)), collapse = "\n")
       ),
       call. = F
     )
@@ -71,24 +67,26 @@ check_matrix <- function(x) {
   
   if (! sum(abs(x-0.5) > 0.5)==0) {
     problem <- which(x < 0 | x > 1, arr.ind = TRUE)
-    # Use tibble here to avoid potentially confusing warnings about
-    # Duplicate rownames
     problem <- tibble::as_tibble(problem)
     names(problem) <- c("cycle", "from", "to")
     states <- get_state_names(x)
     problem$from <- states[problem$from]
     problem$to <- states[problem$to]
-    problem <- format.data.frame(problem, justify = "left")
+    problem %>%
+      group_by(from, to) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(from = x$from, to = x$to, cycles = to_number_list_string(x$cycle), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
     
-    stop(sprintf(
-      "Some transition probabilities are outside the interval [0 - 1]:\n%s",
-      paste(sprintf(
-        "cycle: %s, from: %s, to: %s",
-        problem$cycle, problem$from, problem$to),
-        collapse = "\n")
-    ),
-    call. = F)
-    
+    if (nrow(problem) > 0) {
+      stop(paste0(
+        "Some transition probabilities are outside the interval [0 - 1]:\n\n",
+        paste(capture.output(print(as.data.frame(problem), row.names = F)), collapse = "\n")
+      ),
+      call. = F)
+    }
   }
 }
 
@@ -114,11 +112,54 @@ eval_transition <- function(x, ...) {
   UseMethod("eval_transition")
 }
 
-eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
+eval_transition.uneval_matrix <- function(x, parameters, expand = NULL, state_groups = NULL) {
+
   
-  # Assinging NULLS to avoid CMD Check issues
-  .from <- .to <- .limit <- .from_lim <- .to_state_time <- NULL
-  .to_state_time <- .value <- .state <- state_time <- .full_state <- NULL
+  # Get number of states + state names
+  n_state <- sqrt(length(x))
+  state_names <- attr(x, "state_names")
+  
+  # Fill in expansion table if empty
+  if(is.null(expand)) {
+    expand <- tibble::tibble(
+      .state = state_names,
+      .full_state = state_names,
+      state_time = 1,
+      .expand = F,
+      .limit = 1
+    )
+  }
+  
+  # Handle state groups
+  if (is.null(state_groups)) {
+    state_groups <- tibble(
+      name = state_names,
+      group = state_names,
+      share = F
+    )
+  } else {
+    state_groups <- rbind(
+      tibble(
+        name = state_names,
+        group = state_names,
+        share = 0
+      ) %>%
+        filter(!(name %in% state_groups$name)),
+      state_groups
+    )
+  }
+  
+  # Use sparse matrix evaluation if more than 50 states
+  # as it is faster and more memory-efficient
+  if (nrow(expand) > 50) {
+    eval_sparse_matrix(x, parameters, expand, state_groups)
+  } else {
+    eval_matrix(x, parameters, expand, state_groups)
+  }
+}
+
+
+eval_matrix <- function(x, parameters, expand = NULL, state_groups = NULL) {
   
   # update calls to dispatch_strategy()
   x <- dispatch_strategy_hack(x)
@@ -150,13 +191,48 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
   
   expanding <- any(expand$.expand)
   
-  
-  
   n_cycles <- length(unique(parameters$markov_cycle))
   n_full_state <- nrow(expand)
   trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
   
-  if(expanding) {
+  trans_table <- eval_matrix_table(x, parameters, expand, state_groups)
+  trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
+  trans_matrix[trans_table$.index] <- trans_table$.value
+  
+  # Make sure that the matrix is numeric
+  matrix_type <- class(trans_matrix[1,1,])
+  if (class(trans_matrix[1,1,]) != 'numeric') {
+    stop(sprintf(
+      "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
+      call. = FALSE)
+  }
+  
+  trans_matrix <- replace_C(trans_matrix, expand$.full_state)
+  dimnames(trans_matrix) <- list(
+    seq_len(n_cycles),
+    expand$.full_state,
+    expand$.full_state
+  )
+  attr(trans_matrix, "state_names") <- expand$.full_state
+  
+  check_matrix(trans_matrix)
+  
+  structure(
+    split_array(trans_matrix),
+    class = c("eval_matrix", "list"),
+    state_names = dimnames(trans_matrix)[[2]],
+    entry = expand$state_time == 1
+  )
+}
+
+eval_matrix_table <- function(x, parameters, expand, state_groups) {
+  
+  n_state <- sqrt(length(x))
+  state_names <- attr(x, "state_names")
+  n_cycles <- length(unique(parameters$markov_cycle))
+  n_full_state <- nrow(expand)
+  
+  if(any(expand$.expand)) {
     
     nrow_param = nrow(parameters)
     matrix_pos_names <- names(x)
@@ -180,6 +256,14 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
     ) %>%
       left_join(
+        rename(state_groups, .from_state_group = group),
+        by = c(.from = "name")
+      ) %>%
+      left_join(
+        rename(state_groups, .to_state_group = group, .share = share),
+        by = c(.to = "name")
+      ) %>%
+      left_join(
         transmute(
           expand,
           .state = .state,
@@ -191,7 +275,7 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       ) %>%
       filter(.from_lim >= state_time) %>%
       mutate(
-        .to_state_time = ifelse(.from == .to, pmin(state_time + 1, .from_lim), 1)
+        .to_state_time = ifelse(.from == .to | (.from_state_group == .to_state_group & .share), pmin(state_time + 1, .from_lim), 1)
       ) %>%
       left_join(
         transmute(
@@ -203,10 +287,10 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
         by = c(".to" = ".state", ".to_state_time" = "state_time")
       ) %>%
       mutate(
-        .from_e = as.numeric(factor(.from_e, levels = expand$.full_state)),
-        .to_e = as.numeric(factor(.to_e, levels = expand$.full_state)),
+        .from_e_i = as.numeric(factor(.from_e, levels = expand$.full_state)),
+        .to_e_i = as.numeric(factor(.to_e, levels = expand$.full_state)),
         .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
-        .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
+        .index = .cycle + (.from_e_i - 1) * n_cycles + ((.to_e_i - 1) * n_cycles * n_full_state)
       )
   } else {
     parameters <- filter(parameters, state_time == 1)
@@ -231,61 +315,33 @@ eval_transition.uneval_matrix <- function(x, parameters, expand = NULL) {
       .value = unlist(eval_trans_probs[names(x)])
     ) %>%
       mutate(
-        .from_e = as.numeric(factor(.from, levels = expand$.full_state)),
-        .to_e = as.numeric(factor(.to, levels = expand$.full_state)),
+        .from_e_i = as.numeric(factor(.from, levels = expand$.full_state)),
+        .to_e_i = as.numeric(factor(.to, levels = expand$.full_state)),
         .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
-        .index = .cycle + (.from_e - 1) * n_cycles + ((.to_e - 1) * n_cycles * n_full_state)
+        .index = .cycle + (.from_e_i - 1) * n_cycles + ((.to_e_i - 1) * n_cycles * n_full_state)
       )
   }
-  # Reshape into 3d matrix and calculate complements
-  # trans_matrix <- trans_table %>%
-  #   reshape2::acast(
-  #     model_time ~
-  #       factor(.from_e, levels = expand$.full_state) ~
-  #       factor(.to_e, levels = expand$.full_state),
-  #     value.var = ".value",
-  #     fill = 0
-  #   ) %>%
-  #   replace_C
-  trans_matrix <- array(0, c(n_cycles, n_full_state, n_full_state))
-  trans_matrix[trans_table$.index] <- trans_table$.value
   
-  # Make sure that the matrix is numeric
-  matrix_type <- class(trans_matrix[1,1,])
-  if (class(trans_matrix[1,1,]) != 'numeric') {
-    stop(sprintf(
-      "Error in transition matrix, values for transition probabilities are of type '%s', should be of type 'numeric'.", matrix_type),
-      call. = FALSE)
-  }
-  trans_matrix <- replace_C(trans_matrix, expand$.full_state)
-  dimnames(trans_matrix) <- list(
-    seq_len(n_cycles),
-    expand$.full_state,
-    expand$.full_state
-  )
-  attr(trans_matrix, "state_names") <- expand$.full_state
-  
-  check_matrix(trans_matrix)
-  
-  structure(
-    split_array(trans_matrix),
-    class = c("eval_matrix", "list"),
-    state_names = colnames(trans_matrix[1,,]),
-    entry = expand$state_time == 1
-  )
+  trans_table
 }
 
 split_array <- function(a) {
   iter <- dim(a)[1]
   the_list <- vector(iter, mode = "list")
   for(i in seq_len(iter)) {
-    the_list[[i]] <-a[i,,]
+    the_list[[i]] <- matrix(a[i,,,drop = F], ncol = dim(a)[2], dim(a)[3])
+    colnames(the_list[[i]]) <- dimnames(a)[[3]]
+    rownames(the_list[[i]]) <- dimnames(a)[[2]]
   }
   names(the_list) <- dimnames(a)[[1]]
   return(the_list)
 }
 
 replace_C <- function(x, state_names) {
+  UseMethod('replace_C', x)
+}
+
+replace_C.array <- function(x, state_names) {
   posC <- x == -pi
   
   c_counts <- rowSums(posC, dims = 2)
@@ -295,14 +351,9 @@ replace_C <- function(x, state_names) {
     problems <- lapply(seq_len(ncol(problem_states)), function(i) {
       cycles <- problem_states[ , i]
       problem_cycles <- which(cycles > 1)
-      min_cycle <- min(problem_cycles)
-      max_cycle <- max(problem_cycles)
-      if (all(problem_cycles == min_cycle:max_cycle)) {
-        problem_cycles = paste0(min_cycle, '-', max_cycle)
-      }
       data.frame(
         state = colnames(problem_states)[i],
-        cycles = paste(problem_cycles, collapse = ', '),
+        cycles = to_number_list_string(problem_cycles),
         stringsAsFactors = F
       )
     }) %>%

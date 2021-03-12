@@ -253,11 +253,11 @@ test_that(
     res <- heRomod:::eval_transition.uneval_matrix(mat, par)
     
     expect_identical(
-      unname(round(res[[1]], 2)),
+      unname(round(as.matrix(res[[1]]), 2)),
       structure(c(0.5, 0.1, 0.5, 0.9), .Dim = c(2L, 2L))
     )
     expect_identical(
-      unname(round(res[[2]], 2)),
+      unname(round(as.matrix(res[[2]]), 2)),
       structure(c(0.67, 0.2, 0.33, 0.8), .Dim = c(2L, 2L))
     )
     

@@ -1,7 +1,6 @@
 #' @export
 run_hero_vbp <- function(...) {
   
-  
   # Build model object
   dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)
@@ -35,7 +34,7 @@ run_hero_vbp <- function(...) {
     heemod_res$model_runs,
     sa_table, c(),
     report_progress = dots$report_progress,
-    cores = as.numeric(args$options$value[args$options == 'num_cores'])
+    heemod_res$model_runs$cores
   )
   
   # Pull out results for each scenario

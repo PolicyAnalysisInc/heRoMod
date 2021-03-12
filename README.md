@@ -1,5 +1,7 @@
-[![Travis build status](https://travis-ci.org/PolicyAnalysisInc/heRoMod.svg?branch=master)](https://travis-ci.org/PolicyAnalysisInc/heRoMod)
+  <!-- badges: start -->
+  [![CircleCI build status](https://circleci.com/gh/PolicyAnalysisInc/heRoMod.svg?style=svg)](https://circleci.com/gh/PolicyAnalysisInc/heRoMod)
  [![Coverage status](https://codecov.io/gh/PolicyAnalysisInc/heRoMod/branch/master/graph/badge.svg)](https://codecov.io/github/PolicyAnalysisInc/heRoMod?branch=master)
+  <!-- badges: end -->
 
 # heRomod - A Package for Health Economic Modeling
 
