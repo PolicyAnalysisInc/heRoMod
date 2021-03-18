@@ -828,3 +828,23 @@ to_number_list_string <- function(x) {
 safe_filename <- function(filename) {
   gsub('[^[:alnum:][:space:]_]', '', filename)
 }
+
+to_disc_name <- function(x) {
+  paste0('.disc_', x)
+}
+
+to_undisc_name <- function(x) {
+  ifelse(is_disc_name(x), substring(x, 7), x)
+}
+
+is_disc_name <- function(x) {
+  substr(x, 0, 6) == '.disc_'
+}
+
+to_comparison_name <- function(x, y) {
+  paste0(x, ' vs. ', y)
+}
+
+is_comparison_name <- function(x) {
+  grepl(' vs. ', x, fixed = T)
+}
