@@ -180,7 +180,7 @@ check_names <- function(x) {
   if (any("strategy" %in% x)) {
     stop("'strategy' is a reserved name.")
   }
-  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x) & (x != ".group")))) {
+  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x) & (x != ".group")& (x != ".group_weight")))) {
     stop("Names starting with '.' are reserved.")
   }
 }

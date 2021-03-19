@@ -128,13 +128,12 @@ parse_hero_vars <- function(data, settings, groups) {
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
       mutate(group = name) %>%
-      rename(!!!syms(c(".group" = "name")))
+      rename(!!!syms(c(".group" = "name", '.group_weight' = 'weight')))
     group_vars <- groups %>%
       colnames() %>%
-      setdiff(".weights") %>%
       plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1], low =  NA, high = NA, psa = NA))
   } else {
-    group_vars <- NULL
+    group_vars <- data.frame(parameter = '.group_weight', value = '1', low =  NA, high = NA, psa = NA)
   }
   if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
     if(is.null(data$psa)) data$psa <- ""
@@ -1145,7 +1144,7 @@ run_hero_psa <- function(...) {
   } else {
     # Heterogeneous model
     # Run PSA analysis for each group
-    group_vars <- setdiff(colnames(dots$groups), c("name", "weight"))
+    group_vars <- setdiff(colnames(dots$groups), c("name", ".group_weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
       # Run model for given group
@@ -1159,11 +1158,19 @@ run_hero_psa <- function(...) {
     psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
-    col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
-    psa_res_df$weight <- as.numeric(psa_res_df$weight)
-    psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
+    col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight", ".group_weight"))
+
     psa_res_df <- psa_res_df %>%
-      select(-name) %>%
+      group_by(.strategy_names, .index) %>%
+      group_split() %>%
+      map(function(iter_res) {
+        mutate(
+          iter_res[ ,col_indices] * iter_res$.group_weight / sum(iter_res$.group_weight),
+          .strategy_names = iter_res$.strategy_names,
+          .index = iter_res$.index
+        )
+      }) %>%
+      bind_rows() %>%
       group_by(.strategy_names, .index) %>%
       summarize_all(sum) %>%
       ungroup()
