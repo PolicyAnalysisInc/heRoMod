@@ -52,20 +52,28 @@ run_psa <- function(model, psa, N, resample, cores = 1, report_progress = identi
   list_res <- list()
   for (n in get_strategy_names(model)) {
     message(sprintf("Resampling strategy '%s'...", n))
+    model_res <- eval_strategy_newdata(
+      x = model,
+      strategy = n,
+      newdata = newdata,
+      cores = cores,
+      report_progress
+    )
     list_res <- c(
       list_res,
       list(
-        eval_strategy_newdata(
-          x = model,
-          strategy = n,
-          newdata = newdata,
-          cores = cores,
-          report_progress
-        ) %>% 
+        model_res %>% 
           rowwise() %>% 
           do(get_total_state_values(.$.mod)) %>% 
           bind_cols(newdata) %>% 
-          ungroup()
+          ungroup() %>%
+          mutate(.group_weight = map_dbl(model_res$.mod, function(x) {
+            if('.group_weight' %in% colnames(x$parameters)) {
+              x$parameters$.group_weight[1]
+            } else {
+              NA
+            }
+          }))
       )
     )
   }

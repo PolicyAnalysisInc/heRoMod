@@ -1,8 +1,8 @@
 
 run_sa <- function(model, scenarios, group_vars, report_progress = identity, cores = cores_to_use()) {
   
-  answer_key <- select(scenarios, !!group_vars, .group_scen, .group_weight, .vbp_scen, .vbp_price)
-  inputs <- select(scenarios, -!!group_vars, -.group_scen, -.group_weight, -.vbp_scen, -.vbp_price)
+  answer_key <- select(scenarios, !!group_vars, .group_scen, .vbp_scen, .vbp_price)
+  inputs <- select(scenarios, -!!group_vars, -.group_scen, -.vbp_scen, -.vbp_price)
   
   strategy_names <- get_strategy_names(model)
   var_names <- colnames(scenarios)
@@ -20,6 +20,7 @@ run_sa <- function(model, scenarios, group_vars, report_progress = identity, cor
       report_progress = report_progress
     )
     res$series <- strat_name
+    res$.group_weight <- map_dbl(res$.mod, function(x) x$parameters$.group_weight[1])
     bind_cols(answer_key, res)
   }) %>%
     bind_rows()
@@ -155,14 +156,15 @@ gen_groups_table <- function(groups) {
     return(
       tibble(
         .group_scen = 'All Patients',
-        .group_weight = 1
+        .group_weight = '1'
       )
     )
   }
   
   attribs <- groups %>%
+    rename(.group_weight = weight) %>%
     mutate(group = name, .group = name) %>%
-    select(-name, -weight) %>%
+    select(-name) %>%
     select(group, .group, everything())
   n_groups <- nrow(attribs)
   n_params <- ncol(attribs)
@@ -177,8 +179,7 @@ gen_groups_table <- function(groups) {
     groups_table[[i]] <- var_list
   }
   groups_table$.group_scen <- gsub('"', '', groups$name, fixed= T)
-  groups_table$.group_weight <- as.numeric(groups$weight)
-  groups_table <- dplyr::relocate(groups_table, .group_scen, .group_weight)
+  groups_table <- dplyr::relocate(groups_table, .group_scen)
   return(groups_table)
 }
 
