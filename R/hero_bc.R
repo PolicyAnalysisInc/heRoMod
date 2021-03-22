@@ -70,11 +70,13 @@ extract_sa_bc_trace <- function(res, corrected = F) {
     group_split() %>%
     map(function(strat_res) {
       sum_weights <- sum(strat_res$.group_weight)
-      weighted_trace <- map2(strat_res$.mod, strat_res$.group_weight, function(group_res, weight) {
+      weighted_trace_list <- map2(strat_res$.mod, strat_res$.group_weight, function(group_res, weight) {
         if (corrected) trace <- group_res$counts
         else trace <- group_res$counts_uncorrected
         trace * (weight / sum_weights)
-      }) %>% do.call(`+`, .)
+      })
+      
+      weighted_trace <- Reduce(`+`, weighted_trace_list[-1], weighted_trace_list[[1]])
       cbind(series = strat_res$series[1], time_cols, weighted_trace, stringsAsFactors = F)
     }) %>%
     bind_rows() %>%
