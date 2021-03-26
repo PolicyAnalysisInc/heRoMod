@@ -180,7 +180,7 @@ check_names <- function(x) {
   if (any("strategy" %in% x)) {
     stop("'strategy' is a reserved name.")
   }
-  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x) & (x != ".group")))) {
+  if (any(grepl("^\\.", x) & (!grepl("^\\.disc_", x) & (x != ".group")& (x != ".group_weight")))) {
     stop("Names starting with '.' are reserved.")
   }
 }
@@ -729,4 +729,122 @@ patch_progress_funcs <- function(model) {
     model$report_max_progress <- identity
   }
   model
+}
+
+as_sparse_matrix <- function(x) {
+  dimensions <- dim(x)
+  dim_names <- dimnames(x)
+  indices <- which(x != 0, arr.ind = T)
+  sparseMatrix(
+    indices[ , 1],
+    indices[ , 2],
+    x = x[indices],
+    dims = dimensions,
+    dimnames = dim_names
+  )
+}
+  
+#' @export
+set_max_cores <- function(n) {
+  parent <- parent.frame()
+  parent$.max_cores <- as.integer(n)
+}
+
+apply_max_cores <- function(options, max) {
+  if (is.null(max)) return(options)
+  cores_options_index <- options$option == 'num_cores'
+  if (any(cores_options_index)) {
+    options$value[cores_options_index] <- as.character(min(max, as.numeric(options$value[cores_options_index])))
+  }
+  options
+}
+
+#' @export
+patch_model <- function(...) {
+  values <- list(...)
+  parent <- parent.frame()
+  patched_values <- parent$.patched_values
+  if (is.null(patched_values)) {
+    patched_values <- list()
+  }
+  keys <- names(values)
+  len <- length(values)
+  for (i in seq_len(len)) {
+    patched_values[[keys[i]]] <- values[[i]]
+  }
+  parent$.patched_values <- patched_values
+}
+
+apply_model_patch <- function(model, values) {
+  if (is.null(values)) return(model)
+  keys <- names(values)
+  for (key in keys) {
+    if (is.null(model[[key]])) {
+      model[[key]] <- values[[key]]
+    } else {
+      stop(error_codes$patch_model_bad_key, key = key, call. = F)
+    }
+  }
+  model
+}
+
+sanitize_df <- function(x) {
+  df <- as.data.frame(x)
+  names <- colnames(df)
+  lc_names <- tolower(names)
+  dupes <- any(duplicated(lc_names))
+  if (dupes) {
+    name_df <- tibble(name = names, lc_name = lc_names) %>%
+      group_by(lc_name) %>%
+      mutate(
+        count = seq_len(n()) - 1,
+        unique_name = paste0(name, strrep(" ", count))
+      ) %>%
+      ungroup()
+    colnames(df) <- name_df$unique_name
+  }
+  df
+}
+
+to_number_list_string <- function(x) {
+  
+  first <- min(x)
+  last <- max(x)
+  if (first == last) {
+    string <- as.character(first)
+  } else if (all(x == seq(from = first, to = last, length.out = length(x)))) {
+    string <- paste0(first, "-", last)
+  } else {
+    max <- 3
+    if (length(x) <= max) {
+      string <- paste0(x, collapse = ', ')
+    } else {
+      string <- paste0(paste0(head(x, max), collapse = ', '), '...')
+    }
+  }
+  string
+}
+
+safe_filename <- function(filename) {
+  gsub('[^[:alnum:][:space:]_]', '', filename)
+}
+
+to_disc_name <- function(x) {
+  paste0('.disc_', x)
+}
+
+to_undisc_name <- function(x) {
+  ifelse(is_disc_name(x), substring(x, 7), x)
+}
+
+is_disc_name <- function(x) {
+  substr(x, 0, 6) == '.disc_'
+}
+
+to_comparison_name <- function(x, y) {
+  paste0(x, ' vs. ', y)
+}
+
+is_comparison_name <- function(x) {
+  grepl(' vs. ', x, fixed = T)
 }

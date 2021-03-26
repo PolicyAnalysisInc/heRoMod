@@ -44,14 +44,17 @@
 #' @importFrom dplyr ungroup
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr funs
+#' @importFrom dplyr rename
 #' @importFrom dplyr n row_number
 #' @importFrom dplyr group_by_at
+#' @importFrom dplyr relocate
 #' @importFrom dplyr mutate_all
 #' @importFrom dplyr filter_all
 #' @importFrom dplyr select_if
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
+#' @importFrom plyr rbind.fill
 #' 
 #' @importFrom reshape2 dcast
 #' @importFrom reshape2 acast
@@ -114,6 +117,15 @@
 #' @importFrom grDevices cairo_pdf
 #' @importFrom grDevices png
 #' 
+#' @importFrom openxlsx getSheetNames
+#' @importFrom openxlsx read.xlsx
+#' @importFrom openxlsx createWorkbook
+#' @importFrom openxlsx addWorksheet
+#' @importFrom openxlsx writeDataTable
+#' @importFrom openxlsx setColWidths
+#' @importFrom openxlsx freezePane
+#' @importFrom openxlsx saveWorkbook
+#' 
 #' @importFrom graphics plot
 #' @importFrom graphics par
 #'   
@@ -122,6 +134,8 @@
 #' 
 #' @importFrom tidyr crossing
 #' @importFrom tidyr spread
+#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr pivot_longer
 #' 
 #' @importFrom purrr walk
 #' @importFrom purrr walk2
@@ -134,6 +148,8 @@
 #' @importFrom purrr set_names
 #' 
 #' @importFrom glue glue
+#' 
+#' @importFrom Matrix sparseMatrix
 #' 
 #' @importFrom stringr str_interp
 NULL

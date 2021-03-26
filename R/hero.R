@@ -11,7 +11,7 @@ run_analysis <- function(...) {
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
     'excel' = export_hero_xlsx,
-    'code_preview' = run_markdown,
+    'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
@@ -128,13 +128,12 @@ parse_hero_vars <- function(data, settings, groups) {
   if((class(groups) %in% "data.frame") && (nrow(groups) > 0)) {
     groups <- groups %>%
       mutate(group = name) %>%
-      rename(!!!syms(c(".group" = "name")))
+      rename(!!!syms(c(".group" = "name", '.group_weight' = 'weight')))
     group_vars <- groups %>%
       colnames() %>%
-      setdiff(".weights") %>%
       plyr::ldply(function(name) data.frame(parameter = name, value = groups[[name]][1], low =  NA, high = NA, psa = NA))
   } else {
-    group_vars <- NULL
+    group_vars <- data.frame(parameter = '.group_weight', value = '1', low =  NA, high = NA, psa = NA)
   }
   if((class(data) %in% "data.frame") && (nrow(data) > 0)) {
     if(is.null(data$psa)) data$psa <- ""
@@ -169,7 +168,7 @@ parse_hero_obj_vars <- function(data) {
 parse_hero_groups <- function(data) {
   if((class(data) %in% "data.frame") && (nrow(data) > 1)) {
     rename(data, !!!syms(c(".group" = "name", ".weights" = "weight"))) %>%
-    mutate(group = .group, .weights = as.numeric(.weights))
+    mutate(group = .group, .weights = .weights)
   } else {
     NULL
   }
@@ -983,282 +982,6 @@ hero_extract_psa_scatter <- function(res, hsumms, esumms) {
   abs_res
 }
 
-compile_parameters <- function(x) {
-  if (is.null(x$demographics)) {
-    # Homogenous model
-    lapply(x$model_runs$eval_strategy_list, function(x) x$parameters) %>%
-      do.call(rbind, .) %>%
-      as_tibble()
-  } else {
-    # Heterogeneous model
-    lapply(x$demographics$model_list, function(x) {
-      lapply(x$.mod, function(x) x$parameters)
-    }) %>%
-      unlist(recursive=F) %>%
-      do.call(rbind, .) %>%
-      as_tibble()
-  }
-}
-
-compile_unit_values <- function(x) {
-  if (is.null(x$demographics)) {
-    
-    models <- x$model_runs$eval_strategy_list
-    
-    strategy_names <- names(models)
-    n_strategy <- length(strategy_names)
-    
-    state_names <- names(models[[1]]$states)
-    n_state <- length(state_names)
-    
-    value_names <- colnames(models[[1]]$states[[1]])[-1]
-    
-    states_list <- vector(mode = "list", length = n_strategy * n_state)
-    trans_list <- vector(mode = "list", length = n_strategy)
-    state_count <- 1
-    trans_count <- 1
-    
-    lapply(seq_len(n_strategy), function(i) {
-      trans_df <- attr(models[[i]]$states, "transitions")
-      if(!is.null(trans_df)) {
-        trans_df$strategy <- strategy_names[[i]]
-        trans_list[[trans_count]] <<- trans_df
-        trans_count <<- trans_count + 1
-      }
-      
-      lapply(seq_len(n_state), function(k) {
-        state_df <- models[[i]]$states[[k]]
-        state_df$strategy <- strategy_names[[i]]
-        state_df$state <- state_names[[k]]
-        states_list[[state_count]] <<- state_df
-        state_count <<- state_count + 1
-      })
-    })
-    
-    trans_df <- data.table::rbindlist(trans_list)
-    if(nrow(trans_df) > 0) {
-      trans_df <- trans_df %>%
-        mutate(state = paste0(.from_name_expanded, "\u2192", .to_name_expanded)) %>%
-        data.table::data.table() %>%
-        data.table::dcast(strategy+state+markov_cycle~variable, value.var = "value")
-    } else {
-      trans_df <- NULL
-    }
-    out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
-      arrange(strategy, state, markov_cycle) %>%
-      rename(cycle = markov_cycle)
-    
-    out_df[ ,c("strategy", "state", "cycle", value_names), drop = F]
-  } else {
-    # Heterogeneous model
-    
-    models <- x$demographics$model_list
-    
-    strategy_names <- names(models)
-    n_strategy <- length(strategy_names)
-    
-    group_names <- as.character(lapply(models[[1]]$.mod, function(x) x$parameters$.group[1]))
-    n_group <- length(group_names)
-    
-    state_names <- names(models[[1]]$.mod[[1]]$states)
-    n_state <- length(state_names)
-    
-    value_names <- colnames(models[[1]]$.mod[[1]]$states[[1]])[-1]
-    
-    states_list <- vector(mode = "list", length = n_strategy * n_group * n_state)
-    trans_list <- vector(mode = "list", length = n_strategy * n_group)
-    state_count <- 1
-    trans_count <- 1
-    
-    states_df <- lapply(seq_len(n_strategy), function(i) {
-      lapply(seq_len(n_group), function(j) {
-        trans_df <- attr(models[[i]]$.mod[[j]]$states, "transitions")
-        if(!is.null(trans_df)) {
-          trans_df$strategy <- strategy_names[[i]]
-          trans_df$group <- group_names[[j]]
-          trans_list[[trans_count]] <<- trans_df
-          trans_count <<- trans_count + 1
-        }
-        
-        lapply(seq_len(n_state), function(k) {
-          state_df <- models[[i]]$.mod[[j]]$states[[k]]
-          state_df$strategy <- strategy_names[[i]]
-          state_df$group <- group_names[[j]]
-          state_df$state <- state_names[[k]]
-          states_list[[state_count]] <<- state_df
-          state_count <<- state_count + 1
-        })
-      })
-    })
-    trans_df <- data.table::rbindlist(trans_list)
-    if(nrow(trans_df) > 0) {
-      trans_df <- trans_df %>%
-        mutate(state = paste0(.from_name_expanded, "\u2192", .to_name_expanded)) %>%
-        data.table::data.table() %>%
-        data.table::dcast(strategy+group+state+markov_cycle~variable, value.var = "value")
-    } else {
-      trans_df <- NULL
-    }
-    out_df <- rbind(data.table::rbindlist(states_list), trans_df) %>%
-      arrange(strategy, group, state, markov_cycle) %>%
-      rename(cycle = markov_cycle)
-    
-      out_df[ ,c("strategy", "group", "state", "cycle", value_names), drop = F]
-  }
-}
-
-compile_values <- function(x) {
-  if (is.null(x$demographics)) {
-    
-    models <- x$model_runs$eval_strategy_list
-    
-    strategy_names <- names(models)
-    n_strategy <- length(strategy_names)
-    
-    state_names <- names(models[[1]]$states)
-    n_state <- length(state_names)
-    
-    value_names <- colnames(models[[1]]$states[[1]])[-1]
-    
-    states_list <- vector(mode = "list", length = n_strategy * n_state)
-    trans_list <- vector(mode = "list", length = n_strategy)
-    state_count <- 1
-    trans_count <- 1
-    
-    value_list <- lapply(seq_len(n_strategy), function(i) {
-      the_df <- x$model_runs$eval_strategy_list[[i]]$values
-      the_df$strategy <- strategy_names[i]
-      the_df
-    })
-    
-    ret <- bind_rows(value_list) %>%
-      arrange(strategy, markov_cycle) %>%
-      rename(cycle = markov_cycle)
-    
-    ret[ ,c("strategy", "cycle", value_names), drop = F]
-  } else {
-    # Heterogeneous model
-    
-    models <- x$demographics$model_list
-    
-    strategy_names <- names(models)
-    n_strategy <- length(strategy_names)
-    
-    group_names <- as.character(lapply(models[[1]]$.mod, function(x) x$parameters$.group[1]))
-    n_group <- length(group_names)
-    
-    state_names <- names(models[[1]]$.mod[[1]]$states)
-    n_state <- length(state_names)
-    
-    value_names <- colnames(models[[1]]$.mod[[1]]$states[[1]])[-1]
-    
-    states_list <- vector(mode = "list", length = n_strategy * n_group * n_state)
-    trans_list <- vector(mode = "list", length = n_strategy * n_group)
-    state_count <- 1
-    trans_count <- 1
-    
-    value_list <- lapply(seq_len(n_strategy), function(i) {
-      lapply(seq_len(n_group), function(j) {
-        the_df <- x$model_runs$eval_strategy_list[[i]]$values
-        the_df$strategy <- strategy_names[i]
-        the_df$group <- group_names[j]
-        the_df
-      })
-    })
-    ret <- value_list %>%
-      unlist(recursive=F) %>%
-      unname() %>%
-      bind_rows() %>%
-      arrange(strategy, group, markov_cycle) %>%
-      rename(cycle = markov_cycle)
-    
-    ret[ ,c("strategy", "group", "cycle", value_names), drop = F]
-  }
-}
-
-compile_transitions <- function(x) {
-  if (is.null(x$demographics)) {
-    # Homogenous model
-    the_class <-  class(x$model_runs$eval_strategy_list[[1]]$transition)
-    if("eval_part_surv" %in% the_class) {
-      plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
-        data.frame(
-          cycle = seq_len(length(y$transition$pfs_surv)) - 1,
-          pfs = y$transition$pfs_surv,
-          os = y$transition$os_surv
-        )
-      }, .id = "strategy") %>%
-        select(!!!syms(c("strategy", "cycle", "pfs", "os"))) %>%
-        as_tibble()
-    } else {
-      if("eval_part_surv_custom" %in% the_class) {
-        data.frame()
-      } else {
-        state_names <- rownames(x$model_runs$eval_strategy_list[[1]]$transition[[1]])
-        n_states <- length(state_names)
-        n_cycles <- length(x$model_runs$eval_strategy_list[[1]]$transition)
-        plyr::ldply(x$model_runs$eval_strategy_list, function(y) {
-          do.call(rbind, y$transition) %>%
-            as.data.frame(stringsAsFactors=F) %>%
-            mutate(
-              from = rep(state_names, n_cycles),
-              cycle = rep(seq_len(n_cycles), each = n_states)
-            )
-        }, .id = "strategy") %>%
-          select(!!!syms(c("strategy", "cycle", "from", state_names))) %>%
-          as_tibble()
-      }
-    }
-  } else {
-    # Heterogeneous model
-    the_class <- class(x$demographics$model_list[[1]]$.mod[[1]]$transition)
-    if("eval_part_surv" %in% the_class) {
-      state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
-      n_states <- length(state_names)
-      n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
-      plyr::ldply(x$demographics$model_list, function(x) {
-        group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
-        group_list <- x$.mod
-        names(group_list) <- group_names
-        plyr::ldply(group_list, function(y) {
-          data.frame(
-            cycle = seq_len(length(y$transition$pfs_surv)) - 1,
-            pfs = y$transition$pfs_surv,
-            os = y$transition$os_surv
-          )
-        }, .id = "group")
-      }, .id = "strategy") %>%
-        select(!!!syms(c("strategy", "group", "cycle", "pfs", "os"))) %>%
-        as_tibble()
-      
-    } else {
-      if ("eval_part_surv_custom" %in% the_class) {
-        data.frame()
-      } else {
-        state_names <- rownames(x$demographics$model_list[[1]]$.mod[[1]]$transition[[1]])
-        n_states <- length(state_names)
-        n_cycles <- length(x$demographics$model_list[[1]]$.mod[[1]]$transition)
-        plyr::ldply(x$demographics$model_list, function(x) {
-          group_names <- as.character(lapply(x$.mod, function(x) x$parameters$.group[1]))
-          group_list <- x$.mod
-          names(group_list) <- group_names
-          plyr::ldply(group_list, function(y) {
-            do.call(rbind, y$transition) %>%
-              as.data.frame(stringsAsFactors=F) %>%
-              mutate(
-                from = rep(state_names, n_cycles),
-                cycle = rep(seq_len(n_cycles), each = n_states)
-              )
-          }, .id = "group")
-        }, .id = "strategy") %>%
-          select(!!!syms(c("strategy", "group", "cycle", "from", state_names))) %>%
-          as_tibble()
-      }
-    }
-  }
-  
-}
-
 build_hero_model <- function(...) {
   
   # Capture arguments
@@ -1345,6 +1068,7 @@ build_hero_model <- function(...) {
 
   # Fix column names
   dots$tables <- lapply(dots$tables, function(x) {
+    if(class(x) == 'list') return(x)
     colnames(x) <- gsub("[\r\n]", "", colnames(x))
     x
   })
@@ -1356,7 +1080,6 @@ build_hero_model <- function(...) {
     start = start_list,
     tm = trans,
     param = params,
-    demo = groups_tbl,
     options = tibble::tribble(
       ~option,  ~value,
       "cost",   paste0(".disc_", dots$esumms$name[1]),
@@ -1374,49 +1097,6 @@ build_hero_model <- function(...) {
     aux_params = surv,
     psa = dots$psa,
     report_progress = dots$report_progress
-  )
-}
-
-#' @export
-run_hero_bc <- function(...) {
-  
-  # Capture arguments
-  dots <- patch_progress_funcs(list(...))
-  
-  # Compile model object
-  args <- do.call(build_hero_model, dots)
-  args$run_demo = !(is.null(args$demo))
-  
-  max_prog <- get_bc_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
-  
-  # Run model
-  heemod_res <- do.call(run_model_api, args)
-  
-  # Extract Main Results
-  if(is.null(heemod_res$demographics)) {
-    main_res <- heemod_res$model_runs
-  } else {
-    main_res <- heemod_res$demographics$combined_model
-  }
-  
-  # Format Results Types
-  health_res <- hero_extract_summ(main_res, dots$hsumms)
-  econ_res <- hero_extract_summ(main_res, dots$esumms)
-  nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms)
-  ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms)
-  pw_ce_res <- hero_extract_ce_pw(main_res, health_res, econ_res)
-  trace_res <- hero_extract_trace(main_res)
-  
-  # Return
-  list(
-    trace = trace_res,
-    outcomes = health_res,
-    costs = econ_res,
-    ce = ce_res,
-    pairwise_ce = pw_ce_res,
-    nmb = nmb_res,
-    api_ver = '2.0'
   )
 }
 
@@ -1464,7 +1144,7 @@ run_hero_psa <- function(...) {
   } else {
     # Heterogeneous model
     # Run PSA analysis for each group
-    group_vars <- setdiff(colnames(dots$groups), c("name", "weight"))
+    group_vars <- setdiff(colnames(dots$groups), c("name", ".group_weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
       # Run model for given group
@@ -1478,11 +1158,19 @@ run_hero_psa <- function(...) {
     psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
-    col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight"))
-    psa_res_df$weight <- as.numeric(psa_res_df$weight)
-    psa_res_df[ , col_indices] <- psa_res_df[ , col_indices] * psa_res_df$weight
+    col_indices <- setdiff(colnames(psa_res_df), c(".strategy_names", ".index", "name", "weight", ".group_weight"))
+
     psa_res_df <- psa_res_df %>%
-      select(-name) %>%
+      group_by(.strategy_names, .index) %>%
+      group_split() %>%
+      map(function(iter_res) {
+        mutate(
+          iter_res[ ,col_indices] * iter_res$.group_weight / sum(iter_res$.group_weight),
+          .strategy_names = iter_res$.strategy_names,
+          .index = iter_res$.index
+        )
+      }) %>%
+      bind_rows() %>%
       group_by(.strategy_names, .index) %>%
       summarize_all(sum) %>%
       ungroup()
@@ -1562,142 +1250,6 @@ run_hero_psa <- function(...) {
       results = psa_res_df
     )
   }
-}
-
-#' @export
-export_hero_xlsx <- function(...) {
-  # Capture arguments
-  dots <- patch_progress_funcs(list(...))
-  
-  # Compile model object
-  args <- do.call(build_hero_model, dots)
-  args$run_demo = !(is.null(args$demo))
-  
-  max_prog <- get_excel_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
-  
-  # Run model
-  heemod_res <- do.call(run_model_api, args)
-  
-  # Extract Main Results
-  if(is.null(heemod_res$demographics)) {
-    main_res <- heemod_res$model_runs
-  } else {
-    main_res <- heemod_res$demographics$combined_model
-  }
-  
-  health_res <- hero_extract_summ(main_res, dots$hsumms)
-  econ_res <- hero_extract_summ(main_res, dots$esumms)
-  nmb_res <- hero_extract_nmb(health_res, econ_res, dots$hsumms) %>%
-    rename(
-      "Outcome" = outcome,
-      "Strategy" = series,
-      "Component" = group,
-      "Type" = type,
-      "Value" = value
-    ) %>%
-    select(-disc)
-  health_res <- health_res %>%
-    rename(
-      "Outcome" = outcome,
-      "Strategy" = series,
-      "Component" = group,
-      "Discounted" = disc,
-      "Value" = value
-    )
-  econ_res <- econ_res %>%
-    rename(
-      "Outcome" = outcome,
-      "Strategy" = series,
-      "Component" = group,
-      "Discounted" = disc,
-      "Value" = value
-    )
-  ce_res <- hero_extract_ce(main_res, dots$hsumms, dots$esumms) %>%
-    mutate(
-      health_outcome = substring(health_outcome, 7),
-      econ_outcome = substring(econ_outcome, 7)
-    ) %>%
-    rename(
-      "Health Outcome" = health_outcome,
-      "Economic Outcome" = econ_outcome,
-      "Strategy" = series,
-      "Cost" = cost,
-      "Effect" = eff,
-      "\u0394 Cost" = dcost,
-      "\u0394 Effect" = deffect,
-      "Reference" = dref,
-      "ICER" = icer
-    ) %>%
-    select(-hsumm, esumm)
-  trace_res <- hero_extract_trace(main_res) %>%
-    rename(
-      "Day" = model_day,
-      "Week" = model_week,
-      "Month" = model_month,
-      "Year" = model_year,
-      "Strategy" = series
-    )
-  cor_trace_res <- hero_extract_trace(main_res, T) %>%
-    rename(
-      "Day" = model_day,
-      "Week" = model_week,
-      "Month" = model_month,
-      "Year" = model_year,
-      "Strategy" = series
-    )
-  param_res <- compile_parameters(heemod_res)
-  trans_res <- compile_transitions(heemod_res)
-  if (nrow(trans_res) == 0) {
-    trans_res <- trace_res
-  }
-  unit_values_res <- compile_unit_values(heemod_res)
-  values_res <- compile_values(heemod_res)
-  if(length(dots$tables) > 0) {
-    tables_list <- dots$tables
-    names(tables_list) <- paste0("Tbl - ", names(dots$tables))
-  } else {
-    tables_list <- list()
-  }
-  wb_list <- list(
-    "Inputs - Settings" = data.frame(setting = names(dots$settings), value = as.character(dots$settings)),
-    "Inputs - Groups" = dots$groups,
-    "Inputs - Strategies" = dots$strategies,
-    "Inputs - States" = dots$states,
-    "Inputs - Transitions" = dots$transitions,
-    "Inputs - Health Values" = dots$hvalues,
-    "Inputs - Econ Values" = dots$evalues,
-    "Inputs - Health Summ" = dots$hsumms,
-    "Inputs - Econ Summ" = dots$esumms,
-    "Inputs - Parameters" = dots$variables,
-    "Inputs - Surv Dists" = dots$surv_dists
-  ) %>%
-    append(tables_list) %>%
-    append(list(
-      "Calc - Params"= param_res,
-      "Calc - Trans"= trans_res,
-      "Calc - Unit Values"= unit_values_res,
-      "Calc - Values"= values_res,
-      "Results - Trace" = trace_res,
-      "Results - Trace (Corrected)" = cor_trace_res,
-      "Results - Outcomes" = health_res,
-      "Results - Costs" = econ_res,
-      "Results - CE" = ce_res,
-      "Results - NMB" = nmb_res
-    )) %>%
-    purrr::keep(function(x) {
-      isNull <- is.null(x)
-      dimensions <- c(nrow(x), ncol(x))
-      !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
-    })
-  dots$report_progress(1L)
-  filename <- paste0(dots$name, ".xlsx")
-  writeWorkbook(lapply(wb_list, as.data.frame), filename)
-  if (!is.null(dots$.manifest)) {
-    dots$.manifest$register_file('excel_output', filename, 'Export to excel output', default = T)
-  }
-  ret <- wb_list
-  
 }
 
 #' @export
@@ -1785,18 +1337,6 @@ results <- do.call(run_hero_bc, model)
   file.remove("model.rds")
   try(dots$report_progress(1L))
   list(success = T)
-}
-
-writeWorkbook <- function(dflist, path, ...){
-  sheet_names <- strtrim(names(dflist), 31)
-  wb <- openxlsx::createWorkbook()
-  for(i in 1:length(dflist)){
-    openxlsx::addWorksheet(wb, sheet_names[i])
-    openxlsx::writeDataTable(wb, sheet_names[i], dflist[[i]],...)
-    openxlsx::setColWidths(wb, sheet_names[i], cols = seq_len(ncol(dflist[[i]])), widths = 24)
-    openxlsx::freezePane(wb, sheet_names[i], firstActiveRow = 2, firstActiveCol = 1)
-  }
-  openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
 }
 
 cores_to_use <- function() {

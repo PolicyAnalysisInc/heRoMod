@@ -87,7 +87,8 @@ run_model <- function(...,
                       parallel = F,
                       cores = 1,
                       disc_method = 'start',
-                      report_progress = identity) {
+                      report_progress = identity,
+                      state_groups = NULL) {
   
   uneval_strategy_list <- list(...)
   
@@ -109,7 +110,8 @@ run_model <- function(...,
     parallel = parallel,
     cores = cores,
     disc_method = disc_method,
-    report_progress = report_progress
+    report_progress = report_progress,
+    state_groups = state_groups
   )
 }
 
@@ -128,7 +130,8 @@ run_model_ <- function(uneval_strategy_list,
                        parallel = F,
                        cores = 1,
                        disc_method = 'start',
-                       report_progress = identity) {
+                       report_progress = identity,
+                       state_groups = NULL) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -186,11 +189,15 @@ run_model_ <- function(uneval_strategy_list,
     stop("State value names differ between models.")
   }
   
+  # Check state groups
+  check_state_groups(state_groups, get_state_names(uneval_strategy_list[[1]]))
+  
   state_time_limit <- complete_stl(
     state_time_limit,
     state_names = get_state_names(uneval_strategy_list[[1]]),
     strategy_names = names(uneval_strategy_list),
-    cycles = cycles
+    cycles = cycles,
+    state_groups = state_groups
   )
   
   #eval_strategy_list <- list()
@@ -208,7 +215,8 @@ run_model_ <- function(uneval_strategy_list,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
         disc_method = disc_method,
-        report_progress = report_progress
+        report_progress = report_progress,
+        state_groups = state_groups
       ))
     }, mc.cores = cores)
     
@@ -231,7 +239,8 @@ run_model_ <- function(uneval_strategy_list,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
         disc_method = disc_method,
-        report_progress = report_progress
+        report_progress = report_progress,
+        state_groups = state_groups
       )
     })
   }
@@ -279,7 +288,9 @@ run_model_ <- function(uneval_strategy_list,
       state_time_limit = state_time_limit,
       frontier = if (! is.null(root_strategy)) get_frontier(res),
       disc_method = disc_method,
-      report_progress = report_progress
+      report_progress = report_progress,
+      state_groups = state_groups,
+      cores = cores
     ),
     class = c("run_model", class(res))
   )

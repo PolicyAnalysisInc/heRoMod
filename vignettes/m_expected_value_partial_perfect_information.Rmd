@@ -32,8 +32,7 @@ references:
 ---
 
 ```{r, echo=FALSE, include=FALSE}
-# library(heRomod)
-devtools::load_all()
+library(heRomod)
 ```
 
 This vignette shows how to compute expected value of partial perfect information (EVPPI) of the parameters of the probabilistic Markov model in `vignette("e_probabilistic", "heRomod")` using a linear regression metamodel approach by @jalal2018.

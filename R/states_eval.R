@@ -120,9 +120,14 @@ eval_state_list <- function(x, parameters, expand = NULL,
     f_state_val <- function(i) {
       obj <- discount_hack(state_trans_uneval[[i]], method = disc_method)
       from_states <- from_state_names[[i]]
-      if (any(is.na(from_states))) from_states <- state_names
       to_states <- to_state_names[[i]]
-      if (any(is.na(to_states))) to_states <- state_names
+      filter_self_trans <- F
+      if (any(is.na(from_states)) || any(is.na(to_states))) {
+        filter_self_trans <- T
+        if (any(is.na(from_states))) from_states <- state_names
+        if (any(is.na(to_states))) to_states <- state_names
+        
+      }
       from_states_expanded <- filter(expand, .state %in% from_states)
       max_st <- max(expand$.limit)
       
@@ -151,6 +156,9 @@ eval_state_list <- function(x, parameters, expand = NULL,
         .to = to_states,
         stringsAsFactors = FALSE
       )
+      if (filter_self_trans) {
+        to_from_df <- filter(to_from_df, .from != .to)
+      }
       tidyr::crossing(to_from_df, eval_params)
     }
     st_var_df <- ldply(seq_len(n_states_trans), f_state_val)

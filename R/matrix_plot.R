@@ -53,7 +53,7 @@ print.eval_matrix <- function(x, ...) {
   cat(get_state_names(x), sep = "\n")
   cat("\n")
   
-  print(head(x, ...))
+  print(head(map(x, function(mat) as.matrix(mat)), ...))
   
   if (length(head(x, ...)) < length(x))
     cat("...\n")

@@ -4,6 +4,7 @@
 test_model_results <- function(name, path, bc, vbp, dsa, scen, psa, export) {
   test_that(paste0(name, ' produces correct results.'), {
     model <- readRDS(system.file("hero", path, "model.rds", package="heRomod"))
+    model$cores <- 1
     if (bc) test_bc_results(model, name, path)
     if (vbp) test_vbp_results(model, name, path)
     if (dsa) test_dsa_results(model, name, path, vbp = F)
@@ -195,7 +196,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
 
   # Load previous results
   if (vbp) {
-    model$scenario_settings$run_vbp <- T
+    model$scenario_settings <- list(run_vbp = T)
     scen_res <- readRDS(system.file("hero", path, "scen_vbp_res.rds", package="heRomod"))
   } else {
     scen_res <- readRDS(system.file("hero", path, "scen_res.rds", package="heRomod"))
@@ -209,13 +210,13 @@ test_scen_results <- function(model, name, path, vbp = F) {
   expect_equal(scen_res$cost, scen_res_test$cost)
   expect_equal(scen_res$nmb, scen_res_test$nmb)
   if (vbp) {
-    expect_equal(scen_res$vbp, scen_res_test$vbp$prices)
+    expect_equal(scen_res$vbp, scen_res_test$vbp)
   }
 }
 
 #' Test PSA Results
 test_psa_results <- function(model, name, path) {
-  model$psa$n <- 10
+  model$psa$n <- 5
   psa_res <- do.call(run_hero_psa,model)
 }
 

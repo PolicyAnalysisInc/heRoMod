@@ -38,7 +38,7 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs,
     sa_table, c('.scenario'),
     report_progress = dots$report_progress,
-    cores = as.numeric(args$options$value[args$options == 'num_cores'])
+    heemod_res$model_runs$cores
   )
   
   # Pull out results for each scenario
