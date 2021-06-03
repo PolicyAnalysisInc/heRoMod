@@ -80,7 +80,9 @@ absolute time units.}
 \item{type}{Either \code{prob}, for transition probabilities,
 or \code{surv}, for survival.}
 
-\item{start}{The end time of the interval.}
+\item{start}{The start time of the interval.}
+
+\item{end}{The end time of the interval.}
 }
 \value{
 Returns either the survival probalities or

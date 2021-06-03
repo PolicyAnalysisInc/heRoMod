@@ -57,7 +57,8 @@ Imports:
     triangle,
     jsonlite,
     glue,
-    Matrix
+    Matrix,
+    gtools
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

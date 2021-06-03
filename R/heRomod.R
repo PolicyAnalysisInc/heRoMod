@@ -149,6 +149,8 @@
 #' 
 #' @importFrom glue glue
 #' 
+#' @importFrom gtools rdirichlet
+#' 
 #' @importFrom Matrix sparseMatrix
 #' 
 #' @importFrom stringr str_interp
