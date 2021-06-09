@@ -27,9 +27,10 @@ run_analysis <- function(...) {
   # Write Results to JSON
   filename <- 'results.json'
   jsonlite::write_json(res, filename)
+  print('resulting file')
+  cat(paste0(dplyr::readLines(filename), collapse="\n"))
   no_default <- is.na(manifest$get_manifest()$default)
   manifest$register_file('main_results', filename, 'Main results of running analysis', default = no_default)
-  
   list(
     content = res,
     manifest = manifest$get_manifest()

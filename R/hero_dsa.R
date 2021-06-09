@@ -33,6 +33,7 @@ run_hero_dsa <- function(...) {
   sa_table <- select(sa_table, -.vbp_param) %>%
     dplyr::relocate(.dsa_param, .dsa_side, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   
+  print('running sensitivity analysis')
   # Run sensitivity Analyses
   res <- run_sa(
     heemod_res$model_runs,
@@ -40,17 +41,32 @@ run_hero_dsa <- function(...) {
     report_progress = dots$report_progress,
     heemod_res$model_runs$cores
   )
+  print('finished running sensitivity analysis')
   
   # Pull out results for each scenario
+  print('generating outcomes results')
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.dsa_param', '.dsa_side'))
+  print('outcomes results:')
+  print(outcomes_res)
+  print('generating costs results')
   costs_res <- extract_sa_summary_res(res, dots$esumms, c('.dsa_param', '.dsa_side'))
+  print('costs results:')
+  print(costs_res)
+  print('generating nmb results')
   nmb_res <- extract_sa_nmb(outcomes_res, costs_res, dots$hsumms, dots$esumms, c('.dsa_param', '.dsa_side'))
+  print('nmb results:')
+  print(nmb_res)
   if (run_vbp) {
-    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))
+    print('generating vbp results')
+    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))  print('costs results:')
+    print('vbp results:')
+    print(costs_res)
   }
   
+  print('final res: ')
+  
   # Format and Return
-  list(
+  res <- list(
     outcomes = dsa_reformat_res(outcomes_res),
     cost = dsa_reformat_res(costs_res),
     nmb = dsa_reformat_res(nmb_res, id_vars = c('health_outcome', 'econ_outcome', 'series')),
@@ -60,6 +76,9 @@ run_hero_dsa <- function(...) {
           ) else NULL,
     api_ver = '2.0'
   )
+  print(res)
+  
+  return(res)
 }
 
 dsa_reformat_res <- function(res, id_vars = NULL) {
