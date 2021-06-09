@@ -58,7 +58,7 @@ run_hero_dsa <- function(...) {
   print(nmb_res)
   if (run_vbp) {
     print('generating vbp results')
-    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))  print('costs results:')
+    vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))
     print('vbp results:')
     print(costs_res)
   }
