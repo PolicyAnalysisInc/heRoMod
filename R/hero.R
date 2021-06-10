@@ -1295,6 +1295,8 @@ package_hero_model <- function(...) {
   try(dots$report_max_progress(max_prog))
   
   model_object <- list(...)
+  model_object$report_progress <- NULL
+  model_object$report_max_progress <- NULL
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
 SaveWorkspace: Default

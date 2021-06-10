@@ -297,6 +297,7 @@ convert_scenarios <- function(scenarios) {
         return(list())
     }
     scenarios %>%
+        filter(active) %>%
         rowwise() %>%
         group_split() %>%
         map(function(x) {
