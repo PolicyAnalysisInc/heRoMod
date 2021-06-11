@@ -26,7 +26,7 @@ run_analysis <- function(...) {
 
   # Write Results to JSON
   filename <- 'results.json'
-  jsonlite::write_json(res, filename)
+  jsonlite::write_json(res, filename, digits = 12)
   no_default <- is.na(manifest$get_manifest()$default)
   manifest$register_file('main_results', filename, 'Main results of running analysis', default = no_default)
   
