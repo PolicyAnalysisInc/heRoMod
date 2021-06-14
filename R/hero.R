@@ -62,6 +62,7 @@ parse_hero_settings <- function(settings) {
     settings$disc_method <- 'start'
   }
   
+  
   if (!is.null(settings$CycleLength)) {
     if (!is.null(settings$days_per_year)) {
       dpy <- settings$days_per_year
