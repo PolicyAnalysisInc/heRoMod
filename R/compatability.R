@@ -121,19 +121,19 @@ convert_psm_transitions <- function(transitions, strategies, settings) {
     if (!is.null(settings$days_per_year)) {
         dpy <- settings$days_per_year
     }
+    filtered_transitions <- filter(transitions, strategy %in% c("All", strategies$name))
     cycle_length <- get_cycle_length(settings)
     cycle_length_units <- get_cycle_length_units(settings)
     cycle_length_days <- time_in_days(cycle_length_units, dpy) * cycle_length
-    surv_cycle_unit_days <- map_dbl(transitions$unit, function(x) time_in_days(x, dpy))
+    surv_cycle_unit_days <- map_dbl(filtered_transitions$unit, function(x) time_in_days(x, dpy))
     surv_cycle_length_days <- cycle_length_days / surv_cycle_unit_days
-    transitions %>%
-        filter(strategy %in% c("All", strategies$name)) %>%
-        transmute(
-            strategy = strategy,
-            endpoint = endpoint,
-            cycle_length = surv_cycle_length_days,
-            value = formula
-        )
+    transmute(
+        filtered_transitions,
+        strategy = strategy,
+        endpoint = endpoint,
+        cycle_length = surv_cycle_length_days,
+        value = formula
+    )
 }
 
 convert_custom_transitions <- function(transitions, strategies) {

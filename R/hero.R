@@ -1073,6 +1073,10 @@ build_hero_model <- function(...) {
     colnames(x) <- gsub("[\r\n]", "", colnames(x))
     x
   })
+  psa_n <- '1000'
+  if (!is.null(dots$psa$n)) {
+    psa_n <- as.character(dots$psa$n)
+  }
   
   # Return model object
   list(
@@ -1088,7 +1092,7 @@ build_hero_model <- function(...) {
       "method", settings$method,
       "disc_method", settings$disc_method,
       "cycles", as.character(max(1, round(settings$n_cycles,0))),
-      "n",      as.character(dots$psa$n),
+      "n",      psa_n,
       "init",   paste(dots$states$prob,collapse = ", "),
       "num_cores", as.character(cores)
     ),
