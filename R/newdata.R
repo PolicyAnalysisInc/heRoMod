@@ -95,6 +95,9 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
         )
     })
   )
+  print('parallel exec results: ')
+  print(pieces[1:5])
+  print()
   plyr::l_ply(
     pieces,
     function(x) {

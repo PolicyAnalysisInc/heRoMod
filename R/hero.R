@@ -15,8 +15,10 @@ run_analysis <- function(...) {
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
+  print('attempting to run')
   res <- try({ do.call(runner, convert_model(data)) })
   if (inherits(res, "try-error")) {
+    print('error found in model execution')
     msg <- gsub('Error : ', fixed = T, '', res)
     res <- list(
       error = paste0('Error: ', as.character(msg))
@@ -25,11 +27,16 @@ run_analysis <- function(...) {
   res$warnings <- paste(capture.output(warnings()), collapse = '\n')
 
   # Write Results to JSON
+  print('writing json file')
   filename <- 'results.json'
   jsonlite::write_json(res, filename, digits = 12)
+  print('files in directory')
+  print(list.files('.'))
   no_default <- is.na(manifest$get_manifest()$default)
+  print('adding main results to manifest')
   manifest$register_file('main_results', filename, 'Main results of running analysis', default = no_default)
-  
+  print('manifest')
+  print(manifest$get_manifest())
   list(
     content = res,
     manifest = manifest$get_manifest()
