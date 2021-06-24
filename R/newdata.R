@@ -60,10 +60,10 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
   newdata <- newdata %>%
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
-  future::plan(future::multisession, workers = cores)
+  #future::plan(future::multisession, workers = cores)
   suppressMessages(
-    pieces <- #parallel::mclapply(pnewdata, function(newdata) {
-      furrr::future_map(pnewdata, function(newdata) {
+    pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      #furrr::future_map(pnewdata, function(newdata) {
       #lapply(pnewdata, function(newdata) {
       newdata %>% 
         rowwise() %>% 
@@ -93,7 +93,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
         bind_cols(
           newdata
         )
-    })
+    #})
+    }, mc.cores = cores)
   )
   print('parallel exec results: ')
   print(pieces[1:5])
