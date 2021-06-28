@@ -1,4 +1,5 @@
 context("Parameter influences strategy")
+logger::log_threshold('ERROR')
 
 test_that(
   "Parameter influences strategy", {

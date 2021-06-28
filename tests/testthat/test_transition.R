@@ -1,4 +1,5 @@
 context("State Transition Values")
+logger::log_threshold('ERROR')
 
 test_that("Without state time expansion", {
   

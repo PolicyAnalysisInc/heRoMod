@@ -1,4 +1,5 @@
 context("Test tabular input")
+logger::log_threshold('ERROR')
 
 state_spec_file <- system.file(
   "tabular/test",

@@ -1,4 +1,5 @@
 context("Probabilistic analysis")
+logger::log_threshold('ERROR')
 
 
 test_that(

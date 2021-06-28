@@ -1,4 +1,5 @@
 context("Expected value of partial perfect information")
+logger::log_threshold('ERROR')
 
 test_that(
   "define expected value of partial perfect information", {

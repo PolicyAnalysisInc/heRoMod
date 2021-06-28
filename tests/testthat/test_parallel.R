@@ -1,4 +1,5 @@
 context("Multiple cores")
+logger::log_threshold('ERROR')
 
 test_that(
   "Same results using 1 core or 2.", {

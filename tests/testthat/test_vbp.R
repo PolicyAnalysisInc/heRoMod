@@ -1,4 +1,5 @@
 context("Value-based pricing")
+logger::log_threshold('ERROR')
 
 test_that(
   "define value-based pricing", {

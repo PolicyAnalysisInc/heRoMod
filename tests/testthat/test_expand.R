@@ -1,6 +1,6 @@
 context("Test state cycle expansion")
-
-
+logger::log_threshold('ERROR')
+logger::log_appender(logger::appender_stdout)
 sn <- LETTERS[1:5]
 mn <- c("I", "II", "III")
 
@@ -200,7 +200,8 @@ test_that(
       e = 7
     )
     
-    expect_message(
+    logger::log_threshold('INFO')
+    expect_output(
       res <- run_model(
         define_strategy(
           transition = tm_exp,
@@ -209,14 +210,14 @@ test_that(
         cycles = 10,
         cost = c, effect = e
       ),
-      "expanding state: B\\."
+      "expanding state: B"
     )
     expect_equivalent(
       round(unlist(res$run_model[c(".cost", ".effect")]), 2),
       c(37697.04, 66908.88)
     )
     
-    expect_message(
+    expect_output(
       res <- run_model(
           define_strategy(
             transition = tm,
@@ -225,14 +226,14 @@ test_that(
           cycles = 10,
           cost = c, effect = e
         ),
-      "expanding state: A\\."
+      "expanding state: A"
     )
     expect_equivalent(
       round(unlist(res$run_model[c(".cost", ".effect")]), 2),
       c(20552.39, 81562.5)
     )
     
-    expect_message(
+    expect_output(
       res <- run_model(
         define_strategy(
           transition = tm_exp,
@@ -241,13 +242,14 @@ test_that(
         cycles = 10,
         cost = c, effect = e
       ),
-      "expanding states: A, B\\."
+      "expanding states: A, B"
     )
     expect_equivalent(
       round(unlist(res$run_model[c(".cost", ".effect")]), 2),
       c(21488.12, 82302.96)
     )
     
+    logger::log_threshold('ERROR')
     # Changed expected result to reflect solution to issue #307
     
     res <- run_model(

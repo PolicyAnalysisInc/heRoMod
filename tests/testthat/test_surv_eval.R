@@ -1,4 +1,5 @@
 context("Evaluation of survival functions")
+logger::log_threshold('ERROR')
 
 fs1 = flexsurv::flexsurvreg(survival::Surv(rectime, censrec) ~ group,
                             data = flexsurv::bc,

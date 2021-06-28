@@ -55,11 +55,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
   expand_limit <- get_expand_limit(x, strategy)
   
-  message(paste("Using a cluster with", cores, "cores."))
-  
   newdata <- newdata %>%
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
+  
+  log_info(paste("Using a cluster with", cores, "cores."))
   future::plan(future::multisession, workers = cores)
   suppressMessages(
     pieces <- #parallel::mclapply(pnewdata, function(newdata) {
@@ -99,7 +99,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
     pieces,
     function(x) {
       plyr::l_ply(x$.mod, function(y) {
-        if ("try-error" %in% class(y)) stop(clean_err_msg(y), call. = F)
+        if ("try-error" %in% class(y)) {
+          error_message <- clean_err_msg(y)
+          log_error(error_message)
+          stop(error_message, call. = F)
+        }
       })
     }
   )

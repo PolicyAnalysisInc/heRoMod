@@ -1,4 +1,5 @@
 context("State testing")
+logger::log_threshold('ERROR')
 
 test_that(
   "State definition", {

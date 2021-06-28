@@ -1,4 +1,5 @@
 context("Sensitivity analysis")
+logger::log_threshold('ERROR')
 
 test_that(
   "define sensitivity", {

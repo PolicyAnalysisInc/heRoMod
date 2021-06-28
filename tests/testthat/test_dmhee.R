@@ -1,4 +1,5 @@
 context("DMHEE reproduction")
+logger::log_threshold('ERROR')
 
 test_that("exactly match HIV model",
           ## compare Decision Modelling for Health Economic Evaluation 

@@ -1,4 +1,5 @@
 context("Heterogeneity & Demographic")
+logger::log_threshold('ERROR')
 
 test_that(
   "Demographic analysis", {

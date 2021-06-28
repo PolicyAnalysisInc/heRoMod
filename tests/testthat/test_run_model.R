@@ -1,4 +1,5 @@
 context("Running model")
+logger::log_threshold('ERROR')
 
 test_that(
   "Strange inputs generate errors", {

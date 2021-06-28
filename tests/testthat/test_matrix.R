@@ -1,4 +1,5 @@
 context("Matrix objects")
+logger::log_threshold('ERROR')
 
 
 test_that(

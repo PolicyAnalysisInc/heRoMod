@@ -51,7 +51,12 @@ run_psa <- function(model, psa, N, resample, cores = 1, report_progress = identi
   
   list_res <- list()
   for (n in get_strategy_names(model)) {
-    message(sprintf("Resampling strategy '%s'...", n))
+    log_info(
+      glue(
+        "Resampling strategy '{strategy}' ...",
+        strategy = n
+      )
+    )
     model_res <- eval_strategy_newdata(
       x = model,
       strategy = n,

@@ -1,4 +1,5 @@
 context("calibration functions")
+logger::log_threshold('ERROR')
 
 
 test_that("one-dimensional calibration",

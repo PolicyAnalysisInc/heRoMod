@@ -1,4 +1,5 @@
 context("Test look-up")
+logger::log_threshold('ERROR')
 
 ## set test sets
 tempdf <- expand.grid(arg1 = c("A", "B", "C"), arg2 = 1:4, arg3 = 1:5)

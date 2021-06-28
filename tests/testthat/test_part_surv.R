@@ -1,4 +1,5 @@
 context("Partitioned Survival Model")
+logger::log_threshold('ERROR')
 
 surv_dist1 <- define_survival(
   distribution = "exp",

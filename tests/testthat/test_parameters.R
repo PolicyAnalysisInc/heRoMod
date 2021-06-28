@@ -1,4 +1,5 @@
 context("Parameters definition")
+logger::log_threshold('ERROR')
 
 test_that(
   "Parameter definition and update", {

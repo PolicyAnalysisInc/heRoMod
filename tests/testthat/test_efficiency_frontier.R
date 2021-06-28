@@ -1,4 +1,5 @@
 context("Cost Effective Frontier")
+logger::log_threshold('ERROR')
 
 test_that(
   "Identify Frontier Scenarios",{

@@ -1,4 +1,5 @@
 context("Init checking")
+logger::log_threshold('ERROR')
 
 test_that(
   "check_init() works", {

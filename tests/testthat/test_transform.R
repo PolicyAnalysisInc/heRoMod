@@ -1,4 +1,5 @@
 context("Transformation functions")
+logger::log_threshold('ERROR')
 
 # from http://www.hsrd.research.va.gov/for_researchers/cyber_seminars/archives/819-notes.pdf
 test_that(

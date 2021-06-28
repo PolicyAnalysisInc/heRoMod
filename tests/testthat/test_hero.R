@@ -1,4 +1,5 @@
 context("Running heRo model")
+logger::log_threshold('ERROR')
 
 models_to_test <- tibble::tribble(
   ~name,                        ~path,                    ~bc, ~vbp, ~dsa, ~scen, ~psa, ~export,

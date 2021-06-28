@@ -1,4 +1,5 @@
 context("heRo3 compatability layer works")
+logger::log_threshold('ERROR')
 
 models_to_test <- tibble::tribble(
   ~name,                  ~filename,

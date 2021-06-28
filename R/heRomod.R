@@ -90,6 +90,13 @@
 #' @importFrom stats model.matrix
 #' @importFrom stats formula
 #' @importFrom stats stepfun
+#' 
+#' @importFrom logger log_threshold
+#' @importFrom logger log_info
+#' @importFrom logger log_debug
+#' @importFrom logger log_warn
+#' @importFrom logger log_success
+#' @importFrom logger log_fatal
 #'   
 #' @importFrom mvnfast rmvn
 #'   

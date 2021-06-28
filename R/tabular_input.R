@@ -65,6 +65,8 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
   
   # Evaluate R code
   if(!is.null(source)) {
+    
+    log_info('Evaluating Scripts')
     plyr::l_ply(
       source,
       function(x) eval(parse(text = x), envir = df_env)

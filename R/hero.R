@@ -1,6 +1,18 @@
 #' @export
 run_analysis <- function(...) {
   data <- list(...)
+  
+  # set loglevel
+  if (!is.null(data$log_threshold)) {
+    loglevels <- c('WARN', 'INFO', 'DEBUG', 'SUCCESS', 'FATAL', 'TRACE')
+    level_to_use <- data$log_threshold
+    if (!data$log_threshold %in% loglevels) {
+      stop(paste0('Error: invalid options for log_threshold. Value must be in ', paste(loglevels, collapse = ', ')))
+    }
+    log_threshold(level_to_use)
+  }
+  
+  log_info('Creating manifest')
   manifest <- create_manifest()
   data$.manifest <- manifest
   runner <- switch(
@@ -15,16 +27,28 @@ run_analysis <- function(...) {
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
-  res <- try({ do.call(runner, convert_model(data)) })
+  log_info(paste0('Preparing to run ', data$analysis))
+  res <- try({
+    log_info('Reformatting model')
+    converted <- convert_model(data)
+    log_info('Executing model')
+    do.call(runner, converted)
+  })
   if (inherits(res, "try-error")) {
+    
     msg <- gsub('Error : ', fixed = T, '', res)
     res <- list(
       error = paste0('Error: ', as.character(msg))
     )
+    log_error(res$error)
   }
   res$warnings <- paste(capture.output(warnings()), collapse = '\n')
+  if (res$warnings != "") {
+    log_warn(paste0('Warnings: \n ', res$warnings))
+  }
 
   # Write Results to JSON
+  log_info('Registering main results file with manifest')
   filename <- 'results.json'
   jsonlite::write_json(res, filename, digits = 12)
   no_default <- is.na(manifest$get_manifest()$default)
@@ -1138,7 +1162,9 @@ run_hero_psa <- function(...) {
   try(dots$report_max_progress(max_prog))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
+    log_info('Model is homogeneous')
     # Compile model object
+    log_info("Running Model")
     args <- do.call(build_hero_model, dots)
     args$run_psa <- T
     
@@ -1148,10 +1174,12 @@ run_hero_psa <- function(...) {
     psa_res_df <- psa_model$psa$psa
   } else {
     # Heterogeneous model
+    log_info('Model is heterogeneous')
     # Run PSA analysis for each group
     group_vars <- setdiff(colnames(dots$groups), c("name", ".group_weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
+      log_info(glue('Running group {name}', name = x$name))
       # Run model for given group
       group_args <- dots
       group_args$groups <- x
@@ -1160,6 +1188,7 @@ run_hero_psa <- function(...) {
       args$run_psa <- T
       do.call(run_model_api, args)
     })
+    log_info('Aggregating group results')
     psa_model <- psas[[1]]
     psa_res_df <- plyr::ldply(psas, function(x) x$psa$psa)
     psa_res_df <- psa_res_df[ , setdiff(colnames(psa_res_df), group_vars)]
@@ -1191,7 +1220,7 @@ run_hero_psa <- function(...) {
   }
   
   if(is.null(dots$interim) || !dots$interim) {
-  
+    log_info('Formatting results')
     scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     outcomes_summary <- outcomes %>%

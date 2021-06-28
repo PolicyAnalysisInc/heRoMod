@@ -1,4 +1,5 @@
 context("Test model")
+logger::log_threshold('ERROR')
 
 test_that(
   "Model definition", {

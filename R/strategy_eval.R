@@ -178,12 +178,12 @@ eval_strategy <- function(strategy, parameters, cycles,
     expanded <- expand_table %>%
       filter(.expand) %>%
       distinct(.state)
-    message(
-      sprintf(
-        "%s: detected use of 'state_time', expanding state%s: %s.",
-        strategy_name,
-        plur(length(expanded$.state)),
-        paste(expanded$.state, collapse = ", ")
+    log_info(
+      glue(
+        "{strategy}: detected use of 'state_time', expanding state{s}: {states}",
+        strategy = strategy_name,
+        s = plur(length(expanded$.state)),
+        states = paste(expanded$.state, collapse = ", ")
       )
     )
   }

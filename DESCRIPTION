@@ -60,7 +60,8 @@ Imports:
     Matrix,
     gtools,
     future,
-    furrr
+    furrr,
+    logger
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
