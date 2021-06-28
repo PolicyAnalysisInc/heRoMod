@@ -489,6 +489,7 @@ eval_models_from_tabular <- function(inputs,
   list_args_bc <- list_args
   list_args_bc$parallel <- T
   
+  log_info('Running Base Case')
   if (options()$heRomod.verbose) message("** Running models...")
   model_runs <- do.call(
     run_model,
@@ -506,6 +507,7 @@ eval_models_from_tabular <- function(inputs,
     )
   }
   
+  log_info('Running PSA')
   model_psa <- NULL
   if (!is.null(inputs$param_info$psa_params) & run_psa) {
     if (options()$heRomod.verbose) message("** Running PSA...")

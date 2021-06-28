@@ -202,7 +202,8 @@ run_model_ <- function(uneval_strategy_list,
   
   #eval_strategy_list <- list()
   
-  if (F && parallel && .Platform$OS.type == "unix") {
+  if (parallel && .Platform$OS.type == "unix") {
+    log_info(paste("Using a cluster with", cores, "cores."))
     eval_strategy_list <- parallel::mclapply(seq_len(length(uneval_strategy_list)), function(i) {
       try(eval_strategy(
         strategy = uneval_strategy_list[[i]], 

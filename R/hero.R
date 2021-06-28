@@ -1164,7 +1164,7 @@ run_hero_psa <- function(...) {
     # Homogenous model
     log_info('Model is homogeneous')
     # Compile model object
-    log_info("Running Model")
+    log_info("Building Model Object")
     args <- do.call(build_hero_model, dots)
     args$run_psa <- T
     
@@ -1179,7 +1179,7 @@ run_hero_psa <- function(...) {
     group_vars <- setdiff(colnames(dots$groups), c("name", ".group_weight"))
     psas <- plyr::alply(dots$groups, 1, function(x) {
       
-      log_info(glue('Running group {name}', name = x$name))
+      log_info(glue('Working on group {name}', name = x$name))
       # Run model for given group
       group_args <- dots
       group_args$groups <- x
