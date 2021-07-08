@@ -54,6 +54,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
   aux_params <- x$aux_params
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
   expand_limit <- get_expand_limit(x, strategy)
+  state_groups <- x$state_groups
   
   message(paste("Using a cluster with", cores, "cores."))
   
@@ -86,7 +87,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
             expand_limit = expand_limit,
             disc_method = disc_method,
             iteration = iter,
-            report_progress = report_progress
+            report_progress = report_progress,
+            state_groups = state_groups
           )
           )))}) %>%
         ungroup() %>% 
@@ -111,7 +113,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
                          strategy_name, expand_limit, aux_params = NULL,
-                         disc_method = 'start', iteration = NULL, report_progress = identity) {
+                         disc_method = 'start', iteration = NULL, report_progress = identity, state_groups = NULL) {
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
     new_parameters
@@ -134,7 +136,8 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     expand_limit = expand_limit,
     aux_params = aux_params,
     disc_method = disc_method,
-    report_progress = report_progress
+    report_progress = report_progress,
+    state_groups = state_groups
   )
   res
 }
