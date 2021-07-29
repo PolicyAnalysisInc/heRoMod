@@ -205,10 +205,10 @@ convert_variables <- function(variables) {
         variables,
         name = name,
         desc = description,
-        value = as.character(ifelse(overrideActive == "On", overrideValue, formula)),
-        low = as.character(ifelse(active == "On", low, "")),
-        high = as.character(ifelse(active == "On", high, "")),
-        psa = as.character(ifelse(psa_active == "On", distribution, ""))
+        value = as.character(ifelse(!is.na(overrideActive) && overrideActive == "On", overrideValue, formula)),
+        low = as.character(ifelse(!is.na(active) && active == "On", low, "")),
+        high = as.character(ifelse(!is.na(active) && active == "On", high, "")),
+        psa = as.character(ifelse(!is.na(psa_active) && psa_active == "On", distribution, ""))
     )
 }
 
