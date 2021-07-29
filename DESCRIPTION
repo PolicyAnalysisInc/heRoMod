@@ -58,7 +58,8 @@ Imports:
     jsonlite,
     glue,
     Matrix,
-    gtools
+    gtools,
+    magrittr
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

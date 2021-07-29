@@ -136,6 +136,9 @@
 #' @importFrom tidyr spread
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyr pivot_longer
+#' @importFrom tidyr expand_grid
+#' 
+#' @importFrom magrittr set_colnames
 #' 
 #' @importFrom purrr walk
 #' @importFrom purrr walk2

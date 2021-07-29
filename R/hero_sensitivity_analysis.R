@@ -201,7 +201,7 @@ populate_bc <- function(strat, scenarios) {
         lazy_param <- strat_scenarios[[i]][[j]]
         if ("lazy" %in% class(strat_scenarios[[i]][[j]])) {
           lazy_param$env <- new.env(parent = strat_scenarios[[i]][[j]]$env)
-          lazy_param$env$bc <- strat$parameters[[var_names[i]]]
+          lazy_param$env$bc <- strat$parameters[[var_names[i]]][1]
         }
         lazy_param
     })
