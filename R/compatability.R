@@ -201,7 +201,6 @@ convert_esumms <- function(summaries) {
 }
 
 convert_variables <- function(variables) {
-    print('hi')
     transmute(
         variables,
         name = name,
