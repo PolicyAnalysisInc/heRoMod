@@ -201,15 +201,26 @@ convert_esumms <- function(summaries) {
 }
 
 convert_variables <- function(variables) {
-    transmute(
-        variables,
-        name = name,
-        desc = description,
-        value = as.character(ifelse(!is.na(overrideActive) & overrideActive == "On", overrideValue, formula)),
-        low = as.character(ifelse(!is.na(active) & active == "On", low, "")),
-        high = as.character(ifelse(!is.na(active) & active == "On", high, "")),
-        psa = as.character(ifelse(!is.na(psa_active) & psa_active == "On", distribution, ""))
-    )
+    if (is.null(variables) || class(variables) == "list") {
+        return(variables)
+    }
+    variables %>%
+        mutate(
+            overrideActive = if(exists('overrideActive')) overrideActive else 'Off',
+            overrideValue = if(exists('overrideValue')) overrideValue else NA,
+            psaActive = if(exists('psaActive')) psaActive else 'Off',
+            low = if(exists('low')) low else '',
+            high = if(exists('high')) high else '',
+            psa = if(exists('psa')) psa else ''
+        ) %>%
+        transmute(
+            name = name,
+            desc = description,
+            value = as.character(ifelse(!is.na(overrideActive) & overrideActive == "On", overrideValue, formula)),
+            low = as.character(ifelse(!is.na(active) & active == "On", low, "")),
+            high = as.character(ifelse(!is.na(active) & active == "On", high, "")),
+            psa = as.character(ifelse(!is.na(psa_active) & psa_active == "On", distribution, ""))
+        )
 }
 
 convert_surv_dists <- function(surv_dists) {
