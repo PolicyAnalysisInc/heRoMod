@@ -59,7 +59,8 @@ Imports:
     glue,
     Matrix,
     gtools,
-    magrittr
+    magrittr,
+    rlang
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

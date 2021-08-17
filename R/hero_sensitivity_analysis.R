@@ -131,22 +131,40 @@ calc_dsa_deltas_vs_ref <- function(results, referent, id_vars) {
     )
 }
 
-extract_sa_summary_res <- function(results, summaries, group_vars) {
+extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_include = c(), allowGroupStratDep = T) {
   summary_res <- results %>%
+    select_at(c('series', group_vars, '.vbp_scen', '.vbp_price', '.mod', '.group_weight')) %>%
     rowwise() %>%
     group_split() %>%
-    map(function(x) bind_cols(x, extract_sa_outcome(x$.mod[[1]], summaries))) %>%  # Extract outcomes results
+    map(function(x) bind_cols(
+      x,
+      extract_sa_outcome(x$.mod[[1]], summaries),
+      extract_parameter_values(x$.mod[[1]], vars_to_include)
+    )) %>%  # Extract outcomes results
     bind_rows() %>%
     mutate(
       disc = substring(outcome, 1, 6) == '.disc_',
       outcome = ifelse(disc, substring(outcome, 7), outcome)
     ) %>% # Properly label discounted results
     filter(outcome %in% c(summaries$name, summaries$value)) %>% # only keep results related to relevant values/summaries
-    group_by_at(c('series', group_vars, '.vbp_scen', '.vbp_price', 'outcome', 'disc')) %>%
+    (function(x) {
+      if (!allowGroupStratDep) check_sa_params(x, group_vars, vars_to_include)
+      else x
+    })%>%
+    group_by_at(c('series', group_vars, '.vbp_scen', '.vbp_price', 'outcome', 'disc', vars_to_include)) %>%
     summarize(value = sum(value * .group_weight/sum(.group_weight))) %>% # aggregate by group
     ungroup()
   
   return(summary_res)
+}
+
+check_sa_params <- function(res, group_vars, vars_to_include) {
+  df1 <- distinct_at(res, c(group_vars, '.vbp_scen', '.vbp_price'))
+  df2 <- distinct_at(res, c(group_vars, '.vbp_scen', '.vbp_price', vars_to_include))
+  if (nrow(df1) != nrow(df2)) {
+    stop(error_codes$twsa_group_strat_dep, call. = F)
+  }
+  res
 }
 
 gen_groups_table <- function(groups) {
@@ -190,6 +208,9 @@ create_sa_table <- function(n_scen, n_par, par_names) {
   return(sa_table)
 }
 
+extract_parameter_values <- function(res, params) {
+  res$parameters[1, params]
+}
 
 populate_bc <- function(strat, scenarios) {
   n_scen <- nrow(scenarios)
