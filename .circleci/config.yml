@@ -29,6 +29,7 @@ jobs:
           command: R CMD build .
       - run:
           name: Check package
+          no_output_timeout: 30m
           command: R CMD check --as-cran --no-manual *tar.gz
       - store_artifacts:
           path: heRomod.Rcheck/
