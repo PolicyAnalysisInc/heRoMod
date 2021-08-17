@@ -181,6 +181,7 @@ test_that("Group or strategy-dependent parameters can't be varied", {
 
   model1 <- model
   model1$variables$value[7] <- "by_group(adults = 1.12, children = 1.2)"
+  model1$cores <- 5
   expect_error(
     do.call(run_hero_twsa, model1),
     'Two-way sensitivity analysis may not vary parameters that are group or strategy dependent.'
