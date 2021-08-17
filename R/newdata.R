@@ -62,37 +62,73 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
   suppressMessages(
-    pieces <- parallel::mclapply(pnewdata, function(newdata) {
-      newdata %>% 
-        rowwise() %>% 
-        do({
-          df <- as_tibble(
-            lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+    if (cores == 1) {
+      pieces <- lapply(pnewdata, function(newdata) {
+        newdata %>% 
+          rowwise() %>% 
+          do({
+            df <- as_tibble(
+              lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+            )
+            iter <- df$.iteration
+            tibble(
+              .mod = list(try(eval_newdata(
+                as.data.frame(df),
+                strategy = uneval_strategy,
+                old_parameters = old_parameters,
+                aux_params = aux_params,
+                cycles = cycles,
+                init = init,
+                inflow = inflow,
+                method = method,
+                strategy_name = strategy,
+                expand_limit = expand_limit,
+                disc_method = disc_method,
+                iteration = iter,
+                report_progress = report_progress,
+                state_groups = state_groups
+              )
+              )))}) %>%
+          ungroup() %>% 
+          bind_cols(
+            newdata
           )
-          iter <- df$.iteration
-          tibble(
-          .mod = list(try(eval_newdata(
-            as.data.frame(df),
-            strategy = uneval_strategy,
-            old_parameters = old_parameters,
-            aux_params = aux_params,
-            cycles = cycles,
-            init = init,
-            inflow = inflow,
-            method = method,
-            strategy_name = strategy,
-            expand_limit = expand_limit,
-            disc_method = disc_method,
-            iteration = iter,
-            report_progress = report_progress,
-            state_groups = state_groups
+      })
+      
+    } else {
+      pieces <- parallel::mclapply(pnewdata, function(newdata) {
+        newdata %>% 
+          rowwise() %>% 
+          do({
+            df <- as_tibble(
+              lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+            )
+            iter <- df$.iteration
+            tibble(
+              .mod = list(try(eval_newdata(
+                as.data.frame(df),
+                strategy = uneval_strategy,
+                old_parameters = old_parameters,
+                aux_params = aux_params,
+                cycles = cycles,
+                init = init,
+                inflow = inflow,
+                method = method,
+                strategy_name = strategy,
+                expand_limit = expand_limit,
+                disc_method = disc_method,
+                iteration = iter,
+                report_progress = report_progress,
+                state_groups = state_groups
+              )
+              )))}) %>%
+          ungroup() %>% 
+          bind_cols(
+            newdata
           )
-          )))}) %>%
-        ungroup() %>% 
-        bind_cols(
-          newdata
-        )
-    }, mc.cores = cores)
+      }, mc.cores = cores)
+      
+    }
   )
   plyr::l_ply(
     pieces,

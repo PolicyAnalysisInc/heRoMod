@@ -21,6 +21,13 @@ get_dsa_max_progress <- function(model) {
   n_strat + (n_param * 2 + 1) * n_group * n_strat * ifelse(run_vbp, 4, 1)
 }
 
+get_twsa_max_progress <- function(model, sa_table) {
+  n_strat <- get_n_strats(model)
+  n_group <- get_n_groups(model)
+  
+  n_strat + n_strat * nrow(sa_table)
+}
+
 get_scen_max_progress <- function(model) {
   n_strat <- get_n_strats(model)
   n_group <- get_n_groups(model)
