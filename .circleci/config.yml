@@ -28,9 +28,6 @@ jobs:
           name: Build package
           command: R CMD build .
       - run:
-          name: Set env vars
-          command: export _R_CHECK_TESTS_NLINES_ = 0
-      - run:
           name: Check package
           no_output_timeout: 30m
           command: R CMD check --as-cran --no-manual *tar.gz
