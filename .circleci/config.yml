@@ -1,6 +1,43 @@
 version: 2
 jobs:
-  build:
+  build_and_test:
+      docker:
+        - image: rocker/verse:latest
+      environment:
+        R_LIBS: ~/R/Library
+      steps:
+        - restore_cache:
+            keys:
+              - r-pkg-cache-{{ arch }}-{{ .Branch }}
+              - r-pkg-cache-{{ arch }}-
+        - checkout
+        - run:
+            name: Install package dependencies
+            command: |
+              mkdir -p ~/R/Library
+              Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
+              Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
+              Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
+        - run:
+            name: Session information and installed package versions
+            command: |
+              Rscript -e 'sessionInfo()'
+              Rscript -e 'installed.packages()[, c("Package", "Version")]'
+              Rscript -e 'rmarkdown::pandoc_version()'
+        - run:
+            name: Build package
+            command: R CMD build .
+        - run:
+            name: Check package
+            no_output_timeout: 30m
+            command: R CMD check --as-cran --no-manual *tar.gz
+        - store_artifacts:
+            path: heRomod.Rcheck/
+        - save_cache:
+            key: r-pkg-cache-{{ arch }}-{{ .Branch }}
+            paths:
+              - "~/R/Library"
+  build_and_coverage:
     docker:
       - image: rocker/verse:latest
     environment:
@@ -28,17 +65,6 @@ jobs:
           name: Build package
           command: R CMD build .
       - run:
-          name: Check package
-          no_output_timeout: 30m
-          command: R CMD check --as-cran --no-manual *tar.gz
-      - store_artifacts:
-          path: heRomod.Rcheck/
-      - save_cache:
-          key: r-pkg-cache-{{ arch }}-{{ .Branch }}
-          paths:
-            - "~/R/Library"
-      - run:
-          name: Build Success
-          when: on_success
+          name: Code Coverage
           command: Rscript -e 'library(covr); codecov()'
-          no_output_timeout: 15m
+          no_output_timeout: 30m
