@@ -68,3 +68,10 @@ jobs:
           name: Code Coverage
           command: Rscript -e 'library(covr); codecov()'
           no_output_timeout: 30m
+
+workflows:
+    version: 2
+    build:
+        jobs:
+            - build_and_test
+            - build_and_coverage
