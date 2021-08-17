@@ -4,7 +4,7 @@ export_hero_xlsx <- function(...) {
   dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)
   
-  max_prog <- get_dsa_max_progress(dots)
+  max_prog <- get_excel_max_progress(dots)
   try(dots$report_max_progress(max_prog))
   
   # Initial model run
