@@ -12,5 +12,13 @@ error_codes <- list(
   state_group_wrong_type = 'Error in state group specification, must be provided as data.frame with columns for "name", "state_group", and "share".',
   state_group_bad_names = 'Error in state group specification, invalid states referenced: {names}.',
   patch_model_bad_key = 'Error in patch_model, key "{key}" already exists on model.',
-  zero_initial_prob = 'Initial state probabilities must be defined.'
+  zero_initial_prob = 'Initial state probabilities must be defined.',
+  twsa_bad_format = 'Invalid format for two-way sensitivity analysis.',
+  twsa_empty = 'Two-way sensitivity analysis must be configured before running.',
+  twsa_wrong_no_params = 'Two-way sensitivity analyses must include exactly two parameters per analysis.',
+  twsa_params_empty = 'Two-way sensitivity analysis must be configured before running.',
+  twsa_params_dne = 'Two-way sensitivity analysis references missing parameters: {params}.',
+  twsa_param_orphaned = 'Two-way sensitivity analysis includes parameters that are not part of any analysis: {params}.',
+  twsa_param_bad_type = 'Parameters in two-way sensitivity analyses configured with invalid method for specifying values: {params}.',
+  twsa_group_strat_dep = 'Two-way sensitivity analysis may not vary parameters that are group or strategy dependent.'
 )

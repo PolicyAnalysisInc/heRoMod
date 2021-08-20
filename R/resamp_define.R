@@ -69,12 +69,12 @@ define_psa_ <- function(.dots = list(), correlation) {
     }
   )
   
+  the_env <- new.env(parent = new.env(parent = asNamespace("heRomod")))
+  the_env$bc <- 0.05
   list_input <- lapply(
     eval_dots,
     function(x) {
-      the_env <- new.env(parent = asNamespace("heRomod"))
       # Put in an arbtiray value here so it evaluates and we can determine type
-      the_env$bc <- 0.05
       eval(rhs(x), envir = the_env)
     })
   

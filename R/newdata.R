@@ -54,7 +54,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
   aux_params <- x$aux_params
   uneval_strategy <- x$uneval_strategy_list[[strategy]]
   expand_limit <- get_expand_limit(x, strategy)
+<<<<<<< HEAD
   individual_level <- x$individual_level
+=======
+  state_groups <- x$state_groups
+>>>>>>> master
   
   message(paste("Using a cluster with", cores, "cores."))
   
@@ -62,14 +66,38 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
     dplyr::mutate(.iteration = seq_len(n()))
   pnewdata <- split(newdata, newdata$.iteration)
   suppressMessages(
-    pieces <- parallel::mclapply(pnewdata, function(newdata) {
-      #lapply(pnewdata, function(newdata) {
-      newdata %>% 
-        rowwise() %>% 
-        do({
-          df <- as_tibble(
-            lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+    if (cores == 1) {
+      pieces <- lapply(pnewdata, function(newdata) {
+        newdata %>% 
+          rowwise() %>% 
+          do({
+            df <- as_tibble(
+              lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+            )
+            iter <- df$.iteration
+            tibble(
+              .mod = list(try(eval_newdata(
+                as.data.frame(df),
+                strategy = uneval_strategy,
+                old_parameters = old_parameters,
+                aux_params = aux_params,
+                cycles = cycles,
+                init = init,
+                inflow = inflow,
+                method = method,
+                strategy_name = strategy,
+                expand_limit = expand_limit,
+                disc_method = disc_method,
+                iteration = iter,
+                report_progress = report_progress,
+                state_groups = state_groups
+              )
+              )))}) %>%
+          ungroup() %>% 
+          bind_cols(
+            newdata
           )
+<<<<<<< HEAD
           iter <- df$.iteration
           tibble(
           .mod = list(try(eval_newdata(
@@ -87,14 +115,44 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
             iteration = iter,
             report_progress = report_progress,
             individual_level = individual_level
+=======
+      })
+      
+    } else {
+      pieces <- parallel::mclapply(pnewdata, function(newdata) {
+        newdata %>% 
+          rowwise() %>% 
+          do({
+            df <- as_tibble(
+              lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
+            )
+            iter <- df$.iteration
+            tibble(
+              .mod = list(try(eval_newdata(
+                as.data.frame(df),
+                strategy = uneval_strategy,
+                old_parameters = old_parameters,
+                aux_params = aux_params,
+                cycles = cycles,
+                init = init,
+                inflow = inflow,
+                method = method,
+                strategy_name = strategy,
+                expand_limit = expand_limit,
+                disc_method = disc_method,
+                iteration = iter,
+                report_progress = report_progress,
+                state_groups = state_groups
+              )
+              )))}) %>%
+          ungroup() %>% 
+          bind_cols(
+            newdata
+>>>>>>> master
           )
-          )))}) %>%
-        ungroup() %>% 
-        bind_cols(
-          newdata
-        )
-    #})
-    }, mc.cores = cores)
+      }, mc.cores = cores)
+      
+    }
   )
   plyr::l_ply(
     pieces,
@@ -112,7 +170,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
                          strategy_name, expand_limit, aux_params = NULL,
+<<<<<<< HEAD
                          disc_method = 'start', iteration = NULL, report_progress = identity, individual_level = F) {
+=======
+                         disc_method = 'start', iteration = NULL, report_progress = identity, state_groups = NULL) {
+>>>>>>> master
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
     new_parameters
@@ -136,7 +198,11 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     aux_params = aux_params,
     disc_method = disc_method,
     report_progress = report_progress,
+<<<<<<< HEAD
     individual_level = individual_level
+=======
+    state_groups = state_groups
+>>>>>>> master
   )
   res
 }

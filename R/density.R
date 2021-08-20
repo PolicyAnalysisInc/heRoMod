@@ -91,6 +91,55 @@ r_lognormal <- function(meanlog, sdlog) {
   function(x) stats::qlnorm(p = x, meanlog = meanlog, sdlog = sdlog)
 }
 
+uniform <- function(min, max) {
+  list(function(x) qunif(x, min = min, max = max))
+}
+
+dirichlet <- function(value, dist_group) {
+  if(missing(value)) stop('Value must be specified', call. = F)
+  if(missing(dist_group)) stop('Distribution group must be specified', call. = F)
+  
+  parent_env <- parent.env(parent.frame(n = 1))
+  row <- tibble(
+    group = dist_group, 
+    value = value
+  )
+  
+  if (is.null(parent_env$.dirichlet_inputs)) {
+    row$index <- 1
+    parent_env$.dirichlet_inputs <- row
+  } else {
+    row$index <- nrow(parent_env$.dirichlet_inputs) + 1
+    parent_env$.dirichlet_inputs <- rbind(parent_env$.dirichlet_inputs, row)
+  }
+  
+  dist_func <- function(x) {
+    input_rows <- filter(parent_env$.dirichlet_inputs, group == dist_group)
+    index <- which(input_rows$index == row$index)
+    dirichlet_res <- parent_env$.dirichlet_results
+    if (is.null(dirichlet_res)) {
+      dirichlet_res <- tibble(
+        group = numeric(),
+        result = list()
+      )
+    }
+    
+    group_dirichlet_res <- filter(dirichlet_res, group == dist_group)
+    if (nrow(group_dirichlet_res) == 0) {
+      sample_res <- rdirichlet(
+        length(x),
+        input_rows$value
+      )
+      parent_env$.dirichlet_results <- rbind(dirichlet_res, tibble(group = dist_group, result = list(sample_res)))
+    } else {
+      sample_res <- group_dirichlet_res$result[[1]]
+    }
+    sample_res[ ,index]
+    
+  }
+  dist_func
+}
+
 #' @rdname distributions
 gamma <- function(mean, sd) {
   list(r_gamma(mean^2/sd^2, sd^2/mean))

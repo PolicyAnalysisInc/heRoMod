@@ -188,7 +188,11 @@ plot.dsa <- function(x, type = c("simple", "difference"),
     xend = var_ref,
     colour = var_col)) +
     ggplot2::geom_segment(size = 5) +
+<<<<<<< HEAD
     ggplot2::guides(colour = 'none') +
+=======
+    ggplot2::guides(colour = "none") +
+>>>>>>> master
     ggplot2::ylab("Variable") +
     ggplot2::xlab(xl) +
     ggplot2::xlim(min(tab[[var_plot]]) - l, max(tab[[var_plot]]) + l) +

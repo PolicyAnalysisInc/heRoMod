@@ -750,6 +750,10 @@ set_max_cores <- function(n) {
   parent$.max_cores <- as.integer(n)
 }
 
+is_empty_sa_var <- function(x) {
+  is.vector(x[[1]]) && is.na(x[[1]])
+}
+
 apply_max_cores <- function(options, max) {
   if (is.null(max)) return(options)
   cores_options_index <- options$option == 'num_cores'
@@ -847,4 +851,13 @@ to_comparison_name <- function(x, y) {
 
 is_comparison_name <- function(x) {
   grepl(' vs. ', x, fixed = T)
+}
+
+vector_to_cs_string <- function(x, quoted = F) {
+  if (quoted) {
+    base_str <- paste0('"', x, '"')
+  } else {
+    base_str <- x
+  }
+  paste(base_str, collapse = ', ')
 }
