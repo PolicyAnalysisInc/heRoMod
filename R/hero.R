@@ -7,13 +7,14 @@ run_analysis <- function(...) {
     data$analysis,
     'psa' = run_hero_psa,
     'dsa' = run_hero_dsa,
+    'twsa' = run_hero_twsa,
     'vbp' = run_hero_vbp,
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
     'excel' = export_hero_xlsx,
     'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,
-    stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "psa", "scen", "excel", "code_preview", "r_project".')
+    stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "twsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
   res <- try({ do.call(runner, convert_model(data)) })
   if (inherits(res, "try-error")) {
@@ -26,7 +27,7 @@ run_analysis <- function(...) {
 
   # Write Results to JSON
   filename <- 'results.json'
-  jsonlite::write_json(res, filename)
+  jsonlite::write_json(res, filename, digits = 12)
   no_default <- is.na(manifest$get_manifest()$default)
   manifest$register_file('main_results', filename, 'Main results of running analysis', default = no_default)
   
@@ -61,6 +62,7 @@ parse_hero_settings <- function(settings) {
   if (is.null(settings$disc_method)) {
     settings$disc_method <- 'start'
   }
+  
   
   if (!is.null(settings$CycleLength)) {
     if (!is.null(settings$days_per_year)) {
@@ -1072,6 +1074,10 @@ build_hero_model <- function(...) {
     colnames(x) <- gsub("[\r\n]", "", colnames(x))
     x
   })
+  psa_n <- '1000'
+  if (!is.null(dots$psa$n)) {
+    psa_n <- as.character(dots$psa$n)
+  }
   
   # Return model object
   list(
@@ -1087,7 +1093,7 @@ build_hero_model <- function(...) {
       "method", settings$method,
       "disc_method", settings$disc_method,
       "cycles", as.character(max(1, round(settings$n_cycles,0))),
-      "n",      as.character(dots$psa$n),
+      "n",      psa_n,
       "init",   paste(dots$states$prob,collapse = ", "),
       "num_cores", as.character(cores)
     ),
@@ -1096,7 +1102,8 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progress
+    report_progress = dots$report_progress,
+    individual_level = T
   )
 }
 
@@ -1295,6 +1302,8 @@ package_hero_model <- function(...) {
   try(dots$report_max_progress(max_prog))
   
   model_object <- list(...)
+  model_object$report_progress <- NULL
+  model_object$report_max_progress <- NULL
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
 SaveWorkspace: Default

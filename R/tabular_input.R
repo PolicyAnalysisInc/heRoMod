@@ -23,11 +23,11 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
                           options = NULL, demo = NULL, source = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
                           run_demo = FALSE, state_time_limit = NULL,
-                          aux_params = NULL, psa = NULL, start = NULL, report_progress = identity) {
+                          aux_params = NULL, psa = NULL, start = NULL, report_progress = identity, individual_level = F) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
                                   source, data, aux_params = aux_params, psa = psa, start = start,
-                          report_progress = report_progress)
+                          report_progress = report_progress, individual_level = individual_level)
   
   inputs$state_time_limit <- state_time_limit
   outputs <- eval_models_from_tabular(inputs,
@@ -41,7 +41,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
                                   data = NULL, aux_params = NULL, psa = NULL, start = NULL,
-                                  report_progress = identity) {
+                                  report_progress = identity, individual_level = F) {
   
   # Create new environment
   df_env <- new.env(parent = globalenv())
@@ -109,7 +109,8 @@ gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
       aux_param_info = aux_param_info,
       demographic_file = demographic_file,
       model_options = model_options,
-      report_progress = report_progress
+      report_progress = report_progress,
+      individual_level = individual_level
     ),
     df_env$.patched_values
   )
@@ -475,7 +476,8 @@ eval_models_from_tabular <- function(inputs,
       cores = inputs$model_options$num_cores,
       disc_method = inputs$model_options$disc_method,
       report_progress = report_progress,
-      state_groups = inputs$state_groups
+      state_groups = inputs$state_groups,
+      individual_level = inputs$individual_level
     )
   )
   

@@ -17,6 +17,9 @@ convert_model <- function(model) {
         surv_dists = convert_surv_dists(model$surv_dists),
         type = NULL,
         vbp = model$vbp,
+        twsa_settings = model$twsa_settings,
+        twsa_parameters = model$twsa_parameters,
+        twsa = model$twsa,
         psa = convert_psa(model$psa, model$psa_correlations),
         dsa_settings = model$dsa_settings,
         scenario_settings = model$scenario_settings,
@@ -121,19 +124,19 @@ convert_psm_transitions <- function(transitions, strategies, settings) {
     if (!is.null(settings$days_per_year)) {
         dpy <- settings$days_per_year
     }
+    filtered_transitions <- filter(transitions, strategy %in% c("All", strategies$name))
     cycle_length <- get_cycle_length(settings)
     cycle_length_units <- get_cycle_length_units(settings)
     cycle_length_days <- time_in_days(cycle_length_units, dpy) * cycle_length
-    surv_cycle_unit_days <- map_dbl(transitions$unit, function(x) time_in_days(x, dpy))
+    surv_cycle_unit_days <- map_dbl(filtered_transitions$unit, function(x) time_in_days(x, dpy))
     surv_cycle_length_days <- cycle_length_days / surv_cycle_unit_days
-    transitions %>%
-        filter(strategy %in% c("All", strategies$name)) %>%
-        transmute(
-            strategy = strategy,
-            endpoint = endpoint,
-            cycle_length = surv_cycle_length_days,
-            value = formula
-        )
+    transmute(
+        filtered_transitions,
+        strategy = strategy,
+        endpoint = endpoint,
+        cycle_length = surv_cycle_length_days,
+        value = formula
+    )
 }
 
 convert_custom_transitions <- function(transitions, strategies) {
@@ -201,15 +204,26 @@ convert_esumms <- function(summaries) {
 }
 
 convert_variables <- function(variables) {
-    transmute(
-        variables,
-        name = name,
-        desc = description,
-        value = as.character(ifelse(overrideActive == "On", overrideValue, formula)),
-        low = as.character(ifelse(active == "On", low, "")),
-        high = as.character(ifelse(active == "On", high, "")),
-        psa = as.character(ifelse(psa_active == "On", distribution, ""))
-    )
+    if (is.null(variables) || class(variables) == "list") {
+        return(variables)
+    }
+    variables %>%
+        mutate(
+            overrideActive = if(exists('overrideActive')) overrideActive else 'Off',
+            overrideValue = if(exists('overrideValue')) overrideValue else NA,
+            psaActive = if(exists('psaActive')) psaActive else 'Off',
+            low = if(exists('low')) low else '',
+            high = if(exists('high')) high else '',
+            psa = if(exists('psa')) psa else ''
+        ) %>%
+        transmute(
+            name = name,
+            desc = description,
+            value = as.character(ifelse(!is.na(overrideActive) & overrideActive == "On", overrideValue, formula)),
+            low = as.character(ifelse(!is.na(active) & active == "On", low, "")),
+            high = as.character(ifelse(!is.na(active) & active == "On", high, "")),
+            psa = as.character(ifelse(!is.na(psa_active) & psa_active == "On", distribution, ""))
+        )
 }
 
 convert_surv_dists <- function(surv_dists) {
@@ -297,6 +311,7 @@ convert_scenarios <- function(scenarios) {
         return(list())
     }
     scenarios %>%
+        filter(active) %>%
         rowwise() %>%
         group_split() %>%
         map(function(x) {

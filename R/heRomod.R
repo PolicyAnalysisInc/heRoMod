@@ -51,6 +51,7 @@
 #' @importFrom dplyr mutate_all
 #' @importFrom dplyr filter_all
 #' @importFrom dplyr select_if
+#' @importFrom dplyr distinct_at
 #' 
 #' @importFrom plyr ldply
 #' @importFrom plyr ddply
@@ -136,6 +137,9 @@
 #' @importFrom tidyr spread
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyr pivot_longer
+#' @importFrom tidyr expand_grid
+#' 
+#' @importFrom magrittr set_colnames
 #' 
 #' @importFrom purrr walk
 #' @importFrom purrr walk2
@@ -145,9 +149,14 @@
 #' @importFrom purrr list_modify
 #' @importFrom purrr discard
 #' @importFrom purrr map2_chr
+#' @importFrom purrr map_lgl
 #' @importFrom purrr set_names
 #' 
+#' @importFrom rlang syms
+#' 
 #' @importFrom glue glue
+#' 
+#' @importFrom gtools rdirichlet
 #' 
 #' @importFrom Matrix sparseMatrix
 #' 
