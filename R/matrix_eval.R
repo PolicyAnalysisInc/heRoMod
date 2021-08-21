@@ -296,6 +296,8 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
       .value = unlist(eval_trans_probs[names(x)])
     ) %>%
       mutate(
+        .from_e = .from,
+        .to_e = .to,
         .from_e_i = as.numeric(factor(.from, levels = expand$.full_state)),
         .to_e_i = as.numeric(factor(.to, levels = expand$.full_state)),
         .cycle = as.numeric(factor(model_time, levels = sort(unique(model_time)))),
