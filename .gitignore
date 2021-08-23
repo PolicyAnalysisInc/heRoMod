@@ -8,3 +8,5 @@ heemod-expand.Rproj
 04_progress
 *.RProj
 *.DS_Store
+results.json
+trying_state_time.xlsx
