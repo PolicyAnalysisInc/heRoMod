@@ -88,7 +88,8 @@ run_model <- function(...,
                       cores = 1,
                       disc_method = 'start',
                       report_progress = identity,
-                      state_groups = NULL) {
+                      state_groups = NULL,
+                      individual_level = F) {
   
   uneval_strategy_list <- list(...)
   
@@ -111,7 +112,8 @@ run_model <- function(...,
     cores = cores,
     disc_method = disc_method,
     report_progress = report_progress,
-    state_groups = state_groups
+    state_groups = state_groups,
+    individual_level = individual_level
   )
 }
 
@@ -131,7 +133,8 @@ run_model_ <- function(uneval_strategy_list,
                        cores = 1,
                        disc_method = 'start',
                        report_progress = identity,
-                       state_groups = NULL) {
+                       state_groups = NULL,
+                       individual_level = F) {
   if (length(uneval_strategy_list) == 0) {
     stop("At least 1 strategy is needed.")
   }
@@ -202,7 +205,7 @@ run_model_ <- function(uneval_strategy_list,
   
   #eval_strategy_list <- list()
   
-  if (parallel && .Platform$OS.type == "unix") {
+  if (cores > 1 && parallel && .Platform$OS.type == "unix") {
     eval_strategy_list <- parallel::mclapply(seq_len(length(uneval_strategy_list)), function(i) {
       try(eval_strategy(
         strategy = uneval_strategy_list[[i]], 
@@ -216,7 +219,8 @@ run_model_ <- function(uneval_strategy_list,
         aux_params = aux_params,
         disc_method = disc_method,
         report_progress = report_progress,
-        state_groups = state_groups
+        state_groups = state_groups,
+        individual_level = individual_level
       ))
     }, mc.cores = cores)
     
@@ -240,7 +244,8 @@ run_model_ <- function(uneval_strategy_list,
         aux_params = aux_params,
         disc_method = disc_method,
         report_progress = report_progress,
-        state_groups = state_groups
+        state_groups = state_groups,
+        individual_level = individual_level
       )
     })
   }
@@ -290,6 +295,7 @@ run_model_ <- function(uneval_strategy_list,
       disc_method = disc_method,
       report_progress = report_progress,
       state_groups = state_groups,
+      individual_level = individual_level,
       cores = cores
     ),
     class = c("run_model", class(res))

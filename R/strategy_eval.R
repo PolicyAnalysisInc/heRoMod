@@ -54,7 +54,7 @@ eval_strategy <- function(strategy, parameters, cycles,
                           init, method, expand_limit,
                           inflow, strategy_name, aux_params = NULL,
                           disc_method = 'start', report_progress = identity,
-                          state_groups = NULL) {
+                          state_groups = NULL, individual_level = F) {
   
   .state <- .full_state <- .expand <- NULL
   
@@ -216,7 +216,8 @@ eval_strategy <- function(strategy, parameters, cycles,
   e_init <- eval_init(
     init,
     e_parameters,
-    expand_table
+    expand_table,
+    individual_level = individual_level
   )
   
   # Inflow (now includes init)

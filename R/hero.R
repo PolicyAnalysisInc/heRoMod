@@ -1102,7 +1102,8 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progress
+    report_progress = dots$report_progress,
+    individual_level = T
   )
 }
 
