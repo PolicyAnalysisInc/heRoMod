@@ -29,7 +29,7 @@ jobs:
             command: R CMD build .
         - run:
             name: Check package
-            no_output_timeout: 30m
+            no_output_timeout: 35m
             command: R CMD check --as-cran --no-manual *tar.gz
         - store_artifacts:
             path: heRomod.Rcheck/
@@ -67,7 +67,7 @@ jobs:
       - run:
           name: Code Coverage
           command: Rscript -e 'library(covr); codecov()'
-          no_output_timeout: 30m
+          no_output_timeout: 40m
 
 workflows:
     version: 2

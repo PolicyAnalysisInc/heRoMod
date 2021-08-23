@@ -84,7 +84,7 @@ eval_obj_parameters <- function(x, params) {
   
 }
 
-eval_init <- function(x, parameters, expand) {
+eval_init <- function(x, parameters, expand, individual_level = F) {
   
   # Assinging NULLS to avoid CMD Check issues
   .state <- .limit <- model_time <- state_time <- .value <- NULL
@@ -163,30 +163,35 @@ eval_init <- function(x, parameters, expand) {
     error_states_string <- paste0(error_states, collapse = ",")
     stop(
       paste0(
-        "Error in initial probabilities, probabilites are negative for states: ",
+        "Error in initial probabilities, probabilities are negative for states: ",
         error_states_string
       ),
       call. = F
     )
   }
   
-  # Check that probabilities are within [0-1]
-  # if(any(init_vector < 0) || any(init_vector > 1)) {
-  #   error_states <- paste0("'", init_df$.full_state[init_vector < 0 | init_vector > 1], "'")
-  #   error_states_string <- paste0(error_states, collapse = ",")
-  #   stop(
-  #     paste0(
-  #       "Error in initial probabilities, probabilites are outside range [0-1] for states: ",
-  #       error_states_string
-  #     ),
-  #     call. = F
-  #   )
-  # }
-  
-  # Check that probabiltiies sum to 1
-  # if(sum(init_vector) != 1) {
-  #   stop("Error in initial probabiltiies, values do not sum to 1.", call. = F)
-  # }
+  if (individual_level) {
+    
+    # Check that probabilities are within [0-1]
+    if(any(init_vector < 0) || any(init_vector > 1)) {
+      error_states <- paste0("'", init_df$.full_state[init_vector < 0 | init_vector > 1], "'")
+      error_states_string <- paste0(error_states, collapse = ",")
+      stop(
+        paste0(
+          "Error in initial probabilities, probabilities are outside range [0-1] for states: ",
+          error_states_string
+        ),
+        call. = F
+      )
+    }
+    
+    # Check that probabiltiies sum to 1
+    if(sum(init_vector) != 1) {
+      stop("Error in initial probabilities, values do not sum to 1.", call. = F)
+    }
+    
+  }
+
   if (sum(init_vector) == 0) {
     stop(error_codes$zero_initial_prob, call. = F)
   }
