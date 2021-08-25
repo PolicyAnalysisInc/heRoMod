@@ -41,7 +41,7 @@ run_hero_scen <- function(...) {
   )
   
   strategy_names <- dots$strategies$name
-  
+  stop('foo')
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))
   
