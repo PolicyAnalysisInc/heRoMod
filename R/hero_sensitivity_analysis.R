@@ -133,7 +133,6 @@ calc_dsa_deltas_vs_ref <- function(results, referent, id_vars) {
 
 extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_include = c(), allowGroupStratDep = T) {
   
-  stop('foo')
   summary_res <- results %>%
     select_at(c('series', group_vars, '.vbp_scen', '.vbp_price', '.mod', '.group_weight')) %>%
     rowwise() %>%
@@ -156,6 +155,8 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
     group_by_at(c('series', group_vars, '.vbp_scen', '.vbp_price', 'outcome', 'disc', vars_to_include)) %>%
     summarize(value = sum(value * .group_weight/sum(.group_weight))) %>% # aggregate by group
     ungroup()
+  
+  stop('foo')
   
   return(summary_res)
 }
