@@ -143,7 +143,7 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
       extract_sa_outcome(x$.mod[[1]], summaries),
       extract_parameter_values(x$.mod[[1]], vars_to_include)
     )}) %>%  # Extract outcomes results
-    bind_rows()
+    bind_rows() %>%
     mutate(
       disc = substring(outcome, 1, 6) == '.disc_',
       outcome = ifelse(disc, substring(outcome, 7), outcome)
