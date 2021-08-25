@@ -177,7 +177,6 @@ scenario_format_res <- function(res, scenarios, id_vars = NULL, id_var_ordering 
     id_vars <- c('outcome', 'disc', 'series')
   }
   
-  stop('test')
   if(!is.null(id_var_ordering)) {
     vars_to_order <- names(id_var_ordering)
     for(varname in vars_to_order) {
