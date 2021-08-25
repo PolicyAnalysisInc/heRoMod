@@ -205,7 +205,14 @@ scenario_format_res <- function(res, scenarios, id_vars = NULL, id_var_ordering 
     group_split() %>%
     purrr::map(function(x) {
       res_list <- select(x[1,], !!id_vars) %>%
-        as.list()
+        as.list() %>%
+        map(function(x) {
+          if (!is.factor(x)) {
+            x
+          } else {
+            as.character(x)
+          }
+        })
       res_list$data <- select(x, scenario, value, description)
       return(res_list)
     })
