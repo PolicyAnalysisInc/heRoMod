@@ -40,12 +40,11 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs$cores
   )
   
-  strategy_names <- dots$strategies$name
+  stop(jsonlite::toJSON(dots$stratgies))
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))
   
-  stop('test')
   costs_res <- extract_sa_summary_res(res, dots$esumms, c('.scenario'))
   nmb_res <- extract_sa_nmb(outcomes_res, costs_res, dots$hsumms, dots$esumms, c('.scenario'))
   if (run_vbp) {
