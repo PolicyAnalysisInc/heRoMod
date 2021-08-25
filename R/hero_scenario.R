@@ -10,7 +10,6 @@ run_hero_scen <- function(...) {
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
-  stop('test')
   vbp_name <- dots$vbp$par_name
   
   # Generate sensitvity analysis input table
@@ -41,6 +40,7 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs$cores
   )
   
+  stop('test')
   strategy_names <- dots$strategies$name
   
   # Pull out results for each scenario
