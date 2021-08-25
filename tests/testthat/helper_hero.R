@@ -350,15 +350,38 @@ test_scen_results <- function(model, name, path, vbp = F) {
     scen_res <- readRDS(system.file("hero", path, "scen_res.rds", package="heRomod"))
   }
   
+  convert_scen_res_format <- function(res, sort_vars = c('outcome', 'disc', 'series')) {
+    res %>%
+      map(function(x) cbind(x[setdiff(names(x), 'data')], x$data, stringsAsFactors = F)) %>%
+      bind_rows() %>%
+      arrange_at(sort_vars)
+  }
+  
   # Run model
   scen_res_test <- do.call(run_hero_scen, model)
   
   # Check results
-  expect_equal(scen_res$outcomes, scen_res_test$outcomes)
-  expect_equal(scen_res$cost, scen_res_test$cost)
-  expect_equal(scen_res$nmb, scen_res_test$nmb)
+  expect_equal(
+    convert_scen_res_format(scen_res$outcomes),
+    convert_scen_res_format(scen_res_test$outcomes)
+  )
+  expect_equal(
+    convert_scen_res_format(scen_res$cost),
+    convert_scen_res_format(scen_res_test$cost)
+  )
+  expect_equal(
+    convert_scen_res_format(scen_res$nmb, c('health_outcome', 'econ_outcome', 'series')),
+    convert_scen_res_format(scen_res_test$nmb, c('health_outcome', 'econ_outcome', 'series'))
+  )
   if (vbp) {
-    expect_equal(scen_res$vbp, scen_res_test$vbp)
+    expect_equal(
+      scen_res$vbp$referent,
+      scen_res_test$vbp$referent
+    )
+    expect_equal(
+      convert_scen_res_format(scen_res$vbp$prices, c('series')),
+      convert_scen_res_format(scen_res_test$vbp$prices, c( 'series'))
+    )
   }
 }
 
