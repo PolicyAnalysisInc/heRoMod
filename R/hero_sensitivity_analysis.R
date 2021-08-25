@@ -138,7 +138,7 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
     rowwise() %>%
     group_split() %>%
     map(function(x) {
-      extract_sa_outcome(x$.mod[[1]], summaries)
+      extract_parameter_values(x$.mod[[1]], vars_to_include)
       stop('foo')
       bind_cols(
       x,
