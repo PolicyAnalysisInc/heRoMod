@@ -5,12 +5,12 @@ run_hero_scen <- function(...) {
   dots <- patch_progress_funcs(list(...))
   check_scenarios(dots$scenario)
   args <- do.call(build_hero_model, dots)
-  
   max_prog <- get_scen_max_progress(dots)
   try(dots$report_max_progress(max_prog))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
+  stop('test')
   vbp_name <- dots$vbp$par_name
   
   # Generate sensitvity analysis input table
@@ -177,7 +177,7 @@ scenario_format_res <- function(res, scenarios, id_vars = NULL, id_var_ordering 
   if (is.null(id_vars)) {
     id_vars <- c('outcome', 'disc', 'series')
   }
-  stop('test')
+  
   if(!is.null(id_var_ordering)) {
     vars_to_order <- names(id_var_ordering)
     for(varname in vars_to_order) {
