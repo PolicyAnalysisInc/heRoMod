@@ -44,10 +44,10 @@ run_hero_scen <- function(...) {
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))
+  stop('foo')
   costs_res <- extract_sa_summary_res(res, dots$esumms, c('.scenario'))
   nmb_res <- extract_sa_nmb(outcomes_res, costs_res, dots$hsumms, dots$esumms, c('.scenario'))
   
-  stop('foo')
   if (run_vbp) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.scenario'))
   }
