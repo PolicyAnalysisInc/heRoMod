@@ -136,15 +136,14 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
   summary_res <- results %>%
     select_at(c('series', group_vars, '.vbp_scen', '.vbp_price', '.mod', '.group_weight')) %>%
     rowwise() %>%
-    group_split() %>%
+    group_split()
+    stop('foo')
     map(function(x) bind_cols(
       x,
       extract_sa_outcome(x$.mod[[1]], summaries),
       extract_parameter_values(x$.mod[[1]], vars_to_include)
     )) %>%  # Extract outcomes results
     bind_rows()
-  
-  stop('foo')
     mutate(
       disc = substring(outcome, 1, 6) == '.disc_',
       outcome = ifelse(disc, substring(outcome, 7), outcome)
