@@ -210,7 +210,7 @@ create_sa_table <- function(n_scen, n_par, par_names) {
 }
 
 extract_parameter_values <- function(res, params) {
-  stop(jsonlite::toJSON(res$parameters))
+  stop(jsonlite::toJSON(res$parameters[1, params]))
   res$parameters[1, params]
 }
 
