@@ -156,8 +156,6 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
     summarize(value = sum(value * .group_weight/sum(.group_weight))) %>% # aggregate by group
     ungroup()
   
-  stop('foo')
-  
   return(summary_res)
 }
 
