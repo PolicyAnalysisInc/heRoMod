@@ -132,15 +132,17 @@ calc_dsa_deltas_vs_ref <- function(results, referent, id_vars) {
 }
 
 extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_include = c(), allowGroupStratDep = T) {
+  
   summary_res <- results %>%
     select_at(c('series', group_vars, '.vbp_scen', '.vbp_price', '.mod', '.group_weight')) %>%
     rowwise() %>%
     group_split() %>%
-    map(function(x) bind_cols(
+    map(function(x) {
+      bind_cols(
       x,
       extract_sa_outcome(x$.mod[[1]], summaries),
       extract_parameter_values(x$.mod[[1]], vars_to_include)
-    )) %>%  # Extract outcomes results
+    )}) %>%  # Extract outcomes results
     bind_rows() %>%
     mutate(
       disc = substring(outcome, 1, 6) == '.disc_',
@@ -154,7 +156,6 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
     group_by_at(c('series', group_vars, '.vbp_scen', '.vbp_price', 'outcome', 'disc', vars_to_include)) %>%
     summarize(value = sum(value * .group_weight/sum(.group_weight))) %>% # aggregate by group
     ungroup()
-  
   return(summary_res)
 }
 
@@ -209,6 +210,9 @@ create_sa_table <- function(n_scen, n_par, par_names) {
 }
 
 extract_parameter_values <- function(res, params) {
+  if (is.null(params)) {
+    return(params[1, c()])
+  }
   res$parameters[1, params]
 }
 
