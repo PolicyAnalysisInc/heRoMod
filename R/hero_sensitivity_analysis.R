@@ -211,7 +211,7 @@ create_sa_table <- function(n_scen, n_par, par_names) {
 
 extract_parameter_values <- function(res, params) {
   if (is.null(params)) {
-    return(data.frame())
+    return(params[1, c()])
   }
   res$parameters[1, params]
 }
