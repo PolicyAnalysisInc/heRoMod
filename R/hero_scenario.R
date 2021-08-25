@@ -40,7 +40,7 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs$cores
   )
   
-  stop(jsonlite::toJSON(dots$stratgies))
+  stop(jsonlite::toJSON(dots$strategies))
   
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))
