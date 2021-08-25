@@ -138,8 +138,6 @@ extract_sa_summary_res <- function(results, summaries, group_vars, vars_to_inclu
     rowwise() %>%
     group_split() %>%
     map(function(x) {
-      extract_parameter_values(x$.mod[[1]], vars_to_include)
-      stop('foo')
       bind_cols(
       x,
       extract_sa_outcome(x$.mod[[1]], summaries),
@@ -212,6 +210,7 @@ create_sa_table <- function(n_scen, n_par, par_names) {
 }
 
 extract_parameter_values <- function(res, params) {
+  stop(jsonlite::toJSON(res$parameters))
   res$parameters[1, params]
 }
 
