@@ -41,6 +41,8 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs$cores
   )
   
+  strategy_names <- dots$strategies$name
+  
   # Pull out results for each scenario
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c('.scenario'))
   costs_res <- extract_sa_summary_res(res, dots$esumms, c('.scenario'))
@@ -51,11 +53,11 @@ run_hero_scen <- function(...) {
   
   # Format and Return
   list(
-    outcomes = scenario_format_res(outcomes_res, dots$scenario),
-    cost = scenario_format_res(costs_res, dots$scenario),
-    nmb = scenario_format_res(nmb_res, dots$scenario, id_vars = c('health_outcome', 'econ_outcome', 'series')),
+    outcomes = scenario_format_res(outcomes_res, dots$scenario, id_var_ordering = list(series = strategy_names)),
+    cost = scenario_format_res(costs_res, dots$scenario, id_var_ordering = list(series = strategy_names)),
+    nmb = scenario_format_res(nmb_res, dots$scenario, id_vars = c('health_outcome', 'econ_outcome', 'series'), id_var_ordering = list(series = strategy_names)),
     vbp = if (run_vbp) list(
-        prices = scenario_format_res(vbp_res, dots$scenario, id_vars = c('series')),
+        prices = scenario_format_res(vbp_res, dots$scenario, id_vars = c('series'), id_var_ordering = list(series = strategy_names)),
         referent = dots$vbp$strat
       ) else NULL,
     api_ver = '2.0'
@@ -171,10 +173,18 @@ check_scenarios <- function(scenarios) {
   }
 }
 
-scenario_format_res <- function(res, scenarios, id_vars = NULL) {
+scenario_format_res <- function(res, scenarios, id_vars = NULL, id_var_ordering = NULL) {
   if (is.null(id_vars)) {
     id_vars <- c('outcome', 'disc', 'series')
   }
+  
+  if(!is.null(id_var_ordering)) {
+    vars_to_order <- names(id_var_ordering)
+    for(varname in vars_to_order) {
+      res[[varname]] <- factor(res[[varname]], levels = id_var_ordering[[varname]])
+    }
+  }
+  
   if ('.vbp_scen' %in% colnames(res)) {
     res <- filter(res, is.na(.vbp_scen))
   }
