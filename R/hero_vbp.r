@@ -157,7 +157,7 @@ get_linear_model_and_check <- function(x, y) {
   
   # Check if perfectly linear. Note that all.equal returns TRUE if the condition
   # is true but a string if the condition is false.
-  linear_check <- all.equal(unname(linear_model$residuals), c(0,0,0))
+  linear_check <- all.equal(unname(linear_model$residuals), c(0,0,0), tolerance = 1E-5)
   
   # Return whether linear and slope/intercept
   return(list(linear = linear_check == T, intercept = coef[1], slope = coef[2]))
