@@ -20,6 +20,7 @@ run_hero_dsa <- function(...) {
     vbp_table <- tibble(.vbp_scen = NA, .vbp_price = NA, .vbp_param = list(NA))
     run_vbp <- FALSE
   } else {
+    check_hero_vbp(dots$vbp)
     vbp_table <- gen_vbp_table(dots$vbp)
     run_vbp <- TRUE
   }
@@ -29,7 +30,9 @@ run_hero_dsa <- function(...) {
   if (vbp_name %in% colnames(sa_table)) {
     indices <- !is.na(sa_table$.vbp_param)
   }
-  sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
+  if (run_vbp) {
+    sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
+  }
   sa_table <- select(sa_table, -.vbp_param) %>%
     dplyr::relocate(.dsa_param, .dsa_side, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   
