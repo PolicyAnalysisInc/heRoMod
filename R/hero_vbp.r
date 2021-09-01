@@ -14,9 +14,7 @@ run_hero_vbp <- function(...) {
   
   # Generate sensitvity analysis input table
   groups_table <- gen_groups_table(dots$groups)
-  if (is.null(dots$vbp)) {
-    dots$vbp <- list()
-  }
+  check_hero_vbp(dots$vbp)
   dots$vbp$vbp_only <- T
   vbp_table <- gen_vbp_table(dots$vbp)
   sa_table <- crossing(groups_table, vbp_table)
@@ -48,6 +46,36 @@ run_hero_vbp <- function(...) {
     vbp = vbp_format_vbp(vbp_res, dots$strategies),
     referent = dots$vbp$strat
   )
+}
+
+
+
+check_hero_vbp <- function(vbp) {
+  
+  if (is.null(vbp)) {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
+  if (!('list' %in% class(vbp))) {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
+  if (is.null(vbp$strat) || is.na(vbp$strat) || vbp$strat == '') {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
+  if (is.null(vbp$par_name) || is.na(vbp$par_name) || vbp$par_name == '') {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
+  if (is.null(vbp$cost) || is.na(vbp$cost) || vbp$cost == '') {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
+  if (is.null(vbp$effect) || is.na(vbp$effect) || vbp$effect == '') {
+    stop(error_codes$vbp_settings_undefined, call. = F)
+  }
+  
 }
 
 vbp_format_lin_eq <- function(res, strategies) {

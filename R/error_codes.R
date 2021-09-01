@@ -20,5 +20,6 @@ error_codes <- list(
   twsa_params_dne = 'Two-way sensitivity analysis references missing parameters: {params}.',
   twsa_param_orphaned = 'Two-way sensitivity analysis includes parameters that are not part of any analysis: {params}.',
   twsa_param_bad_type = 'Parameters in two-way sensitivity analyses configured with invalid method for specifying values: {params}.',
-  twsa_group_strat_dep = 'Two-way sensitivity analysis may not vary parameters that are group or strategy dependent.'
+  twsa_group_strat_dep = 'Two-way sensitivity analysis may not vary parameters that are group or strategy dependent.',
+  vbp_settings_undefined = 'VBP settings have not been configured.'
 )
