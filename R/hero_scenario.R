@@ -19,6 +19,7 @@ run_hero_scen <- function(...) {
     vbp_table <- tibble(.vbp_scen = NA, .vbp_price = NA, .vbp_param = list(NA))
     run_vbp <- FALSE
   } else {
+    check_hero_vbp(dots$vbp)
     vbp_table <- gen_vbp_table(dots$vbp)
     run_vbp <- TRUE
   }
