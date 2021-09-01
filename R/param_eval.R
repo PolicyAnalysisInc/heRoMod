@@ -206,6 +206,8 @@ eval_starting_values <- function(x, parameters) {
   
   
   to_keep <- names(x)
+  x <- dispatch_strategy_hack(x)
+  x <- by_group_hack(x)
   
   start_df <- parameters %>%
     filter(state_time == 1) %>%
