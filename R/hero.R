@@ -567,6 +567,19 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
       .state = factor(.state, levels = states),
       name = factor(name, levels = all_value_names)
     ) %>%
+    (function(x) {
+      if (nrow(x) > 0) {
+        x
+      } else {
+        tibble(
+          .model = factor(strategies, levels = strategies),
+          .state = factor(states[1], levels = states),
+          name = factor(all_value_names[1], levels = all_value_names),
+          value = '0'
+        )
+      }
+    }) %>%
+    
     reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F) %>%
     mutate(.model = as.character(.model), .state = as.character(.state))
   
