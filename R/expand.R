@@ -126,31 +126,23 @@ interpolate <- function(x, ...) {
 #' @rdname interpolate
 interpolate.default <- function(x, more = NULL, ...) {
   
-  res <- NULL
+  non_zero_indices <- c()
+  count <- 1
   
-  for (i in seq_along(x)) {
-    to_interp <- x[[i]]
-    for_interp <- c(more, as_expr_list(res))
-    funs <- all.funs(to_interp$expr)
-    
-    if (any(pb <- funs %in% names(for_interp))) {
-      stop(sprintf(
-        "Some parameters are named like a function, this is incompatible with the use of 'state_time': %s.",
-        paste(funs[pb], collapse = ", ")
-      ))
+  walk2(x, seq_len(length(x)), function(y, i) {
+    if (as.character(y)[1] != '0') {
+      new_val <- lazyeval::interp(
+        y,
+        .values = c(more, as_expr_list(x[non_zero_indices]))
+      )
+      x[[i]] <<- new_val
+      non_zero_indices[count] <- i
+      count <<- count + 1
     }
-    
-    new <- setNames(list(lazyeval::interp(
-      to_interp,
-      .values = for_interp
-    )
-    ), names(x)[i])
-    res <- c(res, new)
-    
-  }
-  lazyeval::as.lazy_dots(res)
+  })
+  
+  x
 }
-
 
 #' @export
 #' @rdname interpolate

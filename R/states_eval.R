@@ -34,7 +34,7 @@
 eval_state_list <- function(x, parameters, expand = NULL,
                             disc_method = 'start') {
   
-  # Assinging NULLS to avoid CMD Check issues
+  # Assigning NULLS to avoid CMD Check issues
   .state <- .limit <- state_time <- .value <- NULL
   .full_state <- .name <- .to_name_expanded <- .from_name_expanded <- NULL
   

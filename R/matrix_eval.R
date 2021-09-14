@@ -223,19 +223,17 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
-    renamer <- state_trans_names
-    names(renamer) <- matrix_pos_names
-    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
-      rename(!!!syms(renamer))
-    names(x) <- matrix_pos_names
+    indices <- map_lgl(x, function(y) as.character(y)[1] != '0')
+    .nz_trans_guide <- strsplit(state_trans_names[indices], ' → ', fixed = T) %>%
+      map_dfr(function(z) tibble(.from = z[[1]], .to = z[[2]])) %>%
+      mutate(.trans = state_trans_names[indices])
     
-    trans_table <- tibble::tibble(
-      model_time = rep.int(parameters$model_time, times = n_state^2),
-      state_time = rep.int(parameters$state_time, times = n_state^2),
-      .from = rep(state_names, each = n_state * nrow_param),
-      .to = rep(state_names, times = n_state, each = nrow_param),
-      .value = as.numeric(as.matrix((eval_trans_probs[names(x)])))
-    ) %>%
+    trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
+      .[c('state_time', 'model_time', names(x)[indices])] %>%
+      gather(.trans, .value, -model_time, -state_time) %>%
+      left_join(.nz_trans_guide, by = '.trans') %>%
+      select(-.trans) %>%
+      filter(.value != 0) %>%
       left_join(
         rename(state_groups, .from_state_group = group),
         by = c(.from = "name")
@@ -283,18 +281,16 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
       rep(state_names, length(state_names))
     )
     names(x) <- state_trans_names
-    renamer <- state_trans_names
-    names(renamer) <- matrix_pos_names
-    eval_trans_probs <- safe_eval(parameters, .dots = x, .vartype = "transition") %>%
-      rename(!!!syms(renamer))
-    names(x) <- matrix_pos_names
-    trans_table <- tibble::tibble(
-      model_time = rep(parameters$model_time, times = n_state^2),
-      state_time = rep(parameters$state_time, times = n_state^2),
-      .from = rep(state_names, each = n_state * nrow_param),
-      .to = rep(state_names, times = n_state, each = nrow_param),
-      .value = unlist(eval_trans_probs[names(x)])
-    ) %>%
+    indices <- map_lgl(x, function(y) as.character(y)[1] != '0')
+    .nz_trans_guide <- strsplit(state_trans_names[indices], ' → ', fixed = T) %>%
+      map_dfr(function(z) tibble(.from = z[[1]], .to = z[[2]])) %>%
+      mutate(.trans = state_trans_names[indices])
+    
+    trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
+      .[c('state_time', 'model_time', names(x)[indices])] %>%
+      gather(.trans, .value, -model_time, -state_time) %>%
+      left_join(.nz_trans_guide, by = '.trans') %>%
+      select(-.trans) %>%
       mutate(
         .from_e = .from,
         .to_e = .to,
