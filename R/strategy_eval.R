@@ -83,19 +83,8 @@ eval_strategy <- function(strategy, parameters, cycles,
     state_st <- has_state_time(states)
     
     if (params_st | any(mat_st) | any(state_st)) {
-      # No need for state interpol
-    
-      # Interpolate to determine propogation of state_time
-      i_params <- interpolate(parameters)
-      i_state <- interpolate(states, more = as_expr_list(i_params))
-      i_trans <- interpolate(transitions, more = as_expr_list(i_params))
-      
-      # Determine which states need to be expanded
-      state_td <- has_state_time(i_state)
-      mat_td <- has_state_time(i_trans) %>%
-        matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
-        apply(1, any)
-      to_expand <- state_td | mat_td
+      # Interpolate to determine propagation of state_time
+      to_expand <- get_states_to_expand(parameters, states, transitions)
     } else {
       # No need for interpolation to figure out there is no state_time if there are
       # no references to state_time

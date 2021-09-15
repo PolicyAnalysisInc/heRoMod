@@ -361,3 +361,55 @@ check_state_groups <- function(state_groups, state_names) {
   }
   
 }
+
+trace_st_dep <- function(x, extras = NULL) {
+  param_names <- names(x)
+  n_param <- length(x)
+  
+  # Create a hashtable to quickly look up which parameters are state-time dependent
+  st_hashtable <- rep(F, n_param)
+  names(st_hashtable) <- param_names
+  st_hashtable <- c(state_time = T, st_hashtable, extras)
+  
+  for (i in seq(from = 1, to = n_param, by = 1)) {
+    if (as.character(x[[i]])[1] != '0') {
+      var_name <- param_names[i]
+      deps <- all.vars(x[[i]]$expr)
+      st_hashtable[[var_name]] <- any(st_hashtable[deps], na.rm = T)
+    }
+  }
+  
+  st_hashtable[param_names]
+}
+
+get_states_to_expand <- function(params, states, transitions) {
+  
+  state_trans_values <- attr(states, 'transitions')
+  n_states <- length(states)
+  state_names <- names(states)
+  
+  # Determine which parameters have state time references
+  st_dep_params <- trace_st_dep(params)
+  
+  # Determine which states have values with state time references
+  value_st_dep <- map_lgl(states, function(x) any(trace_st_dep(x, extras = st_dep_params)))
+  
+  # Also look at state transition values if any exist
+  if (!is.null(state_trans_values)) {
+    value_trans_st_dep <- map_lgl(state_trans_values, function(x) any(trace_st_dep(x, extras = st_dep_params)))
+    value_trans_names <- names(value_trans_st_dep)
+    value_trans_from <- map_chr(strsplit(value_trans_names, '→', fixed = T), function(x) x[1])
+    value_st_dep[value_trans_from] <- value_st_dep[value_trans_from] | value_trans_st_dep
+  }
+  
+  # Determine which states have transitions with state time references
+  trans_st_dep <- trace_st_dep(transitions, extras = st_dep_params) %>%
+    matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
+    apply(1, any)
+  
+  # Return named logical vector with which states have state time references
+  res <- value_st_dep | trans_st_dep
+  names(res) <- state_names
+  
+  res
+}

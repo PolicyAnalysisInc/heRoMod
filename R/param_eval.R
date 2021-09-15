@@ -201,7 +201,7 @@ eval_init <- function(x, parameters, expand, individual_level = F) {
 
 eval_starting_values <- function(x, parameters) {
   
-  # Assinging NULLS to avoid CMD Check issues
+  # Assigning NULLS to avoid CMD Check issues
   state_time <- NULL
   
   

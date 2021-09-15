@@ -230,7 +230,13 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
     
     trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
       .[c('state_time', 'model_time', names(x)[indices])] %>%
-      gather(.trans, .value, -model_time, -state_time) %>%
+      data.table::as.data.table() %>%
+      data.table::melt(
+        id.vars = c('model_time', 'state_time'),
+        measure.vars = names(x)[indices],
+        variable.name = '.trans',
+        value.name = '.value'
+      ) %>%
       left_join(.nz_trans_guide, by = '.trans') %>%
       select(-.trans) %>%
       filter(.value != 0) %>%
