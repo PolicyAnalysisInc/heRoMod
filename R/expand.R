@@ -365,6 +365,9 @@ check_state_groups <- function(state_groups, state_names) {
 trace_st_dep <- function(x, extras = NULL) {
   param_names <- names(x)
   n_param <- length(x)
+  if (n_param == 0) {
+    return(vector(mode = 'logical'))
+  }
   
   # Create a hashtable to quickly look up which parameters are state-time dependent
   st_hashtable <- rep(F, n_param)
