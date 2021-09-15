@@ -345,20 +345,18 @@ check_vars_table <- function(res, variables = colnames(res), .vartype = "paramet
     expression_text = .vartype
   }
   
-  walk(res[variables], function(x) {
+  walk2(res[variables], variables, function(x, varname) {
     
     missing_vals <- is.na(x)
     if (any(missing_vals)) {
-      problem_names <- variables[missing_vals]
-      error_msg <- glue(error_codes$variable_missing_value, context = expression_text, name = problem_names[1])
+      error_msg <- glue(error_codes$variable_missing_value, context = expression_text, name = varname)
       stop(error_msg, call. = F)
     }
     
     if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
       infinite_vals <- is.infinite(x)
       if (any(infinite_vals)) {
-        problem_names <- variables[infinite_vals]
-        error_msg <- glue(error_codes$variable_infinite_value, context = expression_text, name = problem_names[1])
+        error_msg <- glue(error_codes$variable_infinite_value, context = expression_text, name = varname)
         get(use_fn)(error_msg, call. = F)
       }
     }
