@@ -67,7 +67,7 @@ eval_state_list <- function(x, parameters, expand = NULL,
     obj <- dispatch_strategy_hack(obj)
     obj <- by_group_hack(obj)
     
-    char_formulas <- as.character(lapply(obj, deparse))
+    char_formulas <- as.character(lapply(obj, function(y) as.character(y)[1]))
     zero_indices <- char_formulas == '0'
     zero_names <- var_names[zero_indices]
     obj_no_zeros <- obj[!zero_indices]
@@ -77,21 +77,24 @@ eval_state_list <- function(x, parameters, expand = NULL,
     
     if (expanding) {
       # bottleneck!
-      parameters %>%
-        safe_eval(obj_no_zeros, .vartype = "value") %>%
+      params_with_zeros %>%
+        safe_eval(obj_no_zeros, .vartype = "value", check = F) %>%
         mutate(.state = state_names[i]) %>%
         .[c("markov_cycle", "state_time", ".state", var_names)]
     } else {
       
       # bottleneck!
-      res <- safe_eval(parameters, obj_no_zeros, .vartype = "value")
+      res <- safe_eval(params_with_zeros, obj_no_zeros, .vartype = "value", check = F)
       res$.state <- state_names[i]
       res[ ,c("markov_cycle", "state_time", ".state", var_names)]
     }
     
   }
   # Evaluate and Handle expansion
-  vars_df <- plyr::ldply(seq_len(n_states), f)
+  vars_df <- map_dfr(seq_len(n_states), f)
+  check_vars_table(vars_df, names(x[[1]]), .vartype = "value")
+  
+  
   vars_df <- vars_df %>%
     left_join(expand, by = c(".state" =  ".state", "state_time" = "state_time")) %>%
     filter(state_time <= .limit) %>%
@@ -141,12 +144,12 @@ eval_state_list <- function(x, parameters, expand = NULL,
       if (expanding) {
         eval_params <- parameters %>%
           mutate(.trans_id = i) %>%
-          safe_eval(obj, .vartype = "value") %>%
+          safe_eval(obj, .vartype = "value", check = F) %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       } else {
         eval_params <- parameters %>%
           mutate(.trans_id = i) %>%
-          safe_eval(obj, .vartype = "value") %>%
+          safe_eval(obj, .vartype = "value", check = F) %>%
           .[c("markov_cycle", "state_time", ".trans_id", var_names)]
       }
       
@@ -161,7 +164,8 @@ eval_state_list <- function(x, parameters, expand = NULL,
       }
       tidyr::crossing(to_from_df, eval_params)
     }
-    st_var_df <- ldply(seq_len(n_states_trans), f_state_val)
+    st_var_df <- map_dfr(seq_len(n_states_trans), f_state_val)
+    check_vars_table(st_var_df, names(x[[1]]), .vartype = "value")
     
     # Evaluate and Handle expansion
     st_var_df <- st_var_df %>%
