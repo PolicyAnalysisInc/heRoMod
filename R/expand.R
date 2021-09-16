@@ -400,9 +400,13 @@ get_states_to_expand <- function(params, states, transitions) {
   # Also look at state transition values if any exist
   if (!is.null(state_trans_values)) {
     value_trans_st_dep <- map_lgl(state_trans_values, function(x) any(trace_st_dep(x, extras = st_dep_params)))
-    value_trans_names <- names(value_trans_st_dep)
-    value_trans_from <- map_chr(strsplit(value_trans_names, '→', fixed = T), function(x) x[1])
-    value_st_dep[value_trans_from] <- value_st_dep[value_trans_from] | value_trans_st_dep
+    value_trans_from <- map_chr(state_trans_values, function(x) attr(x, 'from'))
+    from_all_st <- is.na(value_trans_from)
+    value_st_dep[value_trans_from[!from_all_st]] <- value_st_dep[value_trans_from[!from_all_st]] | value_trans_st_dep[!from_all_st]
+    
+    if (any(from_all_st)) {
+      value_st_dep <- value_st_dep | any(value_trans_st_dep[from_all_st])
+    }
   }
   
   # Determine which states have transitions with state time references
