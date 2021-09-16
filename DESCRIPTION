@@ -64,7 +64,7 @@ Imports:
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.2
 URL: https://github.com/PolicyAnalysisInc/heRoMod
 BugReports: https://github.com/PolicyAnalysisInc/heRoMod/issues
 Roxygen: list(markdown = TRUE)
