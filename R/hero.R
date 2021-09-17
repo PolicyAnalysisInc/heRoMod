@@ -1151,6 +1151,7 @@ run_hero_psa <- function(...) {
   
   max_prog <- get_psa_max_progress(dots)
   try(dots$report_max_progress(max_prog))
+  try(dots$report_progress(1L))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1256,6 +1257,8 @@ run_hero_psa <- function(...) {
           )
         )
       })
+    
+    try(dots$report_progress(1L))
     list(
       api_ver = '2.0',
       scatter = scatter_compressed,

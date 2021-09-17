@@ -23,6 +23,7 @@ run_hero_twsa <- function(...) {
   
   max_prog <- get_twsa_max_progress(dots, sa_table)
   try(dots$report_max_progress(max_prog))
+  try(dots$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -52,6 +53,8 @@ run_hero_twsa <- function(...) {
   if (run_vbp) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc', twsa_param_names))
   }
+  
+  try(dots$report_progress(1L))
   
   # Format and Return
   list(
