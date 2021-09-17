@@ -8,6 +8,7 @@ run_hero_dsa <- function(...) {
   
   max_prog <- get_dsa_max_progress(dots)
   try(dots$report_max_progress(max_prog))
+  try(dots$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -51,6 +52,8 @@ run_hero_dsa <- function(...) {
   if (run_vbp) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.dsa_param', '.dsa_side'))
   }
+  
+  try(dots$report_progress(1L))
   
   # Format and Return
   list(

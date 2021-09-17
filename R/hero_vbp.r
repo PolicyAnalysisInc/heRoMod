@@ -7,6 +7,7 @@ run_hero_vbp <- function(...) {
   
   max_prog <- get_vbp_max_progress(dots)
   try(dots$report_max_progress(max_prog))
+  try(dots$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -39,6 +40,8 @@ run_hero_vbp <- function(...) {
   outcomes_res <- extract_sa_summary_res(res, dots$hsumms, c())
   costs_res <- extract_sa_summary_res(res, dots$esumms, c())
   vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c())
+  
+  try(dots$report_progress(1L))
   
   # Format and Return
   list(

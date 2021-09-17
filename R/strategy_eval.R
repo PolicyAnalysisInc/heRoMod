@@ -176,6 +176,7 @@ eval_strategy <- function(strategy, parameters, cycles,
       )
     )
   }
+  try(report_progress(1L))
   
   # Evaluate parameters
   e_parameters <- eval_parameters(
@@ -185,6 +186,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     max_state_time = max(expand_table$.limit),
     disc_method = disc_method
   )
+  try(report_progress(1L))
   
   # Evaluate object parameters.  Doesn't need to
   # be returned since it modifies via reference
@@ -194,12 +196,14 @@ eval_strategy <- function(strategy, parameters, cycles,
     aux_params,
     e_parameters
   )
+  try(report_progress(1L))
   
   # Evaluate Initial State Values
   e_start_values <- eval_starting_values(
     strategy$starting_values,
     e_parameters
   )
+  try(report_progress(1L))
   
   # Evaluate Initial Counts
   e_init <- eval_init(
@@ -208,6 +212,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     individual_level = individual_level
   )
+  try(report_progress(1L))
   
   # Inflow (now includes init)
   e_inflow <- eval_inflow(
@@ -215,6 +220,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     e_parameters,
     expand_table
   )
+  try(report_progress(1L))
   
   # Evaluate States
   e_states <- eval_state_list(
@@ -223,6 +229,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     disc_method = disc_method
   )
+  try(report_progress(1L))
   
   # Evaluate Transitions
   e_transition <- eval_transition(
@@ -231,6 +238,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     state_groups = state_groups
   )
+  try(report_progress(1L))
   
   # Compute counts
   count_table_uncorrected <- compute_counts(
@@ -249,6 +257,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     inflow = e_inflow,
     starting = e_start_values
   )
+  try(report_progress(1L))
   
   # Get counts of individuals
   n_indiv <- sum(e_inflow) + sum(e_init)
