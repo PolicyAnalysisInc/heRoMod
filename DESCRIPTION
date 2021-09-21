@@ -60,7 +60,8 @@ Imports:
     Matrix,
     gtools,
     magrittr,
-    rlang
+    rlang,
+    Rcpp
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
@@ -70,3 +71,5 @@ BugReports: https://github.com/PolicyAnalysisInc/heRoMod/issues
 Roxygen: list(markdown = TRUE)
 Suggests: 
     covr
+LinkingTo: 
+    Rcpp

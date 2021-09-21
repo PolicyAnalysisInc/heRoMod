@@ -249,28 +249,7 @@ convert_scripts <- function(scripts) {
 }
 
 convert_tables <- function(tables) {
-    if (is.null(tables) || class(tables) == "list") {
-        return(structure(list(), names=character(0)))
-    }
-    names <- tables$name
-    tables$data %>%
-        map(function(mat) {
-            tbl <- mat %>%
-                as.data.frame(stringsAsFactors = F) %>%
-                select_if(function(x) any(x != '' & x != 0 & !is.na(x)))
-            colnames <- as.character(tbl[1, ])
-            data <- tbl[-1, ] %>%
-                filter_all(any_vars(. != '')) %>%
-                mutate_all(function(x) {
-                    number <- suppressWarnings(as.numeric(x))
-                    if (!any(is.na(number))) {
-                        return(number)
-                    }
-                    x
-                }) %>%
-                set_names(colnames)
-        }) %>%
-        set_names(names)
+    suppressWarnings(cpp_convert_tables(model$tables$data, model$tables$name))
 }
 
 convert_psa <- function(psa, correlations) {
