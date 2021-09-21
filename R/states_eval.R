@@ -74,20 +74,9 @@ eval_state_list <- function(x, parameters, expand = NULL,
     params_with_zeros <- parameters
     params_with_zeros[ , zero_names] <- 0
     
-    
-    if (expanding) {
-      # bottleneck!
-      params_with_zeros %>%
-        safe_eval(obj_no_zeros, .vartype = "value", check = F) %>%
-        mutate(.state = state_names[i]) %>%
-        .[c("markov_cycle", "state_time", ".state", var_names)]
-    } else {
-      
-      # bottleneck!
-      res <- safe_eval(params_with_zeros, obj_no_zeros, .vartype = "value", check = F)
-      res$.state <- state_names[i]
-      res[ ,c("markov_cycle", "state_time", ".state", var_names)]
-    }
+    res <- safe_eval(params_with_zeros, obj_no_zeros, .vartype = "value", check = F)
+    res$.state <- state_names[i]
+    res[ ,c("markov_cycle", "state_time", ".state", var_names)]
     
   }
   # Evaluate and Handle expansion

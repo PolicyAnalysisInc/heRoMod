@@ -74,60 +74,60 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
 
 check_matrix.data.frame <- function(x) {
   
-  sums <- x %>%
-    group_by(model_time, .from_e) %>%
-    summarize(sum = sum(.value)) %>%
-    ungroup()
   
-  problem_rows <- sums %>%
-    filter(!is_zero(sum - 1)) %>%
-    group_by(.from_e) %>%
-    group_split() %>%
-    map(function(x) {
-      data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
-    }) %>%
-    bind_rows()
+  correct_sum <- is_zero((max(x$.from_e_i) * max(x$state_time)) - sum(x$.value))
+  outside_range <- any(x$.value > 0) || any(x$.value < 0)
   
-  if (nrow(problem_rows) > 0) {
-    stop(
-      paste0(
-        "Not all transition matrix rows sum to 1.\n\n",
+  if (!correct_sum || !outside_range) {
+  
+    sums <- x %>%
+      group_by(model_time, .from_e) %>%
+      summarize(sum = sum(.value)) %>%
+      ungroup()
+    
+    problem_rows <- sums %>%
+      filter(!is_zero(sum - 1)) %>%
+      group_by(.from_e) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    
+    if (nrow(problem_rows) > 0) {
+      stop(
+        paste0(
+          "Not all transition matrix rows sum to 1.\n\n",
+          paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
+        ),
+        call. = F
+      )
+    }
+    
+    problem_rows <- x %>%
+      filter(abs(.value - 0.5) > 0.5) %>%
+      group_by(.from_e, .to_e) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    
+    if (nrow(problem_rows) > 0) {
+      stop(paste0(
+        "Some transition probabilities are outside the interval [0 - 1]:\n\n",
         paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
       ),
-      call. = F
-    )
-  }
-  
-  problem_rows <- x %>%
-    filter(abs(.value - 0.5) > 0.5) %>%
-    group_by(.from_e, .to_e) %>%
-    group_split() %>%
-    map(function(x) {
-      data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
-    }) %>%
-    bind_rows()
-  
-  if (nrow(problem_rows) > 0) {
-    stop(paste0(
-      "Some transition probabilities are outside the interval [0 - 1]:\n\n",
-      paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
-    ),
-    call. = F)
+      call. = F)
+    }
   }
 }
 
 replace_C.data.frame <- function(x, state_names) {
-  res <- x %>%
-    mutate(.is_complement = .value == -pi) %>%
-    group_by(model_time, .from_e_i) %>%
-    mutate(
-      .n_complement = sum(.is_complement),
-      .complement = 1 - sum(.value) - pi
-    ) %>%
-    ungroup() %>%
-    mutate(
-      .value = if_else(.is_complement, .complement, .value)
-    )
+  res <- as.data.table(x) %>%
+    .[,.is_complement := .value == -pi] %>%
+    .[,c('.n_complement', '.complement') := list(sum(.is_complement), 1 - sum(.value) - pi), by=list(model_time, .from_e_i)] %>%
+    .[,.value:=if_else(.is_complement, .complement, .value)]
   
   # Make sure C is used only once per state per cycle
   if (any(res$.n_complement > 1)) {

@@ -464,14 +464,14 @@ compute_values <- function(states, counts, init, inflow, starting) {
   
   dims_array_2 <- dims_array_1 + c(0, 1, 0)
   
-  state_val_array <- array(unlist(states), dim = dims_array_2)
+  state_val_array <- array(unlist(states, TRUE, FALSE), dim = dims_array_2)
   
   ## get rid of markov_cycle
   mc_col <- match("markov_cycle", names(states[[1]]))
   state_val_array <- state_val_array[, -mc_col, , drop = FALSE]
   
   ## put counts into a similar large array
-  counts_mat <- array(unlist(counts[, states_names]),
+  counts_mat <- array(unlist(counts[, states_names], TRUE, FALSE),
                       dim = dims_array_1[c(1, 3, 2)])
   counts_mat <- aperm(counts_mat, c(1, 3, 2))
   
