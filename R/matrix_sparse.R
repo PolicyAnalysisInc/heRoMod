@@ -75,10 +75,10 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
 check_matrix.data.frame <- function(x) {
   
   
-  correct_sum <- is_zero((max(x$.from_e_i) * max(x$state_time)) - sum(x$.value))
-  outside_range <- any(x$.value > 0) || any(x$.value < 0)
+  correct_sum <- is_zero((max(x$.from_e_i) * max(x$model_time)) - sum(x$.value))
+  outside_range <- any(!is_zero(pmin(x$.value, 0))) || any(!is_zero(pmax(x$.value, 1) - 1))
   
-  if (!correct_sum || !outside_range) {
+  if (!correct_sum || outside_range) {
   
     sums <- x %>%
       group_by(model_time, .from_e) %>%
@@ -126,8 +126,8 @@ check_matrix.data.frame <- function(x) {
 replace_C.data.frame <- function(x, state_names) {
   res <- as.data.table(x) %>%
     .[,.is_complement := .value == -pi] %>%
-    .[,c('.n_complement', '.complement') := list(sum(.is_complement), 1 - sum(.value) - pi), by=list(model_time, .from_e_i)] %>%
-    .[,.value:=if_else(.is_complement, .complement, .value)]
+    .[,c('.n_complement', '.all_else') := list(sum(.is_complement), sum(.value)), by=list(model_time, .from_e_i)] %>%
+    .[,.value:=if_else(.is_complement, ifelse(is_zero(.all_else), 0, 1 - .all_else - pi), .value)]
   
   # Make sure C is used only once per state per cycle
   if (any(res$.n_complement > 1)) {
