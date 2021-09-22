@@ -363,3 +363,34 @@ check_vars_table <- function(res, variables = colnames(res), .vartype = "paramet
     
   })
 }
+
+safe_eval1 <- function(x, .dots) {
+  n_par <- length(.dots)
+  par_names <- names(.dots)
+  res <- x
+  for(i in seq_len(n_par)) {
+    par_res <- try(lazy_eval(.dots[[i]], data = res), silent = T)
+    par_name <- par_names[i]
+    res[[par_name]] <- par_res
+  }
+  
+  res
+}
+
+safe_eval2 <- function(x, .dots) {
+  n_par <- length(.dots)
+  par_names <- names(.dots)
+  res <- new.env(parent = .dots[[1]]$env)
+  for(i in names(x)) {
+    assign(i, x[[i]], res)
+  }
+  for(i in seq_len(n_par)) {
+    par <- .dots[[i]]
+    par$env <- res
+    par_res <- try(lazy_eval(par), silent = T)
+    par_name <- par_names[i]
+    assign(par_name, par_res, res)
+  }
+  
+  res
+}

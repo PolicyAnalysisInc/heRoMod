@@ -127,6 +127,9 @@
 #' @importFrom openxlsx freezePane
 #' @importFrom openxlsx saveWorkbook
 #' 
+#' @importFrom data.table as.data.table
+#' @importFrom data.table :=
+#' 
 #' @importFrom graphics plot
 #' @importFrom graphics par
 #'   

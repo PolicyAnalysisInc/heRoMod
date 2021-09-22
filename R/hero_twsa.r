@@ -182,6 +182,7 @@ gen_twsa_table <- function(twsa, twsa_params) {
     ) %>%
     filter(active == 'On' | active == TRUE) %>%
     left_join(rename(twsa_params, '.param_id' = id), by = c('.twsa_id' = 'parentid')) %>%
+    mutate(.twsa_id = factor(.twsa_id, levels = unique(.twsa_id))) %>%
     group_by(.twsa_id) %>% 
     group_split() %>%
     map(function(analysis) {
@@ -240,8 +241,8 @@ twsa_reformat_res <- function(res, id_vars = NULL) {
       .y_bc,
       value = value
     ) %>%
-    arrange_at(c('id', 'xParam', 'yParam', id_vars, 'x', 'y')) %>%
-    group_by_at(c('id', 'xParam', 'yParam', id_vars)) %>%
+    arrange_at(c('id', id_vars, 'x', 'y')) %>%
+    group_by_at(c('id', id_vars)) %>%
     mutate(
       .x_bc_value = x[which(.x_bc)[1]],
       .x_equals_bc = is_zero(x - .x_bc_value),
@@ -255,7 +256,14 @@ twsa_reformat_res <- function(res, id_vars = NULL) {
       x_bc_included <- any(analysis$.x_equals_bc & !analysis$.x_bc)
       y_bc_included <- any(analysis$.y_equals_bc & !analysis$.y_bc)
       res_list <- select(analysis[1,], id, xParam, yParam, !!id_vars) %>%
-        as.list()
+        as.list() %>%
+        map(function(x) {
+          if (!is.factor(x)) {
+            x
+          } else {
+            as.character(x)
+          }
+        })
       res_list$data <- analysis %>%
         filter(
           !(x_bc_included & .x_bc),

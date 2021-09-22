@@ -224,7 +224,7 @@ test_twsa_results <- function(model, name, path, vbp = F) {
   ##########
   
   # Check that result hasn't changed
-  expect_equal(twsa_res$outcomes, twsa_res_test$outcomes)
+  expect_equal(convert_twsa_res_format(twsa_res$outcomes), convert_twsa_res_format(twsa_res_test$outcomes))
   
   # Check against base case
   bc_outcome_res <-  filter(bc_res$outcomes, !grepl(' vs. ', series, fixed = T)) %>%
@@ -245,7 +245,7 @@ test_twsa_results <- function(model, name, path, vbp = F) {
   ##########
   
   # Check that result hasn't changed
-  expect_equal(twsa_res$cost, twsa_res_test$cost)
+  expect_equal(convert_twsa_res_format(twsa_res$cost), convert_twsa_res_format(twsa_res_test$cost))
   
   # Check against base case
   bc_cost_res <-  filter(bc_res$cost, !grepl(' vs. ', series, fixed = T)) %>%
@@ -267,7 +267,10 @@ test_twsa_results <- function(model, name, path, vbp = F) {
   ##########
   
   # Check that result hasn't changed
-  expect_equal(twsa_res$nmb, twsa_res_test$nmb)
+  expect_equal(
+    convert_twsa_res_format(twsa_res$nmb, sort_vars = c('id', 'series', 'health_outcome', 'econ_outcome', 'x', 'y')),
+    convert_twsa_res_format(twsa_res_test$nmb, sort_vars = c('id', 'series', 'health_outcome', 'econ_outcome', 'x', 'y'))
+  )
   
   # Check that NMB Results Match Base Case
   bc_nmb_cost_res <-  filter(bc_res$nmb, type == 'economic') %>%
@@ -279,7 +282,7 @@ test_twsa_results <- function(model, name, path, vbp = F) {
     summarize(bc_cost_res = sum(value)) %>%
     ungroup()
   
-  twsa_bc_nmb_res <- convert_twsa_res_format(twsa_res_test$nmb, c('series', 'health_outcome', 'econ_outcome')) %>%
+  twsa_bc_nmb_res <- convert_twsa_res_format(twsa_res_test$nmb, c('id', 'series', 'health_outcome', 'econ_outcome', 'x', 'y')) %>%
     filter(isBaseCase, id == id[1]) %>%
     group_by(series, health_outcome, econ_outcome) %>%
     summarize(twsa_bc_res = value[1])
@@ -314,7 +317,10 @@ test_twsa_results <- function(model, name, path, vbp = F) {
   } else {
     
     # Check that result hasn't changed
-    expect_equal(twsa_res$vbp, twsa_res_test$vbp)
+    expect_equal(
+      convert_twsa_res_format(twsa_res$vbp$prices, c('id', 'series', 'x', 'y')),
+      convert_twsa_res_format(twsa_res_test$vbp$prices, c('id', 'series', 'x', 'y'))
+    )
     
     # Check that against base case VBP
     wtp <- filter(model$hsumm, name == model$vbp$effect)$wtp[1]
