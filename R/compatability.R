@@ -249,7 +249,7 @@ convert_scripts <- function(scripts) {
 }
 
 convert_tables <- function(tables) {
-    suppressWarnings(cpp_convert_tables(model$tables$data, model$tables$name))
+    suppressWarnings(cpp_convert_tables(tables$data, tables$name))
 }
 
 convert_psa <- function(psa, correlations) {
