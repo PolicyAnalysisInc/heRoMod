@@ -2,7 +2,7 @@
 using namespace Rcpp;
 
 bool cpp_is_cell_empty(String cell) {
-  return cell == "";
+  return cell == "" || cell == NA_STRING;
 }
 
 int cpp_get_last_nonempty_row_index(CharacterMatrix cells) {
@@ -67,7 +67,7 @@ CharacterVector cpp_get_col_names(CharacterMatrix cells, int max_cols) {
   return char_col;
 }
 
-DataFrame cpp_convert_table(CharacterMatrix cells) {
+List cpp_convert_table(CharacterMatrix cells) {
   int last_nonempty_row_index = cpp_get_last_nonempty_row_index(cells);
   int last_nonempty_col_index = cpp_get_last_nonempty_col_index(cells);
   CharacterVector colNames = cpp_get_col_names(cells, last_nonempty_col_index);
@@ -76,7 +76,6 @@ DataFrame cpp_convert_table(CharacterMatrix cells) {
   Rcpp::Function asNumericVector = base["as.numeric"];
   Rcpp::Function isNa = base["is.na"];
   Rcpp::Function any = base["any"];
-  Rcpp::Function asDataFrame = base["as.data.frame"];
   
   List columns;
   
@@ -91,11 +90,9 @@ DataFrame cpp_convert_table(CharacterMatrix cells) {
     }
   }
   
-  DataFrame df = asDataFrame(columns);
+  columns.attr("names") = colNames;
   
-  df.attr("names") = colNames;
-  
-  return df;
+  return columns;
 }
 
 // [[Rcpp::export]]
