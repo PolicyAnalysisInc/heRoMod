@@ -249,6 +249,9 @@ convert_scripts <- function(scripts) {
 }
 
 convert_tables <- function(tables) {
+    if (is.null(tables) || class(tables) == "list") {
+        return(structure(list(), names=character(0)))
+    }
     suppressWarnings(cpp_convert_tables(tables$data, tables$name))
 }
 
