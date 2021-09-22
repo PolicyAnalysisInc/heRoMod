@@ -67,7 +67,7 @@ CharacterVector cpp_get_col_names(CharacterMatrix cells, int max_cols) {
   return char_col;
 }
 
-List cpp_convert_table(CharacterMatrix cells) {
+DataFrame cpp_convert_table(CharacterMatrix cells) {
   int last_nonempty_row_index = cpp_get_last_nonempty_row_index(cells);
   int last_nonempty_col_index = cpp_get_last_nonempty_col_index(cells);
   CharacterVector colNames = cpp_get_col_names(cells, last_nonempty_col_index);
@@ -91,9 +91,11 @@ List cpp_convert_table(CharacterMatrix cells) {
     }
   }
   
-  columns.attr("names") = colNames;
+  DataFrame df = asDataFrame(columns);
   
-  return asDataFrame(columns);
+  df.attr("names") = colNames;
+  
+  return df;
 }
 
 // [[Rcpp::export]]
