@@ -731,7 +731,7 @@ patch_progress_funcs <- function(model) {
   model
 }
 
-as_sparse_matrix <- function(x) {
+as_sparse_matrix <- function(x, repr = 'C') {
   dimensions <- dim(x)
   dim_names <- dimnames(x)
   indices <- which(x != 0, arr.ind = T)
@@ -740,7 +740,8 @@ as_sparse_matrix <- function(x) {
     indices[ , 2],
     x = x[indices],
     dims = dimensions,
-    dimnames = dim_names
+    dimnames = dim_names,
+    repr = repr
   )
 }
   
@@ -860,4 +861,17 @@ vector_to_cs_string <- function(x, quoted = F) {
     base_str <- x
   }
   paste(base_str, collapse = ', ')
+}
+
+columnSums <- function(x) {
+  UseMethod('columnSums', x)
+}
+
+columnSums.matrix <- function(x) {
+  colSums(x)
+}
+
+columnSums.dgRMatrix <- function(x) {
+  attribs <- attributes(x)
+  cpp_sparse_col_sum(attribs$x, attribs$j, attribs$Dim[2])
 }

@@ -368,14 +368,23 @@ compute_counts.eval_sparse_matrix <- function(x, init, inflow, ...) {
   # Do element-wise multiplication to get the numbers
   # undergoing each transition
   uncond_trans <- vector(mode = 'list', length =  n_cycle + 1)
-  uncond_trans[[1]] <- init_mat
+  uncond_trans[[1]] <- as_sparse_matrix(init_mat)
   trace_mat <- matrix(nrow = n_cycle + 1, ncol = ncol(x[[1]]))
   colnames(trace_mat) <- state_names
   trace_mat[1, ] <- init
-  for(i in seq_len(n_cycle)) {
-    mat <- (colSums(as.matrix(uncond_trans[[i]])) + diag(unlist(inflow[i, ]))) * as.matrix(x[[i]])
-    uncond_trans[[i + 1]] <- as_sparse_matrix(mat)
-    trace_mat[i + 1, ] <- colSums(mat)
+  any_inflow <- sum(inflow) > 0
+  if (any_inflow) {
+    for(i in seq_len(n_cycle)) {
+      mat <- (Matrix::colSums(as.matrix(uncond_trans[[i]])) + diag(unlist(inflow[i, ]))) * as.matrix(x[[i]])
+      uncond_trans[[i + 1]] <- as_sparse_matrix(mat)
+      trace_mat[i + 1, ] <- colSums(mat)
+    }
+  } else {
+    for(i in seq_len(n_cycle)) {
+      mat <- Matrix::colSums(uncond_trans[[i]]) * as.matrix(x[[i]])
+      uncond_trans[[i + 1]] <- as_sparse_matrix(mat)
+      trace_mat[i + 1, ] <- colSums(mat)
+    }
   }
   
   trace_df <- as_tibble(as.data.frame(trace_mat))
