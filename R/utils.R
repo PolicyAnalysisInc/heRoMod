@@ -862,16 +862,3 @@ vector_to_cs_string <- function(x, quoted = F) {
   }
   paste(base_str, collapse = ', ')
 }
-
-columnSums <- function(x) {
-  UseMethod('columnSums', x)
-}
-
-columnSums.matrix <- function(x) {
-  colSums(x)
-}
-
-columnSums.dgRMatrix <- function(x) {
-  attribs <- attributes(x)
-  cpp_sparse_col_sum(attribs$x, attribs$j, attribs$Dim[2])
-}
