@@ -5,10 +5,12 @@ run_hero_bc <- function(...) {
   dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)
   
-  max_prog <- get_dsa_max_progress(dots)
+  max_prog <- get_bc_max_progress(dots)
   try(dots$report_max_progress(max_prog))
   
   # Initial model run
+  
+  try(dots$report_progress(1L))
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name
   
@@ -46,6 +48,7 @@ run_hero_bc <- function(...) {
   pw_ce_res <- extract_sa_bc_pairwise_ce(outcome_res, costs_res)
   nmb_res <- extract_sa_bc_nmb(outcome_res, costs_res, dots$hsumms)
   
+  try(dots$report_progress(1L))
   # Format and Return
   list(
     trace = trace_res,

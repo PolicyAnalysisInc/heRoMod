@@ -127,6 +127,9 @@
 #' @importFrom openxlsx freezePane
 #' @importFrom openxlsx saveWorkbook
 #' 
+#' @importFrom data.table as.data.table
+#' @importFrom data.table :=
+#' 
 #' @importFrom graphics plot
 #' @importFrom graphics par
 #'   
@@ -135,6 +138,7 @@
 #' 
 #' @importFrom tidyr crossing
 #' @importFrom tidyr spread
+#' @importFrom tidyr gather
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr expand_grid
@@ -146,11 +150,14 @@
 #' @importFrom purrr map
 #' @importFrom purrr map2
 #' @importFrom purrr map_dbl
+#' @importFrom purrr map_chr
 #' @importFrom purrr list_modify
 #' @importFrom purrr discard
 #' @importFrom purrr map2_chr
+#' @importFrom purrr map_dfr
 #' @importFrom purrr map_lgl
 #' @importFrom purrr set_names
+#' @importFrom purrr keep
 #' 
 #' @importFrom rlang syms
 #' 
@@ -168,3 +175,9 @@ dplyr::`%>%`
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+
+## usethis namespace: start
+#' @importFrom Rcpp sourceCpp
+#' @useDynLib heRomod
+## usethis namespace: end
+NULL

@@ -126,31 +126,23 @@ interpolate <- function(x, ...) {
 #' @rdname interpolate
 interpolate.default <- function(x, more = NULL, ...) {
   
-  res <- NULL
+  non_zero_indices <- c()
+  count <- 1
   
-  for (i in seq_along(x)) {
-    to_interp <- x[[i]]
-    for_interp <- c(more, as_expr_list(res))
-    funs <- all.funs(to_interp$expr)
-    
-    if (any(pb <- funs %in% names(for_interp))) {
-      stop(sprintf(
-        "Some parameters are named like a function, this is incompatible with the use of 'state_time': %s.",
-        paste(funs[pb], collapse = ", ")
-      ))
+  walk2(x, seq_len(length(x)), function(y, i) {
+    if (as.character(y)[1] != '0') {
+      new_val <- lazyeval::interp(
+        y,
+        .values = c(more, as_expr_list(x[non_zero_indices]))
+      )
+      x[[i]] <<- new_val
+      non_zero_indices[count] <- i
+      count <<- count + 1
     }
-    
-    new <- setNames(list(lazyeval::interp(
-      to_interp,
-      .values = for_interp
-    )
-    ), names(x)[i])
-    res <- c(res, new)
-    
-  }
-  lazyeval::as.lazy_dots(res)
+  })
+  
+  x
 }
-
 
 #' @export
 #' @rdname interpolate
@@ -368,4 +360,63 @@ check_state_groups <- function(state_groups, state_names) {
     )
   }
   
+}
+
+trace_st_dep <- function(x, extras = NULL) {
+  param_names <- names(x)
+  n_param <- length(x)
+  if (n_param == 0) {
+    return(vector(mode = 'logical'))
+  }
+  
+  # Create a hashtable to quickly look up which parameters are state-time dependent
+  st_hashtable <- rep(F, n_param)
+  names(st_hashtable) <- param_names
+  st_hashtable <- c(state_time = T, st_hashtable, extras)
+  
+  for (i in seq(from = 1, to = n_param, by = 1)) {
+    if (as.character(x[[i]])[1] != '0') {
+      var_name <- param_names[i]
+      deps <- all.vars(x[[i]]$expr)
+      st_hashtable[[var_name]] <- any(st_hashtable[deps], na.rm = T)
+    }
+  }
+  
+  st_hashtable[param_names]
+}
+
+get_states_to_expand <- function(params, states, transitions) {
+  
+  state_trans_values <- attr(states, 'transitions')
+  n_states <- length(states)
+  state_names <- names(states)
+  
+  # Determine which parameters have state time references
+  st_dep_params <- trace_st_dep(params)
+  
+  # Determine which states have values with state time references
+  value_st_dep <- map_lgl(states, function(x) any(trace_st_dep(x, extras = st_dep_params)))
+  
+  # Also look at state transition values if any exist
+  if (!is.null(state_trans_values)) {
+    value_trans_st_dep <- map_lgl(state_trans_values, function(x) any(trace_st_dep(x, extras = st_dep_params)))
+    value_trans_from <- map_chr(state_trans_values, function(x) attr(x, 'from'))
+    from_all_st <- is.na(value_trans_from)
+    value_st_dep[value_trans_from[!from_all_st]] <- value_st_dep[value_trans_from[!from_all_st]] | value_trans_st_dep[!from_all_st]
+    
+    if (any(from_all_st)) {
+      value_st_dep <- value_st_dep | any(value_trans_st_dep[from_all_st])
+    }
+  }
+  
+  # Determine which states have transitions with state time references
+  trans_st_dep <- trace_st_dep(transitions, extras = st_dep_params) %>%
+    matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
+    apply(1, any)
+  
+  # Return named logical vector with which states have state time references
+  res <- value_st_dep | trans_st_dep
+  names(res) <- state_names
+  
+  res
 }

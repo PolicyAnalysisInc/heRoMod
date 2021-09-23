@@ -8,6 +8,7 @@ export_hero_xlsx <- function(...) {
   try(dots$report_max_progress(max_prog))
   
   # Initial model run
+  try(dots$report_progress(1L))
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name
   
@@ -156,7 +157,7 @@ export_hero_xlsx <- function(...) {
       dimensions <- c(nrow(x), ncol(x))
       !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
     })
-  dots$report_progress(1L)
+  try(dots$report_progress(1L))
   filename <- paste0(dots$name, ".xlsx")
   write_workbook(lapply(wb_list, sanitize_df), filename)
   if (!is.null(dots$.manifest)) {
