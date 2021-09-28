@@ -1,5 +1,5 @@
 
-run_sa <- function(model, scenarios, group_vars, report_progress = identity, cores = cores_to_use()) {
+run_sa <- function(model, scenarios, group_vars, report_progress = identity, cores = cores_to_use(), simplify = F) {
   
   answer_key <- select(scenarios, !!group_vars, .group_scen, .vbp_scen, .vbp_price)
   inputs <- select(scenarios, -!!group_vars, -.group_scen, -.vbp_scen, -.vbp_price)
@@ -17,7 +17,8 @@ run_sa <- function(model, scenarios, group_vars, report_progress = identity, cor
       strategy = strat_name,
       newdata = strat_scenarios,
       cores = cores,
-      report_progress = report_progress
+      report_progress = report_progress,
+      simplify = simplify
     )
     res$series <- strat_name
     res$.group_weight <- map_dbl(res$.mod, function(x) x$parameters$.group_weight[1])

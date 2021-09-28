@@ -33,7 +33,8 @@ run_hero_vbp <- function(...) {
     heemod_res$model_runs,
     sa_table, c(),
     report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    heemod_res$model_runs$cores,
+    simplify = T
   )
   
   # Pull out results for each scenario

@@ -10,7 +10,8 @@ eval_strategy_newdata(
   strategy = 1,
   newdata,
   cores = 1,
-  report_progress = identity
+  report_progress = identity,
+  simplify = F
 )
 }
 \arguments{

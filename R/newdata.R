@@ -41,7 +41,7 @@
 #' @example inst/examples/example_eval_strategy_newdata.R
 #'   
 #' @keywords internal
-eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = identity) {
+eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = identity, simplify = F) {
   if (is.null(cores)) cores <- 1
   strategy <- check_strategy_index(x = x, i = strategy)
   
@@ -72,25 +72,30 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
               lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
             )
             iter <- df$.iteration
+            model <- try(eval_newdata(
+              as.data.frame(df),
+              strategy = uneval_strategy,
+              old_parameters = old_parameters,
+              aux_params = aux_params,
+              cycles = cycles,
+              init = init,
+              inflow = inflow,
+              method = method,
+              strategy_name = strategy,
+              expand_limit = expand_limit,
+              disc_method = disc_method,
+              iteration = iter,
+              report_progress = report_progress,
+              state_groups = state_groups,
+              individual_level = individual_level
+            ))
+            if(simplify && !("try-error" %in% class(model))) {
+              the_classes <- class(model)
+              model <- model[c('parameters', 'values', 'n_indiv')]
+              class(model) <- the_classes
+            }
             tibble(
-              .mod = list(try(eval_newdata(
-                as.data.frame(df),
-                strategy = uneval_strategy,
-                old_parameters = old_parameters,
-                aux_params = aux_params,
-                cycles = cycles,
-                init = init,
-                inflow = inflow,
-                method = method,
-                strategy_name = strategy,
-                expand_limit = expand_limit,
-                disc_method = disc_method,
-                iteration = iter,
-                report_progress = report_progress,
-                state_groups = state_groups,
-                individual_level = individual_level
-              )
-              )))}) %>%
+              .mod = list(model))}) %>%
           ungroup() %>% 
           bind_cols(
             newdata
@@ -106,25 +111,30 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
               lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
             )
             iter <- df$.iteration
+            model <- try(eval_newdata(
+              as.data.frame(df),
+              strategy = uneval_strategy,
+              old_parameters = old_parameters,
+              aux_params = aux_params,
+              cycles = cycles,
+              init = init,
+              inflow = inflow,
+              method = method,
+              strategy_name = strategy,
+              expand_limit = expand_limit,
+              disc_method = disc_method,
+              iteration = iter,
+              report_progress = report_progress,
+              state_groups = state_groups,
+              individual_level = individual_level
+            ))
+            if(simplify && !("try-error" %in% class(model))) {
+              the_classes <- class(model)
+              model <- model[c('parameters', 'values', 'n_indiv')]
+              class(model) <- the_classes
+            }
             tibble(
-              .mod = list(try(eval_newdata(
-                as.data.frame(df),
-                strategy = uneval_strategy,
-                old_parameters = old_parameters,
-                aux_params = aux_params,
-                cycles = cycles,
-                init = init,
-                inflow = inflow,
-                method = method,
-                strategy_name = strategy,
-                expand_limit = expand_limit,
-                disc_method = disc_method,
-                iteration = iter,
-                report_progress = report_progress,
-                state_groups = state_groups,
-                individual_level = individual_level
-              )
-              )))}) %>%
+              .mod = list(model))}) %>%
           ungroup() %>% 
           bind_cols(
             newdata

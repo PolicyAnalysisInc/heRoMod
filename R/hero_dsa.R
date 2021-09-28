@@ -42,7 +42,8 @@ run_hero_dsa <- function(...) {
     heemod_res$model_runs,
     sa_table, c('.dsa_param', '.dsa_side'),
     report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    heemod_res$model_runs$cores,
+    simplify = F
   )
   
   # Pull out results for each scenario

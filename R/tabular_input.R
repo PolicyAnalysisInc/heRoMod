@@ -515,7 +515,8 @@ eval_models_from_tabular <- function(inputs,
       psa = inputs$param_info$psa_params,
       N = inputs$model_options$n,
       cores = inputs$model_options$num_cores,
-      report_progress = report_progress
+      report_progress = report_progress,
+      simplify = T
     )
   }
   
