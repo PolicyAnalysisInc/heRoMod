@@ -47,6 +47,7 @@
 #' @importFrom dplyr rename
 #' @importFrom dplyr n row_number
 #' @importFrom dplyr group_by_at
+#' @importFrom dplyr summarize_all
 #' @importFrom dplyr relocate
 #' @importFrom dplyr mutate_all
 #' @importFrom dplyr filter_all
