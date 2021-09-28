@@ -39,7 +39,8 @@ run_hero_scen <- function(...) {
     heemod_res$model_runs,
     sa_table, c('.scenario'),
     report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    heemod_res$model_runs$cores,
+    simplify = T
   )
   
   strategy_names <- dots$strategies$name

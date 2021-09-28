@@ -43,7 +43,8 @@ run_hero_twsa <- function(...) {
     heemod_res$model_runs,
     sa_table, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc'),
     report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    heemod_res$model_runs$cores,
+    simplify = T
   )
 
   # Pull out results for each scenario
