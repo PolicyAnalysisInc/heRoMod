@@ -91,7 +91,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
             ))
             if(simplify && !("try-error" %in% class(model))) {
               the_classes <- class(model)
-              model <- model[c('parameters', 'values', 'n_indiv')]
+              model <- list(
+                parameters = model$parameters[1, ],
+                values = summarize_all(model$values, sum),
+                n_indiv = model$n_indiv
+              )
               class(model) <- the_classes
             }
             tibble(
@@ -130,8 +134,11 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
             ))
             if(simplify && !("try-error" %in% class(model))) {
               the_classes <- class(model)
-              model <- model[c('parameters', 'values', 'n_indiv')]
-              class(model) <- the_classes
+              model <- list(
+                parameters = model$parameters[1, ],
+                values = summarize_all(model$values, sum),
+                n_indiv = model$n_indiv
+              )
             }
             tibble(
               .mod = list(model))}) %>%
