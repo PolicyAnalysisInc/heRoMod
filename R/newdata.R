@@ -139,6 +139,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
                 values = summarize_all(model$values, sum),
                 n_indiv = model$n_indiv
               )
+              class(model) <- the_classes
             }
             tibble(
               .mod = list(model))}) %>%
