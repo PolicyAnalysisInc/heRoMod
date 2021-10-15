@@ -926,12 +926,29 @@ hero_extract_psa_summ <- function(res, summ) {
   
   disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
   
-  rbind(
+  all_abs <- rbind(
     disc_summ,
     rename(select(disc, group, series, disc, sim, value), outcome = group),
     undisc_summ,
     rename(select(undisc, group, series, disc, sim, value), outcome = group)
   )
+  
+  strat_names <- unique(all_abs$series)
+  
+  comparisons <- crossing(ref = strat_names, comp = strat_names) %>%
+    filter(ref != comp) %>%
+    left_join(
+      transmute(all_abs, ref = series, disc, outcome, sim, ref_value = value),
+      by = 'ref'
+    ) %>%
+    left_join(
+      transmute(all_abs, comp = series, disc, outcome, sim, comp_value = value),
+      by = c('comp', 'disc', 'outcome', 'sim')
+    ) %>%
+    mutate(value = ref_value - comp_value, series = paste0(ref, ' vs. ', comp)) %>%
+    select('series', 'disc', 'outcome', 'sim', 'value')
+  
+  rbind(all_abs, comparisons)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
