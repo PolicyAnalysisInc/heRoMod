@@ -903,6 +903,8 @@ hero_extract_psa_summ <- function(res, summ) {
     ) %>%
     select(outcome, series, sim, group, disc, value)
   
+  undisc_summ <- undisc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  
   disc <- inner_join(
     mutate(
       summ_unique,
@@ -921,7 +923,15 @@ hero_extract_psa_summ <- function(res, summ) {
       disc = T
     ) %>%
     select(outcome, series, sim, group, disc, value)
-  rbind(disc, undisc)
+  
+  disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  
+  rbind(
+    disc_summ,
+    rename(select(disc, group, series, disc, sim, value), outcome = group),
+    undisc_summ,
+    rename(select(undisc, group, series, disc, sim, value), outcome = group)
+  )
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
@@ -1211,10 +1221,13 @@ run_hero_psa <- function(...) {
     scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     outcomes_summary <- outcomes %>%
-      group_by(series, group) %>%
+      group_by(series, outcome, disc) %>%
       summarize(
         mean = mean(value),
         sd = sd(value),
+        n = n(),
+        lcl95 = unname(quantile(value, 0.025)),
+        ucl95 = unname(quantile(value, 0.975)),
         min = min(value),
         lowerq = unname(quantile(value, 0.25)),
         median = median(value),
@@ -1222,14 +1235,18 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       ungroup() %>%
-      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+series~statistic, value.var = "value")
+      reshape2::melt(id.vars = c("series", "outcome", "disc"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(outcome+series+disc~statistic, value.var = "value") %>%
+      as_tibble()
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
     costs_summary <- costs %>%
-      group_by(series, group) %>%
+      group_by(series, outcome, disc) %>%
       summarize(
         mean = mean(value),
         sd = sd(value),
+        n = n(),
+        lcl95 = unname(quantile(value, 0.025)),
+        ucl95 = unname(quantile(value, 0.975)),
         min = min(value),
         lowerq = unname(quantile(value, 0.25)),
         median = median(value),
@@ -1237,8 +1254,9 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       ungroup() %>%
-      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+series~statistic, value.var = "value")
+      reshape2::melt(id.vars = c("series", "outcome", "disc"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(outcome+series+disc~statistic, value.var = "value") %>%
+      as_tibble()
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
