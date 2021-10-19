@@ -88,7 +88,7 @@ run_model <- function(...,
                       cores = 1,
                       disc_method = 'start',
                       report_progress = identity,
-                      create_progress_reporter = function() identity,
+                      create_progress_reporter = create_null_prog_reporter,
                       state_groups = NULL,
                       individual_level = F) {
   
@@ -135,7 +135,7 @@ run_model_ <- function(uneval_strategy_list,
                        cores = 1,
                        disc_method = 'start',
                        report_progress = identity,
-                       create_progress_reporter = function() identity,
+                       create_progress_reporter = create_null_prog_reporter,
                        state_groups = NULL,
                        individual_level = F) {
   if (length(uneval_strategy_list) == 0) {

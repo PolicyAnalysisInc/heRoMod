@@ -28,10 +28,10 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_dsa.R
-run_dsa <- function(model, dsa, cores = 1, report_progress = identity, create_progress_reporter = function() identity) UseMethod("run_dsa")
+run_dsa <- function(model, dsa, cores = 1, report_progress = identity, create_progress_reporter = create_null_prog_reporter) UseMethod("run_dsa")
 
 #' @export
-run_dsa.run_model <- function(model, dsa, cores = 1, report_progress = identity, create_progress_reporter = function() identity) {
+run_dsa.run_model <- function(model, dsa, cores = 1, report_progress = identity, create_progress_reporter = create_null_prog_reporter) {
   
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
     stop("No cost and/or effect defined, sensitivity analysis unavailable.")

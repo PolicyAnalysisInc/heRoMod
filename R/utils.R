@@ -723,7 +723,7 @@ get_dpy <- function() {
 
 patch_progress_funcs <- function(model) {
   if (is.null(model$create_progress_reporter)) {
-    model$create_progress_reporter <- function() identity
+    model$create_progress_reporter <- create_null_prog_reporter
   }
   if (is.null(model$report_progress)) {
     model$report_progress <- model$create_progress_reporter()
@@ -864,3 +864,5 @@ vector_to_cs_string <- function(x, quoted = F) {
   }
   paste(base_str, collapse = ', ')
 }
+
+create_null_prog_reporter <- function() identity

@@ -41,7 +41,7 @@
 #' @example inst/examples/example_eval_strategy_newdata.R
 #'   
 #' @keywords internal
-eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = identity, create_progress_reporter = function() identity, simplify = F) {
+eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = identity, create_progress_reporter = create_null_prog_reporter, simplify = F) {
   if (is.null(cores)) cores <- 1
   strategy <- check_strategy_index(x = x, i = strategy)
   

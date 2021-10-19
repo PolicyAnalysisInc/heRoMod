@@ -24,7 +24,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
                           data = NULL, run_dsa = FALSE, run_psa = FALSE,
                           run_demo = FALSE, state_time_limit = NULL,
                           aux_params = NULL, psa = NULL, start = NULL,
-                          report_progress = identity, create_progress_reporter = function() identity,
+                          report_progress = identity, create_progress_reporter = create_null_prog_reporter,
                           individual_level = F) {
   
   inputs <- gather_model_info_api(states, tm, param, st, options, demo,
@@ -44,7 +44,7 @@ run_model_api <- function(states, tm, param = NULL, st = NULL,
 gather_model_info_api <- function(states, tm, param = NULL, st = NULL,
                                   options = NULL, demo = NULL, source = NULL,
                                   data = NULL, aux_params = NULL, psa = NULL, start = NULL,
-                                  report_progress = identity, create_progress_reporter = function() identity,
+                                  report_progress = identity, create_progress_reporter = create_null_prog_reporter,
                                   individual_level = F) {
   
   # Create new environment
@@ -467,7 +467,7 @@ eval_models_from_tabular <- function(inputs,
   }
   create_progress_reporter <- inputs$create_progress_reporter
   if (is.null(create_progress_reporter)) {
-    create_progress_reporter <- function() identity
+    create_progress_reporter <- create_null_prog_reporter
   }
   list_args <- c(
     inputs$models,

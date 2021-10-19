@@ -9,7 +9,7 @@ run_dsa(
   dsa,
   cores = 1,
   report_progress = identity,
-  create_progress_reporter = function() identity
+  create_progress_reporter = create_null_prog_reporter
 )
 }
 \arguments{

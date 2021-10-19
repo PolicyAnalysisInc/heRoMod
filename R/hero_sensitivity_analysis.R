@@ -1,5 +1,5 @@
 
-run_sa <- function(model, scenarios, group_vars, report_progress = identity, create_progress_reporter = function() identity, cores = cores_to_use(), simplify = F) {
+run_sa <- function(model, scenarios, group_vars, report_progress = identity, create_progress_reporter = create_null_prog_reporter, cores = cores_to_use(), simplify = F) {
   
   answer_key <- select(scenarios, !!group_vars, .group_scen, .vbp_scen, .vbp_price)
   inputs <- select(scenarios, -!!group_vars, -.group_scen, -.vbp_scen, -.vbp_price)
