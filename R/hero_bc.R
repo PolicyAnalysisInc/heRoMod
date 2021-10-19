@@ -10,7 +10,7 @@ run_hero_bc <- function(...) {
   
   # Initial model run
   
-  try(dots$report_progress(1L))
+  try(args$report_progress(1L))
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name
   
@@ -26,7 +26,8 @@ run_hero_bc <- function(...) {
     res <- run_sa(
       heemod_res$model_runs,
       sa_table, c(),
-      report_progress = dots$report_progress,
+      report_progress = args$report_progress,
+      create_progress_reporter = args$create_progress_reporter,
       heemod_res$model_runs$cores
     )
     
@@ -48,7 +49,7 @@ run_hero_bc <- function(...) {
   pw_ce_res <- extract_sa_bc_pairwise_ce(outcome_res, costs_res)
   nmb_res <- extract_sa_bc_nmb(outcome_res, costs_res, dots$hsumms)
   
-  try(dots$report_progress(1L))
+  try(args$report_progress(1L))
   # Format and Return
   list(
     trace = trace_res,

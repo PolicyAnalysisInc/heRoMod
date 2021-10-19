@@ -4,7 +4,13 @@
 \alias{run_dsa}
 \title{Run Sensitivity Analysis}
 \usage{
-run_dsa(model, dsa, cores = 1, report_progress = identity)
+run_dsa(
+  model,
+  dsa,
+  cores = 1,
+  report_progress = identity,
+  create_progress_reporter = function() identity
+)
 }
 \arguments{
 \item{model}{An evaluated Markov model.}

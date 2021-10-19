@@ -11,6 +11,7 @@ run_psa(
   resample,
   cores = 1,
   report_progress = identity,
+  create_progress_reporter = function() identity,
   simplify = F
 )
 }

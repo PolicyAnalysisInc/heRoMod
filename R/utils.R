@@ -722,8 +722,11 @@ get_dpy <- function() {
 }
 
 patch_progress_funcs <- function(model) {
+  if (is.null(model$create_progress_reporter)) {
+    model$create_progress_reporter <- function() identity
+  }
   if (is.null(model$report_progress)) {
-    model$report_progress <- identity
+    model$report_progress <- model$create_progress_reporter()
   }
   if (is.null(model$report_max_progress)) {
     model$report_max_progress <- identity

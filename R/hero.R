@@ -1142,7 +1142,8 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progress,
+    report_progress = dots$create_progress_reporter(), # For main process
+    create_progress_reporter = dots$create_progress_reporter, # For child processes
     individual_level = T
   )
 }
@@ -1313,7 +1314,6 @@ run_hero_psa <- function(...) {
 #' @export
 run_markdown <- function(...) {
   dots <- patch_progress_funcs(list(...))
-  
   max_prog <- get_code_preview_max_progress(dots)
   try(dots$report_max_progress(max_prog))
   text <- dots$text

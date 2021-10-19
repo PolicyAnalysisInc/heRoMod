@@ -4,7 +4,14 @@
 \alias{run_vbp}
 \title{Run Value-Based Price Analysis}
 \usage{
-run_vbp(model, vbp, strategy_vbp, wtp_thresholds, report_progress = identity)
+run_vbp(
+  model,
+  vbp,
+  strategy_vbp,
+  wtp_thresholds,
+  report_progress = identity,
+  create_progress_reporter = function() identity
+)
 }
 \arguments{
 \item{model}{An evaluated Markov model.}
