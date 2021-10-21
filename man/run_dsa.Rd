@@ -8,8 +8,8 @@ run_dsa(
   model,
   dsa,
   cores = 1,
-  report_progress = identity,
-  create_progress_reporter = create_null_prog_reporter
+  create_progress_reporter = create_null_prog_reporter,
+  progress_reporter = create_progress_reporter()
 )
 }
 \arguments{

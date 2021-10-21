@@ -22,8 +22,8 @@ run_hero_twsa <- function(...) {
   sa_table <- crossing(groups_table, twsa_table, vbp_table)
   
   max_prog <- get_twsa_max_progress(dots, sa_table)
-  try(dots$report_max_progress(max_prog))
-  try(args$report_progress(1L))
+  try(dots$progress_reporter$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -42,8 +42,8 @@ run_hero_twsa <- function(...) {
   res <- run_sa(
     heemod_res$model_runs,
     sa_table, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc'),
-    report_progress = args$report_progress,
-    create_progress_reporter = args$create_progress_reporter,
+    create_progress_reporter = dots$create_progress_reporter,
+    progress_reporter = dots$progress_reporter,
     heemod_res$model_runs$cores,
     simplify = T
   )
@@ -56,7 +56,7 @@ run_hero_twsa <- function(...) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc', twsa_param_names))
   }
   
-  try(args$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   
   # Format and Return
   list(

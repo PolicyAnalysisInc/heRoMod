@@ -15,7 +15,7 @@ eval_strategy(
   strategy_name,
   aux_params = NULL,
   disc_method = "start",
-  report_progress = identity,
+  progress_reporter = create_null_prog_reporter(),
   state_groups = NULL,
   individual_level = F
 )

@@ -20,8 +20,8 @@ run_model(
   parallel = F,
   cores = 1,
   disc_method = "start",
-  report_progress = identity,
   create_progress_reporter = create_null_prog_reporter,
+  progress_reporter = create_progress_reporter(),
   state_groups = NULL,
   individual_level = F
 )
@@ -41,8 +41,8 @@ run_model_(
   parallel = F,
   cores = 1,
   disc_method = "start",
-  report_progress = identity,
   create_progress_reporter = create_null_prog_reporter,
+  progress_reporter = create_progress_reporter(),
   state_groups = NULL,
   individual_level = F
 )

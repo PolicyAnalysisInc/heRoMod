@@ -9,8 +9,8 @@ run_vbp(
   vbp,
   strategy_vbp,
   wtp_thresholds,
-  report_progress = identity,
-  create_progress_reporter = create_null_prog_reporter
+  create_progress_reporter = create_null_prog_reporter,
+  progress_reporter = create_progress_reporter()
 )
 }
 \arguments{

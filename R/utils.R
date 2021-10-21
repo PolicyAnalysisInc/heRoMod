@@ -725,12 +725,7 @@ patch_progress_funcs <- function(model) {
   if (is.null(model$create_progress_reporter)) {
     model$create_progress_reporter <- create_null_prog_reporter
   }
-  if (is.null(model$report_progress)) {
-    model$report_progress <- model$create_progress_reporter()
-  }
-  if (is.null(model$report_max_progress)) {
-    model$report_max_progress <- identity
-  }
+  model$progress_reporter <- model$create_progress_reporter()
   model
 }
 
@@ -865,4 +860,12 @@ vector_to_cs_string <- function(x, quoted = F) {
   paste(base_str, collapse = ', ')
 }
 
-create_null_prog_reporter <- function() identity
+nullfunc <- function(...) {}
+
+create_null_prog_reporter <- function() {
+  list(
+    report_progress = nullfunc,
+    report_max_progress = nullfunc,
+    disconnect = nullfunc
+  )
+}

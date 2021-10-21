@@ -10,8 +10,8 @@ eval_strategy_newdata(
   strategy = 1,
   newdata,
   cores = 1,
-  report_progress = identity,
   create_progress_reporter = create_null_prog_reporter,
+  progress_reporter = create_progress_reporter(),
   simplify = F
 )
 }
