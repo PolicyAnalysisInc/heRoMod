@@ -722,10 +722,19 @@ get_dpy <- function() {
 }
 
 patch_progress_funcs <- function(model) {
-  if (is.null(model$create_progress_reporter)) {
-    model$create_progress_reporter <- create_null_prog_reporter
+  if (is.null(model[['create_progress_reporter']])) {
+    if (is.null(model$create_progress_reporter_factory)) {
+      # If we aren't given a factory then we'll create progress reporters that do nothing
+      model$create_progress_reporter <- create_null_prog_reporter
+      model$progress_reporter <- model$create_progress_reporter()
+    } else {
+      # If we are, then create one factory that we won't use in this process and will
+      # hand down to the main process
+      model$create_progress_reporter <- model$create_progress_reporter_factory()
+      # Also create a factory and use it to generate a reporter for the main process only
+      model$progress_reporter <- (model$create_progress_reporter_factory())()
+    }
   }
-  model$progress_reporter <- model$create_progress_reporter()
   model
 }
 

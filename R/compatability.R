@@ -26,7 +26,7 @@ convert_model <- function(model) {
         scenario = convert_scenarios(model$scenarios),
         cores = get_n_cores(model$cores),
         script_to_run = model$script_to_run,
-        create_progress_reporter = model$create_progress_reporter,
+        create_progress_reporter_factory = model$create_progress_reporter_factory,
         .manifest = model$.manifest,
         name = safe_filename(model$modelheader$filename)
     )
