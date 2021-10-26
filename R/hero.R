@@ -883,13 +883,24 @@ hero_extract_trace <- function(res, corrected = F) {
 
 hero_extract_psa_summ <- function(res, summ) {
   
+  print('results: ')
   print(res)
+  
+  
+  print('summaries: ')
   print(summ)
+  
   all_res <- rbind(res) %>%
     reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
     mutate(variable = as.character(variable))
   
+  
+  print('all_res: ')
+  print(all_res)
+  
   summ_unique <- distinct(summ, name, value)
+  print('summ_unique: ')
+  print(summ_unique)
   
   undisc <- inner_join(
     rename(summ_unique,variable = value),
@@ -904,8 +915,12 @@ hero_extract_psa_summ <- function(res, summ) {
       disc = F
     ) %>%
     select(outcome, series, sim, group, disc, value)
+  print('undisc: ')
+  print(undisc)
   
   undisc_summ <- undisc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  print('undisc_summ: ')
+  print(undisc_summ)
   
   disc <- inner_join(
     mutate(
@@ -925,8 +940,12 @@ hero_extract_psa_summ <- function(res, summ) {
       disc = T
     ) %>%
     select(outcome, series, sim, group, disc, value)
+  print('disc: ')
+  print(disc)
   
   disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  print('disc_summ: ')
+  print(disc_summ)
   
   all_abs <- rbind(
     disc_summ,
@@ -934,6 +953,9 @@ hero_extract_psa_summ <- function(res, summ) {
     undisc_summ,
     rename(select(undisc, group, series, disc, sim, value), outcome = group)
   )
+  
+  print('all_abs: ')
+  print(all_abs)
   
   strat_names <- unique(all_abs$series)
   print(strat_names)
