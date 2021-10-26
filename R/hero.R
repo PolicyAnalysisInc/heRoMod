@@ -926,7 +926,7 @@ hero_extract_psa_summ <- function(res, summ) {
   
   disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
   
-  all_abs <- rbind(
+  all_abs <- bind_rows(
     disc_summ,
     rename(select(disc, group, series, disc, sim, value), outcome = group),
     undisc_summ,
@@ -948,7 +948,7 @@ hero_extract_psa_summ <- function(res, summ) {
     mutate(value = ref_value - comp_value, series = paste0(ref, ' vs. ', comp)) %>%
     select('series', 'disc', 'outcome', 'sim', 'value')
   
-  rbind(all_abs, comparisons)
+  bind_rows(all_abs, comparisons)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
@@ -1296,6 +1296,8 @@ run_hero_psa <- function(...) {
       })
     
     try(dots$progress_reporter$report_progress(1L))
+    print(outcomes_summary)
+    print(costs_summary)
     list(
       api_ver = '2.0',
       scatter = scatter_compressed,
