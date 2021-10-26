@@ -916,11 +916,11 @@ hero_extract_psa_summ <- function(res, summ) {
     ) %>%
     select(outcome, series, sim, group, disc, value)
   print('undisc: ')
-  print(undisc)
+  print(as_tibble(undisc))
   
   undisc_summ <- undisc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
   print('undisc_summ: ')
-  print(undisc_summ)
+  print(as_tibble(undisc_summ))
   
   disc <- inner_join(
     mutate(
@@ -941,11 +941,11 @@ hero_extract_psa_summ <- function(res, summ) {
     ) %>%
     select(outcome, series, sim, group, disc, value)
   print('disc: ')
-  print(disc)
+  print(as_tibble(disc))
   
   disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
   print('disc_summ: ')
-  print(disc_summ)
+  print(as_tibble(disc_summ))
   
   all_abs <- rbind(
     disc_summ,
