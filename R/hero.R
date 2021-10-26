@@ -955,7 +955,8 @@ hero_extract_psa_summ <- function(res, summ) {
   )
   
   print('all_abs: ')
-  print(all_abs)
+  print(class(all_abs))
+  print(as_tibble(all_abs))
   
   strat_names <- unique(all_abs$series)
   print(strat_names)
