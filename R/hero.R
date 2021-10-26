@@ -949,9 +949,9 @@ hero_extract_psa_summ <- function(res, summ) {
   
   all_abs <- rbind(
     disc_summ,
-    rename(select(disc, group, series, disc, sim, value), outcome = group),
+    rename(disc, select(disc, group, series, disc, sim, value), outcome = group),
     undisc_summ,
-    rename(select(undisc, group, series, disc, sim, value), outcome = group)
+    rename(undisc, select(undisc, group, series, disc, sim, value), outcome = group)
   )
   
   print('all_abs: ')
