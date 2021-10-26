@@ -883,6 +883,8 @@ hero_extract_trace <- function(res, corrected = F) {
 
 hero_extract_psa_summ <- function(res, summ) {
   
+  print(res)
+  print(summ)
   all_res <- rbind(res) %>%
     reshape2::melt(id.vars = c(".strategy_names", ".index")) %>%
     mutate(variable = as.character(variable))
@@ -934,6 +936,7 @@ hero_extract_psa_summ <- function(res, summ) {
   )
   
   strat_names <- unique(all_abs$series)
+  print(strat_names)
   
   comparisons <- crossing(ref = strat_names, comp = strat_names) %>%
     filter(ref != comp) %>%
