@@ -1296,8 +1296,7 @@ run_hero_psa <- function(...) {
       })
     
     try(dots$progress_reporter$report_progress(1L))
-    print(outcomes_summary)
-    print(costs_summary)
+
     list(
       api_ver = '2.0',
       scatter = scatter_compressed,
