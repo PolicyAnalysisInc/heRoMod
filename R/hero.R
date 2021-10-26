@@ -947,7 +947,7 @@ hero_extract_psa_summ <- function(res, summ) {
   print('disc_summ: ')
   print(as_tibble(disc_summ))
   
-  all_abs <- rbind(
+  all_abs <- bind_rows(
     disc_summ,
     rename(select(disc, group, series, disc, sim, value), outcome = group),
     undisc_summ,
