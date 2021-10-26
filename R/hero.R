@@ -973,8 +973,9 @@ hero_extract_psa_summ <- function(res, summ) {
     ) %>%
     mutate(value = ref_value - comp_value, series = paste0(ref, ' vs. ', comp)) %>%
     select('series', 'disc', 'outcome', 'sim', 'value')
-  
-  rbind(all_abs, comparisons)
+  print('final res')
+  print(as_tibble(bind_rows(all_abs, comparisons)))
+  bind_rows(all_abs, comparisons)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
