@@ -926,7 +926,7 @@ hero_extract_psa_summ <- function(res, summ) {
   
   disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
   
-  all_abs <- rbind(
+  all_abs <- bind_rows(
     disc_summ,
     rename(select(disc, group, series, disc, sim, value), outcome = group),
     undisc_summ,
@@ -948,7 +948,7 @@ hero_extract_psa_summ <- function(res, summ) {
     mutate(value = ref_value - comp_value, series = paste0(ref, ' vs. ', comp)) %>%
     select('series', 'disc', 'outcome', 'sim', 'value')
   
-  rbind(all_abs, comparisons)
+  bind_rows(all_abs, comparisons)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
@@ -1142,7 +1142,8 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progress,
+    progress_reporter = dots$progress_reporter,
+    create_progress_reporter = dots$create_progress_reporter,
     individual_level = T
   )
 }
@@ -1177,8 +1178,9 @@ run_hero_psa <- function(...) {
   n_sims <- n_strats * n_groups * dots$psa$n
   
   max_prog <- get_psa_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
-  try(dots$report_progress(1L))
+  reporters <- dots$create_progress_reporter
+  try(dots$progress_reporter$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_progress(1L))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1293,7 +1295,8 @@ run_hero_psa <- function(...) {
         )
       })
     
-    try(dots$report_progress(1L))
+    try(dots$progress_reporter$report_progress(1L))
+
     list(
       api_ver = '2.0',
       scatter = scatter_compressed,
@@ -1313,30 +1316,29 @@ run_hero_psa <- function(...) {
 #' @export
 run_markdown <- function(...) {
   dots <- patch_progress_funcs(list(...))
-  
   max_prog <- get_code_preview_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
   md_filename <- paste0(dots$name, ".md")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   file.remove(md_filename)
   file.remove(r_filename)
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
   }
@@ -1350,11 +1352,11 @@ package_hero_model <- function(...) {
   dots <- patch_progress_funcs(list(...))
 
   max_prog <- get_r_project_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
   
   model_object <- list(...)
-  model_object$report_progress <- NULL
-  model_object$report_max_progress <- NULL
+  model_object$create_progress_reporter <- NULL
+  model_object <- patch_progress_funcs(model_object)
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
 SaveWorkspace: Default
@@ -1378,24 +1380,24 @@ results <- do.call(run_hero_bc, model)
 "
   filename <- paste0(dots$name, ".zip")
   write(rproj_string, paste0(dots$name, ".rproj"))
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   write(rcode_string, "run.R")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   saveRDS(model_object, "model.rds")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   utils::zip(
     filename,
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
     flags="-q"
   )
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if(!is.null(dots$.manifest)) {
      dots$.manifest$register_file('r_model_export', filename, 'R Export', default = T)
   }
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
   file.remove("model.rds")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   list(success = T)
 }
 

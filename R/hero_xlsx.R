@@ -5,16 +5,16 @@ export_hero_xlsx <- function(...) {
   args <- do.call(build_hero_model, dots)
   
   max_prog <- get_excel_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
   
   # Initial model run
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   heemod_res <- do.call(run_model_api, args)
   vbp_name <- dots$vbp$par_name
   
   if ((class(dots$groups) %in% "data.frame") && (nrow(dots$groups) > 1)) {
     
-    # Generate sensitvity analysis input table
+    # Generate sensitivity analysis input table
     groups_table <- gen_groups_table(dots$groups)
     vbp_table <- tibble(.vbp_scen = NA, .vbp_price = NA, .vbp_param = list(NA))
     sa_table <- crossing(groups_table, vbp_table)
@@ -24,7 +24,8 @@ export_hero_xlsx <- function(...) {
     res <- run_sa(
       heemod_res$model_runs,
       sa_table, c(),
-      report_progress = dots$report_progress,
+      create_progress_reporter = dots$create_progress_reporter,
+      progress_reporter = dots$progress_reporter,
       heemod_res$model_runs$cores
     )
     
@@ -157,7 +158,7 @@ export_hero_xlsx <- function(...) {
       dimensions <- c(nrow(x), ncol(x))
       !isNull && !all(is.na(dimensions)) && all(dimensions) > 0
     })
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   filename <- paste0(dots$name, ".xlsx")
   write_workbook(lapply(wb_list, sanitize_df), filename)
   if (!is.null(dots$.manifest)) {

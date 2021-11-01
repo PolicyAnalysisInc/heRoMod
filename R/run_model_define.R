@@ -87,7 +87,8 @@ run_model <- function(...,
                       parallel = F,
                       cores = 1,
                       disc_method = 'start',
-                      report_progress = identity,
+                      create_progress_reporter = create_null_prog_reporter,
+                      progress_reporter = create_progress_reporter(),
                       state_groups = NULL,
                       individual_level = F) {
   
@@ -111,7 +112,8 @@ run_model <- function(...,
     parallel = parallel,
     cores = cores,
     disc_method = disc_method,
-    report_progress = report_progress,
+    create_progress_reporter = create_progress_reporter,
+    progress_reporter = progress_reporter,
     state_groups = state_groups,
     individual_level = individual_level
   )
@@ -132,7 +134,8 @@ run_model_ <- function(uneval_strategy_list,
                        parallel = F,
                        cores = 1,
                        disc_method = 'start',
-                       report_progress = identity,
+                       create_progress_reporter = create_null_prog_reporter,
+                       progress_reporter = create_progress_reporter(),
                        state_groups = NULL,
                        individual_level = F) {
   if (length(uneval_strategy_list) == 0) {
@@ -218,7 +221,7 @@ run_model_ <- function(uneval_strategy_list,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
         disc_method = disc_method,
-        report_progress = report_progress,
+        progress_reporter = create_progress_reporter(),
         state_groups = state_groups,
         individual_level = individual_level
       ))
@@ -243,7 +246,7 @@ run_model_ <- function(uneval_strategy_list,
         strategy_name = names(uneval_strategy_list)[i],
         aux_params = aux_params,
         disc_method = disc_method,
-        report_progress = report_progress,
+        progress_reporter = progress_reporter,
         state_groups = state_groups,
         individual_level = individual_level
       )
@@ -293,7 +296,8 @@ run_model_ <- function(uneval_strategy_list,
       state_time_limit = state_time_limit,
       frontier = if (! is.null(root_strategy)) get_frontier(res),
       disc_method = disc_method,
-      report_progress = report_progress,
+      create_progress_reporter = create_progress_reporter,
+      progress_reporter = progress_reporter,
       state_groups = state_groups,
       individual_level = individual_level,
       cores = cores

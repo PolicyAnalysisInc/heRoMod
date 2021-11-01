@@ -28,10 +28,10 @@
 #' @export
 #' 
 #' @example inst/examples/example_run_dsa.R
-run_dsa <- function(model, dsa, cores = 1, report_progress = identity) UseMethod("run_dsa")
+run_dsa <- function(model, dsa, cores = 1, create_progress_reporter = create_null_prog_reporter, progress_reporter = create_progress_reporter()) UseMethod("run_dsa")
 
 #' @export
-run_dsa.run_model <- function(model, dsa, cores = 1, report_progress = identity) {
+run_dsa.run_model <- function(model, dsa, cores = 1, create_progress_reporter = create_null_prog_reporter, progress_reporter = create_progress_reporter()) {
   
   if (! all(c(".cost", ".effect") %in% names(get_model_results(model)))) {
     stop("No cost and/or effect defined, sensitivity analysis unavailable.")
@@ -75,7 +75,8 @@ run_dsa.run_model <- function(model, dsa, cores = 1, report_progress = identity)
       strategy = n,
       newdata = dsa_table,
       cores = cores,
-      report_progress = report_progress
+      create_progress_reporter = create_progress_reporter,
+      progress_reporter = progress_reporter
     )
     
     res <- tab %>% 
@@ -134,7 +135,7 @@ run_dsa.run_model <- function(model, dsa, cores = 1, report_progress = identity)
 }
 
 #' @export
-run_dsa.updated_model <- function(model, dsa, report_progress = identity) {
+run_dsa.updated_model <- function(model, dsa, create_progress_reporter = create_null_prog_reporter, progress_reporter = create_progress_reporter()) {
   # n_groups <- length(model$model_list[[1]]$.mod)
   # group_models <- lapply(model$model_list, function(x) {
   # 
@@ -162,7 +163,9 @@ run_dsa.updated_model <- function(model, dsa, report_progress = identity) {
     tab <- eval_strategy_newdata(
       model,
       strategy = n,
-      newdata = dsa$dsa
+      newdata = dsa$dsa,
+      create_progress_reporter = create_progress_reporter,
+      progress_reporter = progress_reporter
     )
     
     res <- tab %>% 
