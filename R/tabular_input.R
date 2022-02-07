@@ -1530,12 +1530,11 @@ create_demographic_table <- function(newdata,
 #' @keywords internal
 read_file <- function(file_name) {
   
-  have_xls <- is_xls(file_name)
   have_xlsx <- is_xlsx(file_name)
   have_csv <- is_csv(file_name)
   
-  if(! have_csv & ! have_xls & ! have_xlsx) {
-    stop("file names must be for csv, xls, or xlsx")
+  if(! have_csv & ! have_xlsx) {
+    stop("file names must be for csv or xlsx")
   }
   
   if(have_csv) {
@@ -1545,15 +1544,11 @@ read_file <- function(file_name) {
       strip.white = TRUE,
       na.strings = c(".", "NA", "")
     ) 
-  } else if(have_xls | have_xlsx) {
-    if (! requireNamespace("readxl", quietly = TRUE)) {
-      stop("readxl packaged needed to read Excel files")
-      
-    } else {
-      tab <- as.data.frame(
-        readxl::read_excel(file_name)
-      )
-    }
+  } else if(have_xlsx) {
+
+    tab <- as.data.frame(
+      openxlsx::read.xlsx(file_name)
+    )
   }
   
   ## get rid of "comment" columns, if any
