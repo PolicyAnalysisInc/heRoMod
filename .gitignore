@@ -10,3 +10,4 @@ heemod-expand.Rproj
 *.DS_Store
 results.json
 trying_state_time.xlsx
+env.RData
