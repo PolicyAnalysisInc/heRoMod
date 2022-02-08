@@ -48,7 +48,6 @@ Imports:
     mgcv,
     optimx,
     parallel,
-    rgho,
     rmarkdown,
     stringr,
     survival,
