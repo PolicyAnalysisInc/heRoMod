@@ -9,7 +9,7 @@ json_model <- jsonlite::read_json(
     simplifyVector = TRUE
 )
 model <- heRomod:::convert_model(json_model)
-
+model$psa$cores <- 1
 test_that(
     "Threshold analysis checks inputs",
     {
