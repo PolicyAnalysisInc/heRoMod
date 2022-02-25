@@ -48,7 +48,6 @@ Imports:
     mgcv,
     optimx,
     parallel,
-    rgho,
     rmarkdown,
     stringr,
     survival,
@@ -60,7 +59,8 @@ Imports:
     gtools,
     magrittr,
     rlang,
-    Rcpp
+    Rcpp,
+    rgho
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
