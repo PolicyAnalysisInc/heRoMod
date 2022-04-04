@@ -2,15 +2,36 @@
 #' @export
 run_hero_threshold <- function(...) {
     model <- list(...)
+    
+    # Handle progress reporting. Because the number of iterations for
+    # threshold analysis can't be predicted in advance, we use a
+    # separate progress reporting system that only runs once per model
+    # run. Accordingly, we do not pass down a progress reporter to
+    # the results runner for more granular progress like we normally
+    # do.
+    if (is.null(model$create_progress_reporter_factory)) {
+        create_progress_reporter <- create_null_prog_reporter
+        progress_reporter <- create_progress_reporter()
+    } else {
+        create_progress_reporter <- model$create_progress_reporter_factory()
+        progress_reporter <- (model$create_progress_reporter_factory())()
+    }
+    model$create_progress_reporter_factory <- NULL
+    max_prog <- get_threshold_max_progress(model)
+    progress_reporter$report_max_progress(max_prog)
+
     check_threshold_analyses(model)
+    progress_reporter$report_progress(5)
+
     n_analyses <- nrow(model$threshold_analyses)
 
     res_list <- list()
     for (i in seq_len(n_analyses)) {
-        res_list[[i]] <- run_single_analysis(model, model$threshold_analyses[i, ])
+        res_list[[i]] <- run_single_analysis(model, model$threshold_analyses[i, ], progress_reporter)
     }
     
     res <- aggregate_threshold_analysis_results(model$threshold_analyses, res_list)
+    progress_reporter$report_progress(5)
 
     res
 }
@@ -159,9 +180,10 @@ get_required_condition_fields <- function(condition) {
     required_fields
 }
 
-run_single_analysis <- function(model, analysis) {
-    solver_instance <- create_solver_instance(model, analysis)
+run_single_analysis <- function(model, analysis, progress_reporter) {
+    solver_instance <- create_solver_instance(model, analysis, progress_reporter)
     threshold_value <- find_threshold_value(solver_instance$run_iteration, analysis)
+    solver_instance$complete_progress()
     list(
         name = analysis$name,
         param = analysis$param,
@@ -193,9 +215,12 @@ aggregate_threshold_analysis_results <- function(analyses, results_list) {
     )
 }
 
-create_solver_instance <- function(model, analysis) {
+create_solver_instance <- function(model, analysis, progress_reporter) {
     history <- list()
     iteration <- 0
+    max_progress_analysis <- 100
+    cumulative_progress <- 0
+    min_rel_progress <- 0.1
 
     list(
         run_iteration = function(x) {
@@ -211,6 +236,23 @@ create_solver_instance <- function(model, analysis) {
             diff <- target_res - goal
 
             iteration <<- iteration + 1
+            # Handle progress reporting
+            remaining_progress <- max_progress_analysis - cumulative_progress
+            progress_to_report <- remaining_progress * min_rel_progress
+            # if (iteration > 1) {
+            #     last_diff <- abs(history[[iteration - 1]]$diff)
+            #     diff_in_diff <- last_diff - abs(diff)
+            #     if (diff_in_diff > 0) {
+            #         relative_progress <- diff_in_diff / last_diff
+            #         progress_to_report <- max(
+            #             relative_progress * remaining_progress,
+            #             progress_to_report
+            #         )
+            #     }
+            # }
+            progress_reporter$report_progress(progress_to_report)
+            cumulative_progress <<- cumulative_progress + progress_to_report
+
             history[[iteration]] <<- tibble(
                 iteration = iteration,
                 input = x,
@@ -221,7 +263,11 @@ create_solver_instance <- function(model, analysis) {
 
             diff
         },
-        get_history = function() bind_rows(history)
+        get_history = function() bind_rows(history),
+        complete_progress = function() {
+            remaining_progress <- max_progress_analysis - cumulative_progress
+            progress_reporter$report_progress(remaining_progress)
+        }
     )
 }
 
