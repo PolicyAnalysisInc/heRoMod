@@ -57,6 +57,15 @@ get_r_project_max_progress <- function(model) {
   return(5)
 }
 
+
+get_threshold_max_progress <- function(model) {
+  return(10 + get_n_threshold_analyses(model) * 100)
+}
+
+get_n_threshold_analyses <- function(model) {
+  max(nrow(model$threshold_analyses), 1)
+}
+
 get_n_strats <- function(model) {
   nrow(model$strategies)
 }
@@ -88,4 +97,3 @@ get_n_scen <- function(model) {
 get_n_psa_iter <- function(model) {
   model$psa$n
 }
-
