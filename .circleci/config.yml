@@ -18,6 +18,8 @@ jobs:
               Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
               Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
               Rscript -e 'remotes::install_github("cran/rgho")'
+              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herotools")'
+              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herosurv")'
               Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
         - run:
             name: Session information and installed package versions
