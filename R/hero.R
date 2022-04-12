@@ -11,6 +11,7 @@ run_analysis <- function(...) {
     'vbp' = run_hero_vbp,
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
+    'threshold' = run_hero_threshold,
     'excel' = export_hero_xlsx,
     'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,

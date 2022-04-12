@@ -23,5 +23,14 @@ error_codes <- list(
   twsa_group_strat_dep = 'Two-way sensitivity analysis may not vary parameters that are group or strategy dependent.',
   vbp_settings_undefined = 'VBP settings have not been configured.',
   variable_infinite_value = "Error in {context} '{name}', formula resulted in infinite value.",
-  variable_missing_value = "Error in {context} '{name}', formula resulted in missing value."
+  variable_missing_value = "Error in {context} '{name}', formula resulted in missing value.",
+  threshold_no_analyses = 'Error in threshold analysis, no analyses were defined.',
+  threshold_missing_fields = 'Error in threshold analysis "{name}", analysis missing required fields: {fields}.',
+  threshold_input_not_found = 'Error in threshold analysis "{name}", input parameter "{param}" not found in model.',
+  threshold_invalid_output = 'Error in threshold analysis "{name}", output "{output}" is not valid.',
+  threshold_invalid_health_outcome = 'Error in threshold analysis "{name}", health outcome "{outcome}" is not valid.',
+  threshold_invalid_econ_outcome = 'Error in threshold analysis "{name}", economic outcome "{outcome}" is not valid.',
+  threshold_condition_invalid = 'Error in threshold analysis "{name}", condition is missing required fields: {fields}.',
+  threshold_invalid_range = 'Error in threshold analysis "{name}", lower and upper boundaries must be numeric.',
+  warn_threshold_unit = 'Warning in threshold analysis "{name}", could not be completed using uniroot. Using optimize instead.'
 )
