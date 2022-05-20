@@ -186,13 +186,13 @@ eval_init <- function(x, parameters, expand, individual_level = F) {
     }
     
     # Check that probabiltiies sum to 1
-    if(sum(init_vector) != 1) {
+    if(!is_equal(sum(init_vector), 1)) {
       stop("Error in initial probabilities, values do not sum to 1.", call. = F)
     }
     
   }
 
-  if (sum(init_vector) == 0) {
+  if (is_equal(sum(init_vector), 0)) {
     stop(error_codes$zero_initial_prob, call. = F)
   }
   init_vector
