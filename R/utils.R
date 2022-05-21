@@ -878,3 +878,7 @@ create_null_prog_reporter <- function() {
     disconnect = nullfunc
   )
 }
+
+is_equal <- function(x, y) {
+  is_zero(x - y)
+}
