@@ -107,7 +107,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, create_pr
       })
       
     } else {
-      pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      pieces <- mclapply(pnewdata, function(newdata) {
         reporter <- create_progress_reporter()
         newdata %>% 
           rowwise() %>% 

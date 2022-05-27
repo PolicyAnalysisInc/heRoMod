@@ -1357,6 +1357,9 @@ package_hero_model <- function(...) {
   
   model_object <- list(...)
   model_object$create_progress_reporter <- NULL
+  model_object$create_progress_reporter_factory <- NULL
+  model_object$progress_reporter <- NULL
+  model_object$cores <- NULL
   model_object <- patch_progress_funcs(model_object)
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
@@ -1368,12 +1371,13 @@ NumSpacesForTab: 4
 Encoding: UTF-8
 RnwWeave: knitr
 LaTeX: pdfLaTeX"
-  rcode_string <- "if(!require(heRomod)) {
+  rcode_string <- "if(!require(heRomod) || !require(herotools) || !require(herosurv)) {
   if(!require(devtools)) {
     install.packages('devtools')
   }
-  library(devtools)
-  install_github('PolicyAnalysisInc/heRomod')
+  devtools::install_github('PolicyAnalysisInc/herotools')
+  devtools::install_github('PolicyAnalysisInc/herosurv')
+  devtools::install_github('PolicyAnalysisInc/heRomod')
   library(heRomod)
 }
 model <- readRDS('./model.rds')
