@@ -209,7 +209,7 @@ run_model_ <- function(uneval_strategy_list,
   #eval_strategy_list <- list()
   
   if (cores > 1 && parallel && .Platform$OS.type == "unix") {
-    eval_strategy_list <- parallel::mclapply(seq_len(length(uneval_strategy_list)), function(i) {
+    eval_strategy_list <- mclapply(seq_len(length(uneval_strategy_list)), function(i) {
       try(eval_strategy(
         strategy = uneval_strategy_list[[i]], 
         parameters = parameters,

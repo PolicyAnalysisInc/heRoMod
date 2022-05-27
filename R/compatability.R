@@ -48,7 +48,7 @@ run_code_preview_compat <- function(...) {
 }
 
 get_n_cores <- function(cores) {
-    if (is.null(cores)) return(as.numeric(system('nproc',intern = T)))
+    if (is.null(cores)) return(parallel::detectCores())
     cores
 }
 
