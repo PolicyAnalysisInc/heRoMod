@@ -180,22 +180,6 @@ define_part_surv_custom_ <- function(.dots) {
   
 }
 
-
-
-#' @return a tibble of partitioned survival objects, similar to the
-#'   original tibble of survival fits, with all the columns
-#'   except type and fit, and a new column part_surv.
-#' @export
-#'
-part_survs_from_surv_inputs <- function(surv_inputs, state_names) {
-  
-  surv_inputs %>%
-    group_by(treatment, set_name, dist, set_def) %>%
-    do(tibble(
-      part_surv = list(make_part_surv_from_small_tibble(
-        ., state_names = state_names))))
-}
-
 get_state_names.part_surv <- function(x) {
   x$state_names
 }
