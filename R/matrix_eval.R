@@ -224,10 +224,12 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
     )
     names(x) <- state_trans_names
     indices <- map_lgl(x, function(y) as.character(y)[1] != '0')
+    print('a')
     .nz_trans_guide <- strsplit(state_trans_names[indices], ' → ', fixed = T) %>%
       map_dfr(function(z) tibble(.from = z[[1]], .to = z[[2]])) %>%
       mutate(.trans = state_trans_names[indices])
     
+    print('b')
     trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
       .[c('state_time', 'model_time', names(x)[indices])] %>%
       data.table::as.data.table() %>%
@@ -288,10 +290,11 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
     )
     names(x) <- state_trans_names
     indices <- map_lgl(x, function(y) as.character(y)[1] != '0')
+    print('c')
     .nz_trans_guide <- strsplit(state_trans_names[indices], ' → ', fixed = T) %>%
       map_dfr(function(z) tibble(.from = z[[1]], .to = z[[2]])) %>%
       mutate(.trans = state_trans_names[indices])
-    
+    print('d')
     trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
       .[c('state_time', 'model_time', names(x)[indices])] %>%
       data.table::as.data.table() %>%
