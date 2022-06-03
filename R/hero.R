@@ -1295,17 +1295,35 @@ run_hero_psa <- function(...) {
           )
         )
       })
-    
     try(dots$progress_reporter$report_progress(1L))
-
-    list(
-      api_ver = '2.0',
-      scatter = scatter_compressed,
-      outcomes_summary = outcomes_summary,
-      costs_summary = costs_summary,
-      ceac = ceac,
-      evpi = evpi
-    )
+    
+    if (!is.null(dots$include_param_values) && dots$include_param_values) {
+      param_values <- mutate(
+        psa_model$psa$psa[psa_model$psa$resamp_par],
+        iteration = seq_len(n()),
+        .before = 1
+      )
+      ret <- list(
+          api_ver = '2.0',
+          scatter = scatter_compressed,
+          outcomes_summary = outcomes_summary,
+          costs_summary = costs_summary,
+          ceac = ceac,
+          evpi = evpi,
+          param_values = param_values
+        )
+    } else {
+      ret <- list(
+        api_ver = '2.0',
+        scatter = scatter_compressed,
+        outcomes_summary = outcomes_summary,
+        costs_summary = costs_summary,
+        ceac = ceac,
+        evpi = evpi
+      )
+    }
+    
+    return(ret)
   } else {
     
     list(
