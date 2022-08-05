@@ -35,7 +35,7 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
   
   trans_table <- eval_matrix_table(x, parameters, expand, state_groups) %>%
     replace_C()
-  
+
   # Make sure that values are numeric, or integer which would be odd but would technically be valid
   # if all transition probabilities are 1 or 0.
   matrix_type <- class(trans_table$.value)
@@ -105,7 +105,7 @@ check_matrix.data.frame <- function(x) {
     }
     
     problem_rows <- x %>%
-      filter(abs(.value - 0.5) > 0.5) %>%
+      filter(is_equal(pmax(abs(.value-0.5), 0.5), 0.5)) %>%
       group_by(.from_e, .to_e) %>%
       group_split() %>%
       map(function(x) {

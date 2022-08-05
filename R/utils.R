@@ -694,6 +694,12 @@ clean_err_msg <- function(x) {
   }
 }
 
+is_equal_mat <- function(x, y) {
+  tolerance <- sqrt(.Machine$double.eps)
+  abs_diff <- abs(x - y)
+  abs_diff <= tolerance
+}
+
 is_zero <- function(current) {
   target <- rep(0L, length(current))
   tolerance <- sqrt(.Machine$double.eps)

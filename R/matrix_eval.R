@@ -65,8 +65,9 @@ check_matrix.array <- function(x) {
     
   }
   
-  if (! sum(abs(x-0.5) > 0.5)==0) {
-    problem <- which(x < 0 | x > 1, arr.ind = TRUE)
+  problem_indices <- !is_equal_mat(pmax(abs(x-0.5), 0.5), 0.5)
+  if (any(problem_indices)) {
+    problem <- which(problem_indices, arr.ind = TRUE)
     problem <- tibble::as_tibble(problem)
     names(problem) <- c("cycle", "from", "to")
     states <- get_state_names(x)
@@ -227,7 +228,7 @@ eval_matrix_table <- function(x, parameters, expand, state_groups) {
     .nz_trans_guide <- strsplit(state_trans_names[indices], ' → ', fixed = T) %>%
       map_dfr(function(z) tibble(.from = z[[1]], .to = z[[2]])) %>%
       mutate(.trans = state_trans_names[indices])
-    
+
     trans_table <- safe_eval(parameters, .dots = x[indices], .vartype = "transition") %>%
       .[c('state_time', 'model_time', names(x)[indices])] %>%
       data.table::as.data.table() %>%
