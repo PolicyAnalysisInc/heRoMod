@@ -311,10 +311,10 @@ convert_scenarios <- function(scenarios) {
 
 # Settings Getter Functions
 get_cost_dr <- function(settings) {
-    as.numeric(settings$DiscountRateOutcomes) / 100
+    as.numeric(settings$DiscountRateCosts) / 100
 }
 get_outcomes_dr <- function(settings) {
-    as.numeric(settings$DiscountRateCosts) / 100
+    as.numeric(settings$DiscountRateOutcomes) / 100
 }
 get_n_cycles <- function(settings) {
     as.integer(settings$CycleCount)
