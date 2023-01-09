@@ -77,7 +77,7 @@ check_threshold_analysis <- function(analysis, model) {
     bounds_numeric <- isNumericOrInteger(analysis$range$lower) & isNumericOrInteger(analysis$range$upper)
     bounds_undefined <- c(is.na(analysis$range$lower), is.na(analysis$range$upper))
 
-    if (range_class != 'data.frame' || bounds_numeric || any(bounds_undefined)) {
+    if (range_class != 'data.frame' || !bounds_numeric || any(bounds_undefined)) {
         stop(glue(error_codes$threshold_invalid_range, name = name), call. = F)
     }
 
