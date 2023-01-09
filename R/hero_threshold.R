@@ -51,6 +51,10 @@ check_threshold_analyses <- function(model) {
         walk(check_threshold_analysis, model)
 }
 
+isNumericOrInteger <- function(x) {
+  is.numeric(x) | is.integer(x)
+}
+
 check_threshold_analysis <- function(analysis, model) {
 
     name <- analysis$name
@@ -70,10 +74,10 @@ check_threshold_analysis <- function(analysis, model) {
 
     # Check that range is a list with upper and lower specified as numeric
     range_class <- class(analysis$range)
-    bounds_class <- c(class(analysis$range$lower), class(analysis$range$upper))
+    bounds_numeric <- isNumericOrInteger(analysis$range$lower) & isNumericOrInteger(analysis$range$upper)
     bounds_undefined <- c(is.na(analysis$range$lower), is.na(analysis$range$upper))
 
-    if (range_class != 'data.frame' || any(bounds_class != c('numeric', 'numeric')) || any(bounds_undefined)) {
+    if (range_class != 'data.frame' || bounds_numeric || any(bounds_undefined)) {
         stop(glue(error_codes$threshold_invalid_range, name = name), call. = F)
     }
 
