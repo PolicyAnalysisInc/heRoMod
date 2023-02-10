@@ -214,7 +214,7 @@ plot.updated_model <- function(x, type = c("simple", "difference",
   )
   summary(x)$scaled_results %>% 
     filter(.strategy_names %in% strategy) %>% 
-    ggplot2::ggplot(ggplot2::aes_string(x = x_var)) +
+    ggplot2::ggplot(ggplot2::aes(x = !!sym(x_var))) +
     ggplot2::geom_histogram(...) +
     ggplot2::xlab(x_lab)+
     ggplot2::facet_grid(.strategy_names ~ .)

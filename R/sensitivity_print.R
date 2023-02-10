@@ -181,13 +181,13 @@ plot.dsa <- function(x, type = c("simple", "difference"),
     if (limits_by_bars) l <- l * (1 + 0.075 * max(new_digits$nd))
   }
   
-  res <- ggplot2::ggplot(tab, ggplot2::aes_string(
-    y = ".par_names",
-    yend = ".par_names",
-    x = var_plot,
-    xend = var_ref,
-    colour = var_col)) +
-    ggplot2::geom_segment(size = 5) +
+  res <- ggplot2::ggplot(tab, ggplot2::aes(
+    y = .par_names,
+    yend = .par_names,
+    x = !!sym(var_plot),
+    xend = !!sym(var_ref),
+    colour = !!sym(var_col))) +
+    ggplot2::geom_segment(linewidth = 5) +
     ggplot2::guides(colour = "none") +
     ggplot2::ylab("Variable") +
     ggplot2::xlab(xl) +
@@ -197,11 +197,11 @@ plot.dsa <- function(x, type = c("simple", "difference"),
   if (limits_by_bars) {
     res <- res + 
       ggplot2::geom_text(
-        ggplot2::aes_string(
-          x = var_plot,
-          y = ".par_names",
-          label = ".par_value",
-          hjust = ".hjust"
+        ggplot2::aes(
+          x = !!sym(var_plot),
+          y = .par_names,
+          label = .par_value,
+          hjust = .hjust
         )
       )
   }

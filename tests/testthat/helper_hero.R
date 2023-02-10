@@ -3,18 +3,21 @@
 #' Test All Results of a Model
 test_model_results <- function(name, path, bc, vbp, dsa, twsa, scen, psa, export) {
   test_that(paste0(name, ' produces correct results.'), {
+    local_edition(3)
     model <- readRDS(system.file("hero", path, "model.rds", package="heRomod"))
     model$cores <- 1
-    if (bc) test_bc_results(model, name, path)
-    if (vbp) test_vbp_results(model, name, path)
-    if (dsa) test_dsa_results(model, name, path, vbp = F)
-    if (dsa && vbp) test_dsa_results(model, name, path, vbp = T)
-    if (twsa) test_twsa_results(model, name, path, vbp = F)
-    if (twsa && vbp) test_twsa_results(model, name, path, vbp = T)
-    if (scen) test_scen_results(model, name, path)
-    if (scen && vbp) test_scen_results(model, name, path, vbp = T)
-    if (psa) test_psa_results(model, name, path)
-    if (export) test_export_results(model, name, path)
+    suppressMessages({
+      if (bc) test_bc_results(model, name, path)
+      if (vbp) test_vbp_results(model, name, path)
+      if (dsa) test_dsa_results(model, name, path, vbp = F)
+      if (dsa && vbp) test_dsa_results(model, name, path, vbp = T)
+      if (twsa) test_twsa_results(model, name, path, vbp = F)
+      if (twsa && vbp) test_twsa_results(model, name, path, vbp = T)
+      if (scen) test_scen_results(model, name, path)
+      if (scen && vbp) test_scen_results(model, name, path, vbp = T)
+      if (psa) test_psa_results(model, name, path)
+      if (export) test_export_results(model, name, path)
+    })
   })
 }
 
@@ -33,7 +36,7 @@ test_bc_results <- function(model, name, path) {
   expect_equal(bc_res$costs, bc_res_test$costs)
   expect_equal(bc_res$nmb, bc_res_test$nmb)
   expect_equal(bc_res$ce, bc_res_test$ce)
-  expect_equal(bc_res$pairwise_ce, bc_res_test$pairwise_ce)
+  expect_snapshot_value(bc_res$pairwise_ce, style = 'serialize', cran = TRUE)
 }
 
 #' Test VBP results
