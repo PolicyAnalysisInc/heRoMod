@@ -283,7 +283,7 @@ find_threshold_value <- function(solver_callback, analysis) {
                 warning(glue(error_codes$warn_threshold_unit, name = analysis$name), call. = F)
                 threshold_optimizer(solver_callback, analysis)
             } else {
-                stop(e)
+                stop(e$message, call. = F)
             }
         }
     )
@@ -296,9 +296,10 @@ threshold_root_finder <- function(solver_callback, analysis) {
 }
 
 threshold_optimizer <- function(solver_callback, analysis) {
+    goal_func <- function(x) abs(solver_callback(x))
     tol <- .Machine$double.eps^0.25
     res <- optimize(
-        function(x) abs(solver_callback(x)),
+      goal_func,
         lower = analysis$range$lower,
         upper = analysis$range$upper,
         maximum = FALSE,
@@ -306,11 +307,10 @@ threshold_optimizer <- function(solver_callback, analysis) {
     )
 
     # Return NA if acceptably close solution isn't found
-    if (res$minimum > (tol * 2)) {
+    if (goal_func(res$minimum) > (tol * 2)) {
         return(NA)
     }
 
-    res$minimum
 }
 
 get_solver_results_dataset <- function(result, analysis) {

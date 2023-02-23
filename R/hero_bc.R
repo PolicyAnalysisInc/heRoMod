@@ -272,10 +272,8 @@ extract_sa_bc_pairwise_ce <- function(outcomes, costs) {
       icer_string = format_icer(icer)
     ) %>%
     arrange(
-      health,
-      econ,
-      referent,
-      comparator
+      factor(referent, levels = strategy_names),
+      factor(comparator, levels = strategy_names)
     ) %>%
     as.data.frame()
   
