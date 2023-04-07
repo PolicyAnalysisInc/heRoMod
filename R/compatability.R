@@ -26,8 +26,8 @@ convert_model <- function(model) {
         scenario = convert_scenarios(model$scenarios),
         cores = get_n_cores(model$cores),
         script_to_run = model$script_to_run,
-        report_max_progress = model$report_max_progress,
-        report_progress = model$report_progress,
+        threshold_analyses = model$threshold_analyses,
+        create_progress_reporter_factory = model$create_progress_reporter_factory,
         .manifest = model$.manifest,
         name = safe_filename(model$modelheader$filename)
     )
@@ -40,8 +40,7 @@ run_code_preview_compat <- function(...) {
         list(
             text = data$scripts[[data$script_to_run]],
             data = data$tables,
-            report_max_progress = data$report_max_progress,
-            report_progress = data$report_progress,
+            create_progress_reporter = data$create_progress_reporter,
             .manifest = data$.manifest,
             name = data$name
         )
@@ -49,7 +48,7 @@ run_code_preview_compat <- function(...) {
 }
 
 get_n_cores <- function(cores) {
-    if (is.null(cores)) return(as.numeric(system('nproc',intern = T)))
+    if (is.null(cores)) return(parallel::detectCores())
     cores
 }
 
@@ -252,25 +251,9 @@ convert_tables <- function(tables) {
     if (is.null(tables) || class(tables) == "list") {
         return(structure(list(), names=character(0)))
     }
-    names <- tables$name
-    tables$data %>%
-        map(function(mat) {
-            tbl <- mat %>%
-                as.data.frame(stringsAsFactors = F) %>%
-                select_if(function(x) any(x != '' & x != 0 & !is.na(x)))
-            colnames <- as.character(tbl[1, ])
-            data <- tbl[-1, ] %>%
-                filter_all(any_vars(. != '')) %>%
-                mutate_all(function(x) {
-                    number <- suppressWarnings(as.numeric(x))
-                    if (!any(is.na(number))) {
-                        return(number)
-                    }
-                    x
-                }) %>%
-                set_names(colnames)
-        }) %>%
-        set_names(names)
+    suppressWarnings(table_lists <- cpp_convert_tables(tables$data, tables$name))
+    
+    map(table_lists, function(x) set_names(as.data.frame(x, stringsAsFactors = F), names(x)))
 }
 
 convert_psa <- function(psa, correlations) {
@@ -328,10 +311,10 @@ convert_scenarios <- function(scenarios) {
 
 # Settings Getter Functions
 get_cost_dr <- function(settings) {
-    as.numeric(settings$DiscountRateOutcomes) / 100
+    as.numeric(settings$DiscountRateCosts) / 100
 }
 get_outcomes_dr <- function(settings) {
-    as.numeric(settings$DiscountRateCosts) / 100
+    as.numeric(settings$DiscountRateOutcomes) / 100
 }
 get_n_cycles <- function(settings) {
     as.integer(settings$CycleCount)

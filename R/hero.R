@@ -11,6 +11,7 @@ run_analysis <- function(...) {
     'vbp' = run_hero_vbp,
     'bc' = run_hero_bc,
     'scen' = run_hero_scen,
+    'threshold' = run_hero_threshold,
     'excel' = export_hero_xlsx,
     'code_preview' = run_code_preview_compat,
     'r_project' = package_hero_model,
@@ -567,6 +568,19 @@ parse_hero_states <- function(hvalues, evalues, hsumms, esumms, strategies, stat
       .state = factor(.state, levels = states),
       name = factor(name, levels = all_value_names)
     ) %>%
+    (function(x) {
+      if (nrow(x) > 0) {
+        x
+      } else {
+        tibble(
+          .model = factor(strategies, levels = strategies),
+          .state = factor(states[1], levels = states),
+          name = factor(all_value_names[1], levels = all_value_names),
+          value = '0'
+        )
+      }
+    }) %>%
+    
     reshape2::dcast(.model+.state~name, value.var = "value", fill = 0, drop = F) %>%
     mutate(.model = as.character(.model), .state = as.character(.state))
   
@@ -890,6 +904,8 @@ hero_extract_psa_summ <- function(res, summ) {
     ) %>%
     select(outcome, series, sim, group, disc, value)
   
+  undisc_summ <- undisc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  
   disc <- inner_join(
     mutate(
       summ_unique,
@@ -908,7 +924,32 @@ hero_extract_psa_summ <- function(res, summ) {
       disc = T
     ) %>%
     select(outcome, series, sim, group, disc, value)
-  rbind(disc, undisc)
+  
+  disc_summ <- disc %>% group_by(outcome, series, disc, sim) %>% summarize(value = sum(value))
+  
+  all_abs <- bind_rows(
+    disc_summ,
+    rename(select(disc, group, series, disc, sim, value), outcome = group),
+    undisc_summ,
+    rename(select(undisc, group, series, disc, sim, value), outcome = group)
+  )
+  
+  strat_names <- unique(all_abs$series)
+  
+  comparisons <- crossing(ref = strat_names, comp = strat_names) %>%
+    filter(ref != comp) %>%
+    left_join(
+      transmute(all_abs, ref = series, disc, outcome, sim, ref_value = value),
+      by = 'ref'
+    ) %>%
+    left_join(
+      transmute(all_abs, comp = series, disc, outcome, sim, comp_value = value),
+      by = c('comp', 'disc', 'outcome', 'sim')
+    ) %>%
+    mutate(value = ref_value - comp_value, series = paste0(ref, ' vs. ', comp)) %>%
+    select('series', 'disc', 'outcome', 'sim', 'value')
+  
+  bind_rows(all_abs, comparisons)
 }
 hero_extract_psa_ceac <- function(res, hsumms, esumms, wtps) {
   unique_hsumms <- paste0(".disc_", unique(hsumms$name))
@@ -1102,7 +1143,8 @@ build_hero_model <- function(...) {
     source = dots$scripts,
     aux_params = surv,
     psa = dots$psa,
-    report_progress = dots$report_progress,
+    progress_reporter = dots$progress_reporter,
+    create_progress_reporter = dots$create_progress_reporter,
     individual_level = T
   )
 }
@@ -1137,7 +1179,9 @@ run_hero_psa <- function(...) {
   n_sims <- n_strats * n_groups * dots$psa$n
   
   max_prog <- get_psa_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  reporters <- dots$create_progress_reporter
+  try(dots$progress_reporter$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_progress(1L))
   if(nrow(as.data.frame(dots$groups)) <= 1) {
     # Homogenous model
     # Compile model object
@@ -1197,10 +1241,13 @@ run_hero_psa <- function(...) {
     scatter <- hero_extract_psa_scatter(psa_res_df, dots$hsumms, dots$esumms)
     outcomes <- hero_extract_psa_summ(psa_res_df, dots$hsumms)
     outcomes_summary <- outcomes %>%
-      group_by(series, group) %>%
+      group_by(series, outcome, disc) %>%
       summarize(
         mean = mean(value),
         sd = sd(value),
+        n = n(),
+        lcl95 = unname(quantile(value, 0.025)),
+        ucl95 = unname(quantile(value, 0.975)),
         min = min(value),
         lowerq = unname(quantile(value, 0.25)),
         median = median(value),
@@ -1208,14 +1255,18 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       ungroup() %>%
-      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+series~statistic, value.var = "value")
+      reshape2::melt(id.vars = c("series", "outcome", "disc"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(outcome+series+disc~statistic, value.var = "value") %>%
+      as_tibble()
     costs <- hero_extract_psa_summ(psa_res_df, dots$esumms)
     costs_summary <- costs %>%
-      group_by(series, group) %>%
+      group_by(series, outcome, disc) %>%
       summarize(
         mean = mean(value),
         sd = sd(value),
+        n = n(),
+        lcl95 = unname(quantile(value, 0.025)),
+        ucl95 = unname(quantile(value, 0.975)),
         min = min(value),
         lowerq = unname(quantile(value, 0.25)),
         median = median(value),
@@ -1223,8 +1274,9 @@ run_hero_psa <- function(...) {
         max = max(value)
       ) %>%
       ungroup() %>%
-      reshape2::melt(id.vars = c("series", "group"), variable.name = "statistic", value.name = "value") %>%
-      reshape2::dcast(group+series~statistic, value.var = "value")
+      reshape2::melt(id.vars = c("series", "outcome", "disc"), variable.name = "statistic", value.name = "value") %>%
+      reshape2::dcast(outcome+series+disc~statistic, value.var = "value") %>%
+      as_tibble()
     ceac <- hero_extract_psa_ceac(psa_res_df, dots$hsumms, dots$esumms, seq(from = 0,to = dots$psa$thresh_max,by = thresh_step))
     temp_model <- psa_model$psa
     temp_model$psa <- psa_res_df
@@ -1243,14 +1295,35 @@ run_hero_psa <- function(...) {
           )
         )
       })
-    list(
-      api_ver = '2.0',
-      scatter = scatter_compressed,
-      outcomes_summary = outcomes_summary,
-      costs_summary = costs_summary,
-      ceac = ceac,
-      evpi = evpi
-    )
+    try(dots$progress_reporter$report_progress(1L))
+    
+    if (!is.null(dots$include_param_values) && dots$include_param_values) {
+      param_values <- mutate(
+        psa_model$psa$psa[psa_model$psa$resamp_par],
+        iteration = seq_len(n()),
+        .before = 1
+      )
+      ret <- list(
+          api_ver = '2.0',
+          scatter = scatter_compressed,
+          outcomes_summary = outcomes_summary,
+          costs_summary = costs_summary,
+          ceac = ceac,
+          evpi = evpi,
+          param_values = param_values
+        )
+    } else {
+      ret <- list(
+        api_ver = '2.0',
+        scatter = scatter_compressed,
+        outcomes_summary = outcomes_summary,
+        costs_summary = costs_summary,
+        ceac = ceac,
+        evpi = evpi
+      )
+    }
+    
+    return(ret)
   } else {
     
     list(
@@ -1262,30 +1335,34 @@ run_hero_psa <- function(...) {
 #' @export
 run_markdown <- function(...) {
   dots <- patch_progress_funcs(list(...))
-  
   max_prog <- get_code_preview_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
   text <- dots$text
   data <- dots$data
   eval_env <- new.env(parent = parent.frame())
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if(!is.null(data)) {
     plyr::l_ply(
       seq_len(length(data)),
       function(i) assign(names(data)[i], data[[i]], envir = eval_env)
     )
   }
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
   md_filename <- paste0(dots$name, ".md")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
+  html_doc <- read_html(html_filename)
+  html_list <- as_list(html_doc)
+  html_list$html$head$title <- NULL
+  html_doc <- as_xml_document(html_list)
+  write_html(html_doc, html_filename)
   file.remove(md_filename)
   file.remove(r_filename)
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
   }
@@ -1299,11 +1376,14 @@ package_hero_model <- function(...) {
   dots <- patch_progress_funcs(list(...))
 
   max_prog <- get_r_project_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
   
   model_object <- list(...)
-  model_object$report_progress <- NULL
-  model_object$report_max_progress <- NULL
+  model_object$create_progress_reporter <- NULL
+  model_object$create_progress_reporter_factory <- NULL
+  model_object$progress_reporter <- NULL
+  model_object$cores <- NULL
+  model_object <- patch_progress_funcs(model_object)
   rproj_string <- "Version: 1.0
 RestoreWorkspace: Default
 SaveWorkspace: Default
@@ -1314,12 +1394,13 @@ NumSpacesForTab: 4
 Encoding: UTF-8
 RnwWeave: knitr
 LaTeX: pdfLaTeX"
-  rcode_string <- "if(!require(heRomod)) {
+  rcode_string <- "if(!require(heRomod) || !require(herotools) || !require(herosurv)) {
   if(!require(devtools)) {
     install.packages('devtools')
   }
-  library(devtools)
-  install_github('PolicyAnalysisInc/heRomod')
+  devtools::install_github('PolicyAnalysisInc/herotools')
+  devtools::install_github('PolicyAnalysisInc/herosurv')
+  devtools::install_github('PolicyAnalysisInc/heRomod')
   library(heRomod)
 }
 model <- readRDS('./model.rds')
@@ -1327,24 +1408,24 @@ results <- do.call(run_hero_bc, model)
 "
   filename <- paste0(dots$name, ".zip")
   write(rproj_string, paste0(dots$name, ".rproj"))
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   write(rcode_string, "run.R")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   saveRDS(model_object, "model.rds")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   utils::zip(
     filename,
     c(paste0(dots$name, ".rproj"), "run.R", "model.rds"),
     flags="-q"
   )
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   if(!is.null(dots$.manifest)) {
      dots$.manifest$register_file('r_model_export', filename, 'R Export', default = T)
   }
   file.remove(paste0(dots$name, ".rproj"))
   file.remove("run.R")
   file.remove("model.rds")
-  try(dots$report_progress(1L))
+  try(dots$progress_reporter$report_progress(1L))
   list(success = T)
 }
 

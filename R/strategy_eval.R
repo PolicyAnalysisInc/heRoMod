@@ -53,7 +53,7 @@
 eval_strategy <- function(strategy, parameters, cycles, 
                           init, method, expand_limit,
                           inflow, strategy_name, aux_params = NULL,
-                          disc_method = 'start', report_progress = identity,
+                          disc_method = 'start', progress_reporter = create_null_prog_reporter(),
                           state_groups = NULL, individual_level = F) {
   
   .state <- .full_state <- .expand <- NULL
@@ -83,19 +83,8 @@ eval_strategy <- function(strategy, parameters, cycles,
     state_st <- has_state_time(states)
     
     if (params_st | any(mat_st) | any(state_st)) {
-      # No need for state interpol
-    
-      # Interpolate to determine propogation of state_time
-      i_params <- interpolate(parameters)
-      i_state <- interpolate(states, more = as_expr_list(i_params))
-      i_trans <- interpolate(transitions, more = as_expr_list(i_params))
-      
-      # Determine which states need to be expanded
-      state_td <- has_state_time(i_state)
-      mat_td <- has_state_time(i_trans) %>%
-        matrix(nrow = n_states, ncol = n_states, byrow = TRUE) %>%
-        apply(1, any)
-      to_expand <- state_td | mat_td
+      # Interpolate to determine propagation of state_time
+      to_expand <- get_states_to_expand(parameters, states, transitions)
     } else {
       # No need for interpolation to figure out there is no state_time if there are
       # no references to state_time
@@ -187,6 +176,7 @@ eval_strategy <- function(strategy, parameters, cycles,
       )
     )
   }
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate parameters
   e_parameters <- eval_parameters(
@@ -196,6 +186,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     max_state_time = max(expand_table$.limit),
     disc_method = disc_method
   )
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate object parameters.  Doesn't need to
   # be returned since it modifies via reference
@@ -205,12 +196,14 @@ eval_strategy <- function(strategy, parameters, cycles,
     aux_params,
     e_parameters
   )
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate Initial State Values
   e_start_values <- eval_starting_values(
     strategy$starting_values,
     e_parameters
   )
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate Initial Counts
   e_init <- eval_init(
@@ -219,6 +212,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     individual_level = individual_level
   )
+  try(progress_reporter$report_progress(1L))
   
   # Inflow (now includes init)
   e_inflow <- eval_inflow(
@@ -226,6 +220,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     e_parameters,
     expand_table
   )
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate States
   e_states <- eval_state_list(
@@ -234,6 +229,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     disc_method = disc_method
   )
+  try(progress_reporter$report_progress(1L))
   
   # Evaluate Transitions
   e_transition <- eval_transition(
@@ -242,6 +238,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     expand_table,
     state_groups = state_groups
   )
+  try(progress_reporter$report_progress(1L))
   
   # Compute counts
   count_table_uncorrected <- compute_counts(
@@ -260,6 +257,7 @@ eval_strategy <- function(strategy, parameters, cycles,
     inflow = e_inflow,
     starting = e_start_values
   )
+  try(progress_reporter$report_progress(1L))
   
   # Get counts of individuals
   n_indiv <- sum(e_inflow) + sum(e_init)
@@ -280,7 +278,7 @@ eval_strategy <- function(strategy, parameters, cycles,
   ) %>%
     do.call(tibble::tibble, .)
   
-  try(report_progress(1L))
+  try(progress_reporter$report_progress(1L))
   structure(
     list(
       parameters = e_parameters,
@@ -466,14 +464,14 @@ compute_values <- function(states, counts, init, inflow, starting) {
   
   dims_array_2 <- dims_array_1 + c(0, 1, 0)
   
-  state_val_array <- array(unlist(states), dim = dims_array_2)
+  state_val_array <- array(unlist(states, TRUE, FALSE), dim = dims_array_2)
   
   ## get rid of markov_cycle
   mc_col <- match("markov_cycle", names(states[[1]]))
   state_val_array <- state_val_array[, -mc_col, , drop = FALSE]
   
   ## put counts into a similar large array
-  counts_mat <- array(unlist(counts[, states_names]),
+  counts_mat <- array(unlist(counts[, states_names], TRUE, FALSE),
                       dim = dims_array_1[c(1, 3, 2)])
   counts_mat <- aperm(counts_mat, c(1, 3, 2))
   

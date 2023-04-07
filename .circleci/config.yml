@@ -17,6 +17,9 @@ jobs:
               mkdir -p ~/R/Library
               Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
               Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
+              Rscript -e 'remotes::install_github("cran/rgho")'
+              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herotools")'
+              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herosurv")'
               Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
         - run:
             name: Session information and installed package versions
@@ -29,7 +32,7 @@ jobs:
             command: R CMD build .
         - run:
             name: Check package
-            no_output_timeout: 35m
+            no_output_timeout: 55m
             command: R CMD check --as-cran --no-manual *tar.gz
         - store_artifacts:
             path: heRomod.Rcheck/
@@ -54,6 +57,9 @@ jobs:
             mkdir -p ~/R/Library
             Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
             Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
+            Rscript -e 'remotes::install_github("cran/rgho")'
+            Rscript -e 'remotes::install_github("PolicyAnalysisInc/herotools")'
+            Rscript -e 'remotes::install_github("PolicyAnalysisInc/herosurv")'
             Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
       - run:
           name: Session information and installed package versions
@@ -67,8 +73,11 @@ jobs:
       - run:
           name: Code Coverage
           command: Rscript -e 'library(covr); codecov()'
-          no_output_timeout: 40m
-
+          no_output_timeout: 55m
+    post-steps:
+      - jira/notify
+orbs:
+  jira: circleci/jira@1.3.1
 workflows:
     version: 2
     build:

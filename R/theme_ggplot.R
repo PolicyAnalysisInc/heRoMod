@@ -49,13 +49,13 @@ theme_pub_bw <- function (base_size = 12, base_family = "") {
       # Plot background
       panel.background = ggplot2::element_rect(fill = "white"),
       panel.grid.major = ggplot2::element_line(colour = "grey83", 
-                                               size = 0.2), 
+                                               linewidth = 0.2), 
       panel.grid.minor = ggplot2::element_line(colour = "grey88", 
-                                               size = 0.5), 
+                                               linewidth = 0.5), 
       
       # Facet labels        
       legend.key = ggplot2::element_rect(colour = "grey80"), 
       strip.background = ggplot2::element_rect(fill = "grey80", 
                                                colour = "grey50", 
-                                               size = 0.2))
+                                               linewidth = 0.2))
 }

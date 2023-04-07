@@ -41,7 +41,7 @@
 #' @example inst/examples/example_eval_strategy_newdata.R
 #'   
 #' @keywords internal
-eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_progress = identity) {
+eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, create_progress_reporter = create_null_prog_reporter, progress_reporter = create_progress_reporter(), simplify = F) {
   if (is.null(cores)) cores <- 1
   strategy <- check_strategy_index(x = x, i = strategy)
   
@@ -72,25 +72,34 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
               lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
             )
             iter <- df$.iteration
-            tibble(
-              .mod = list(try(eval_newdata(
-                as.data.frame(df),
-                strategy = uneval_strategy,
-                old_parameters = old_parameters,
-                aux_params = aux_params,
-                cycles = cycles,
-                init = init,
-                inflow = inflow,
-                method = method,
-                strategy_name = strategy,
-                expand_limit = expand_limit,
-                disc_method = disc_method,
-                iteration = iter,
-                report_progress = report_progress,
-                state_groups = state_groups,
-                individual_level = individual_level
+            model <- try(eval_newdata(
+              as.data.frame(df),
+              strategy = uneval_strategy,
+              old_parameters = old_parameters,
+              aux_params = aux_params,
+              cycles = cycles,
+              init = init,
+              inflow = inflow,
+              method = method,
+              strategy_name = strategy,
+              expand_limit = expand_limit,
+              disc_method = disc_method,
+              iteration = iter,
+              progress_reporter = progress_reporter,
+              state_groups = state_groups,
+              individual_level = individual_level
+            ))
+            if(simplify && !("try-error" %in% class(model))) {
+              the_classes <- class(model)
+              model <- list(
+                parameters = model$parameters[1, ],
+                values = summarize_all(model$values, sum),
+                n_indiv = model$n_indiv
               )
-              )))}) %>%
+              class(model) <- the_classes
+            }
+            tibble(
+              .mod = list(model))}) %>%
           ungroup() %>% 
           bind_cols(
             newdata
@@ -98,7 +107,8 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
       })
       
     } else {
-      pieces <- parallel::mclapply(pnewdata, function(newdata) {
+      pieces <- mclapply(pnewdata, function(newdata) {
+        reporter <- create_progress_reporter()
         newdata %>% 
           rowwise() %>% 
           do({
@@ -106,25 +116,34 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
               lapply(., function(x) if(class(x) == 'lazy') list(x) else x)
             )
             iter <- df$.iteration
-            tibble(
-              .mod = list(try(eval_newdata(
-                as.data.frame(df),
-                strategy = uneval_strategy,
-                old_parameters = old_parameters,
-                aux_params = aux_params,
-                cycles = cycles,
-                init = init,
-                inflow = inflow,
-                method = method,
-                strategy_name = strategy,
-                expand_limit = expand_limit,
-                disc_method = disc_method,
-                iteration = iter,
-                report_progress = report_progress,
-                state_groups = state_groups,
-                individual_level = individual_level
+            model <- try(eval_newdata(
+              as.data.frame(df),
+              strategy = uneval_strategy,
+              old_parameters = old_parameters,
+              aux_params = aux_params,
+              cycles = cycles,
+              init = init,
+              inflow = inflow,
+              method = method,
+              strategy_name = strategy,
+              expand_limit = expand_limit,
+              disc_method = disc_method,
+              iteration = iter,
+              progress_reporter = reporter,
+              state_groups = state_groups,
+              individual_level = individual_level
+            ))
+            if(simplify && !("try-error" %in% class(model))) {
+              the_classes <- class(model)
+              model <- list(
+                parameters = model$parameters[1, ],
+                values = summarize_all(model$values, sum),
+                n_indiv = model$n_indiv
               )
-              )))}) %>%
+              class(model) <- the_classes
+            }
+            tibble(
+              .mod = list(model))}) %>%
           ungroup() %>% 
           bind_cols(
             newdata
@@ -149,7 +168,7 @@ eval_strategy_newdata <- function(x, strategy = 1, newdata, cores = 1, report_pr
 eval_newdata <- function(new_parameters, strategy, old_parameters,
                          cycles, init, method, inflow,
                          strategy_name, expand_limit, aux_params = NULL,
-                         disc_method = 'start', iteration = NULL, report_progress = identity,
+                         disc_method = 'start', iteration = NULL, progress_reporter = create_null_prog_reporter(),
                          state_groups = NULL, individual_level = F) {
   new_parameters <- Filter(
     function(x) all(! is.na(x)),
@@ -173,7 +192,7 @@ eval_newdata <- function(new_parameters, strategy, old_parameters,
     expand_limit = expand_limit,
     aux_params = aux_params,
     disc_method = disc_method,
-    report_progress = report_progress,
+    progress_reporter = progress_reporter,
     state_groups = state_groups,
     individual_level = individual_level
   )

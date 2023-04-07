@@ -22,7 +22,8 @@ run_hero_twsa <- function(...) {
   sa_table <- crossing(groups_table, twsa_table, vbp_table)
   
   max_prog <- get_twsa_max_progress(dots, sa_table)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -41,8 +42,10 @@ run_hero_twsa <- function(...) {
   res <- run_sa(
     heemod_res$model_runs,
     sa_table, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc'),
-    report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    create_progress_reporter = dots$create_progress_reporter,
+    progress_reporter = dots$progress_reporter,
+    heemod_res$model_runs$cores,
+    simplify = T
   )
 
   # Pull out results for each scenario
@@ -52,6 +55,8 @@ run_hero_twsa <- function(...) {
   if (run_vbp) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.twsa_id', '.twsa_index', '.x_param_name', '.x_param_id', '.x_bc', '.y_param_name', '.y_param_id', '.y_bc', twsa_param_names))
   }
+  
+  try(dots$progress_reporter$report_progress(1L))
   
   # Format and Return
   list(
@@ -179,6 +184,7 @@ gen_twsa_table <- function(twsa, twsa_params) {
     ) %>%
     filter(active == 'On' | active == TRUE) %>%
     left_join(rename(twsa_params, '.param_id' = id), by = c('.twsa_id' = 'parentid')) %>%
+    mutate(.twsa_id = factor(.twsa_id, levels = unique(.twsa_id))) %>%
     group_by(.twsa_id) %>% 
     group_split() %>%
     map(function(analysis) {
@@ -237,8 +243,8 @@ twsa_reformat_res <- function(res, id_vars = NULL) {
       .y_bc,
       value = value
     ) %>%
-    arrange_at(c('id', 'xParam', 'yParam', id_vars, 'x', 'y')) %>%
-    group_by_at(c('id', 'xParam', 'yParam', id_vars)) %>%
+    arrange_at(c('id', id_vars, 'x', 'y')) %>%
+    group_by_at(c('id', id_vars)) %>%
     mutate(
       .x_bc_value = x[which(.x_bc)[1]],
       .x_equals_bc = is_zero(x - .x_bc_value),
@@ -252,7 +258,14 @@ twsa_reformat_res <- function(res, id_vars = NULL) {
       x_bc_included <- any(analysis$.x_equals_bc & !analysis$.x_bc)
       y_bc_included <- any(analysis$.y_equals_bc & !analysis$.y_bc)
       res_list <- select(analysis[1,], id, xParam, yParam, !!id_vars) %>%
-        as.list()
+        as.list() %>%
+        map(function(x) {
+          if (!is.factor(x)) {
+            x
+          } else {
+            as.character(x)
+          }
+        })
       res_list$data <- analysis %>%
         filter(
           !(x_bc_included & .x_bc),

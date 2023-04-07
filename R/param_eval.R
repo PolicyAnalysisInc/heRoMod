@@ -186,13 +186,13 @@ eval_init <- function(x, parameters, expand, individual_level = F) {
     }
     
     # Check that probabiltiies sum to 1
-    if(sum(init_vector) != 1) {
+    if(!is_equal(sum(init_vector), 1)) {
       stop("Error in initial probabilities, values do not sum to 1.", call. = F)
     }
     
   }
 
-  if (sum(init_vector) == 0) {
+  if (is_equal(sum(init_vector), 0)) {
     stop(error_codes$zero_initial_prob, call. = F)
   }
   init_vector
@@ -201,7 +201,7 @@ eval_init <- function(x, parameters, expand, individual_level = F) {
 
 eval_starting_values <- function(x, parameters) {
   
-  # Assinging NULLS to avoid CMD Check issues
+  # Assigning NULLS to avoid CMD Check issues
   state_time <- NULL
   
   
@@ -276,17 +276,8 @@ eval_inflow <- function(x, parameters, expand) {
 }
 
 
-safe_eval <- function(x, .dots, .vartype = "parameter") {
+safe_eval <- function(x, .dots, .vartype = "parameter", check = T) {
   
-  if (.vartype == "parameter") {
-    expression_text = "parameter"
-  } else if (.vartype == "init") {
-    expression_text = "initial probability for state"
-  } else if (.vartype == "value") {
-    expression_text = "value"
-  } else {
-    expression_text = .vartype
-  }
   n_par <- length(.dots)
   par_names <- names(.dots)
   res <- x
@@ -294,6 +285,16 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     par_res <- try(lazy_eval(.dots[[i]], data = res), silent = T)
     par_name <- par_names[i]
     if (inherits(par_res, "try-error")) {
+      
+      if (.vartype == "parameter") {
+        expression_text = "parameter"
+      } else if (.vartype == "init") {
+        expression_text = "initial probability for state"
+      } else if (.vartype == "value") {
+        expression_text = "value"
+      } else {
+        expression_text = .vartype
+      }
       
       # Pull of the lazyeval part of error call
       if (startsWith(par_res, "Error in eval(x$expr, data, x$env) : ")) {
@@ -325,31 +326,70 @@ safe_eval <- function(x, .dots, .vartype = "parameter") {
     res[[par_name]] <- par_res
   }
   
-  if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
-    
-    if (any(these_are_inf <- sapply(res, is.infinite))) {
-      inf_param_nums <- unique(which(these_are_inf, arr.ind = TRUE)[,2])
-      inf_param_names <- names(res)[inf_param_nums]
-      
-      error_message <- paste(
-        "Infinite parameter values:",
-        paste(inf_param_names, collapse = ", "),
-        ";\n",
-        "See the option heRomod.inf_parameter, which",
-        "can be 'ignore', 'warning', or 'stop' (the default)."
-      )
-      get(use_fn)(error_message)
-    }
+  if (check) {
+    check_vars_table(res, par_names, .vartype)
   }
   
-  # Check for missing values
-  if (any(is.na(res))) {
-    index <- which(apply(res, 2, function(x) any(is.na(x)))==T)[1]
-    param_name <- colnames(res)[index]
-    text_error <- 'Calculation resulted in missing values.'
-    stop(sprintf(
-        "Error in %s '%s', %s", expression_text, param_name, text_error),
-        call. = FALSE)
+  res
+}
+
+check_vars_table <- function(res, variables = colnames(res), .vartype = "parameter") {
+  
+  if (.vartype == "parameter") {
+    expression_text = "parameter"
+  } else if (.vartype == "init") {
+    expression_text = "initial probability for state"
+  } else if (.vartype == "value") {
+    expression_text = "value"
+  } else {
+    expression_text = .vartype
+  }
+  
+  walk2(res[variables], variables, function(x, varname) {
+    
+    missing_vals <- is.na(x)
+    if (any(missing_vals)) {
+      error_msg <- glue(error_codes$variable_missing_value, context = expression_text, name = varname)
+      stop(error_msg, call. = F)
+    }
+    
+    if ((use_fn <- options()$heRomod.inf_parameter) != "ignore") {
+      infinite_vals <- is.infinite(x)
+      if (any(infinite_vals)) {
+        error_msg <- glue(error_codes$variable_infinite_value, context = expression_text, name = varname)
+        get(use_fn)(error_msg, call. = F)
+      }
+    }
+    
+  })
+}
+
+safe_eval1 <- function(x, .dots) {
+  n_par <- length(.dots)
+  par_names <- names(.dots)
+  res <- x
+  for(i in seq_len(n_par)) {
+    par_res <- try(lazy_eval(.dots[[i]], data = res), silent = T)
+    par_name <- par_names[i]
+    res[[par_name]] <- par_res
+  }
+  
+  res
+}
+
+safe_eval2 <- function(x, .dots) {
+  n_par <- length(.dots)
+  par_names <- names(.dots)
+  res <- new.env(parent = .dots[[1]]$env)
+  for(i in names(x)) {
+    assign(i, x[[i]], res)
+  }
+  for(i in seq_len(n_par)) {
+    par <- .dots[[i]]
+    par$env <- res
+    par_res <- try(lazy_eval(par), silent = T)
+    par_name <- par_names[i]
+    assign(par_name, par_res, res)
   }
   
   res

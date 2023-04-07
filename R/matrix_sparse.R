@@ -35,7 +35,7 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
   
   trans_table <- eval_matrix_table(x, parameters, expand, state_groups) %>%
     replace_C()
-  
+
   # Make sure that values are numeric, or integer which would be odd but would technically be valid
   # if all transition probabilities are 1 or 0.
   matrix_type <- class(trans_table$.value)
@@ -74,60 +74,60 @@ eval_sparse_matrix <- function(x, parameters, expand = NULL, state_groups = NULL
 
 check_matrix.data.frame <- function(x) {
   
-  sums <- x %>%
-    group_by(model_time, .from_e) %>%
-    summarize(sum = sum(.value)) %>%
-    ungroup()
   
-  problem_rows <- sums %>%
-    filter(!is_zero(sum - 1)) %>%
-    group_by(.from_e) %>%
-    group_split() %>%
-    map(function(x) {
-      data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
-    }) %>%
-    bind_rows()
+  correct_sum <- is_zero((max(x$.from_e_i) * max(x$model_time)) - sum(x$.value))
+  outside_range <- any(!is_zero(pmin(x$.value, 0))) || any(!is_zero(pmax(x$.value, 1) - 1))
   
-  if (nrow(problem_rows) > 0) {
-    stop(
-      paste0(
-        "Not all transition matrix rows sum to 1.\n\n",
+  if (!correct_sum || outside_range) {
+  
+    sums <- x %>%
+      group_by(model_time, .from_e) %>%
+      summarize(sum = sum(.value)) %>%
+      ungroup()
+    
+    problem_rows <- sums %>%
+      filter(!is_zero(sum - 1)) %>%
+      group_by(.from_e) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(state = x$.from_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    
+    if (nrow(problem_rows) > 0) {
+      stop(
+        paste0(
+          "Not all transition matrix rows sum to 1.\n\n",
+          paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
+        ),
+        call. = F
+      )
+    }
+    
+    problem_rows <- x %>%
+      filter(is_equal(pmax(abs(.value-0.5), 0.5), 0.5)) %>%
+      group_by(.from_e, .to_e) %>%
+      group_split() %>%
+      map(function(x) {
+        data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
+      }) %>%
+      bind_rows()
+    
+    if (nrow(problem_rows) > 0) {
+      stop(paste0(
+        "Some transition probabilities are outside the interval [0 - 1]:\n\n",
         paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
       ),
-      call. = F
-    )
-  }
-  
-  problem_rows <- x %>%
-    filter(abs(.value - 0.5) > 0.5) %>%
-    group_by(.from_e, .to_e) %>%
-    group_split() %>%
-    map(function(x) {
-      data.frame(from = x$.from_e[1], to = x$.to_e[1], cycles = to_number_list_string(x$model_time), stringsAsFactors=F)
-    }) %>%
-    bind_rows()
-  
-  if (nrow(problem_rows) > 0) {
-    stop(paste0(
-      "Some transition probabilities are outside the interval [0 - 1]:\n\n",
-      paste(capture.output(print(problem_rows, row.names = F)), collapse = "\n")
-    ),
-    call. = F)
+      call. = F)
+    }
   }
 }
 
 replace_C.data.frame <- function(x, state_names) {
-  res <- x %>%
-    mutate(.is_complement = .value == -pi) %>%
-    group_by(model_time, .from_e_i) %>%
-    mutate(
-      .n_complement = sum(.is_complement),
-      .complement = 1 - sum(.value) - pi
-    ) %>%
-    ungroup() %>%
-    mutate(
-      .value = if_else(.is_complement, .complement, .value)
-    )
+  res <- as.data.table(x) %>%
+    .[,.is_complement := .value == -pi] %>%
+    .[,c('.n_complement', '.all_else') := list(sum(.is_complement), sum(.value)), by=list(model_time, .from_e_i)] %>%
+    .[,.value:=if_else(.is_complement, ifelse(is_zero(.all_else), 0, 1 - .all_else - pi), .value)]
   
   # Make sure C is used only once per state per cycle
   if (any(res$.n_complement > 1)) {

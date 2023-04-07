@@ -459,7 +459,7 @@ test_that(
       heRomod:::read_file(
         system.file("tabular/test/wrong_ext.tab", package = "heRomod")
       ),
-      "file names must be for csv, xls, or xlsx"
+      "file names must be for csv or xlsx"
     )
     
     expect_error(
@@ -749,9 +749,7 @@ test_that(
 tCSV <- heRomod:::read_file(system.file(
   "tabular/test", "testing_CSV_file_with_comment_col.csv",
   package = "heRomod"))
-tXLS <- heRomod:::read_file(system.file(
-  "tabular/test", "testing_XLS_file_with_comment_col.xls",
-  package = "heRomod"))
+
 tXLSX <- heRomod:::read_file(system.file(
   "tabular/test", "testing_XLSX_file_with_comment_col.xlsx",
   package = "heRomod"))
@@ -760,9 +758,6 @@ test_that(
   "Columns that start with '.comment' in their header are ignored.", {
     expect_that(
       names(tCSV),
-      equals(c(".model", "state", "cost", "qaly", ".discount.cost", ".discount.qaly", "valid.column")))
-    expect_that(
-      names(tXLS),
       equals(c(".model", "state", "cost", "qaly", ".discount.cost", ".discount.qaly", "valid.column")))
     expect_that(
       names(tXLSX),

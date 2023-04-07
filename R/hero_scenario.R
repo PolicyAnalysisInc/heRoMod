@@ -6,7 +6,8 @@ run_hero_scen <- function(...) {
   check_scenarios(dots$scenario)
   args <- do.call(build_hero_model, dots)
   max_prog <- get_scen_max_progress(dots)
-  try(dots$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_max_progress(max_prog))
+  try(dots$progress_reporter$report_progress(1L))
   
   # Initial model run
   heemod_res <- do.call(run_model_api, args)
@@ -37,8 +38,10 @@ run_hero_scen <- function(...) {
   res <- run_sa(
     heemod_res$model_runs,
     sa_table, c('.scenario'),
-    report_progress = dots$report_progress,
-    heemod_res$model_runs$cores
+    create_progress_reporter = dots$create_progress_reporter,
+    progress_reporter = dots$progress_reporter,
+    heemod_res$model_runs$cores,
+    simplify = T
   )
   
   strategy_names <- dots$strategies$name
@@ -52,6 +55,7 @@ run_hero_scen <- function(...) {
     vbp_res <- extract_sa_vbp(outcomes_res, costs_res, dots$vbp, dots$hsumms, c('.scenario'))
   }
   
+  try(dots$progress_reporter$report_progress(1L))
   # Format and Return
   list(
     outcomes = scenario_format_res(outcomes_res, dots$scenario, id_var_ordering = list(series = strategy_names)),
