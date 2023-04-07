@@ -61,7 +61,8 @@ Imports:
     magrittr,
     rlang,
     Rcpp,
-    rgho
+    rgho,
+    xml2
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr

@@ -1355,6 +1355,11 @@ run_markdown <- function(...) {
   try(dots$progress_reporter$report_progress(1L))
   knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
   try(dots$progress_reporter$report_progress(1L))
+  html_doc <- read_html(html_filename)
+  html_list <- as_list(html_doc)
+  html_list$html$head$title <- NULL
+  html_doc <- as_xml_document(html_list)
+  write_html(html_doc, html_filename)
   file.remove(md_filename)
   file.remove(r_filename)
   try(dots$progress_reporter$report_progress(1L))

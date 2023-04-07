@@ -128,6 +128,11 @@
 #' @importFrom openxlsx freezePane
 #' @importFrom openxlsx saveWorkbook
 #' 
+#' @importFrom xml2 write_html
+#' @importFrom xml2 as_list
+#' @importFrom xml2 as_xml_document
+#' @importFrom xml2 read_html
+#' 
 #' @importFrom data.table as.data.table
 #' @importFrom data.table :=
 #' 
