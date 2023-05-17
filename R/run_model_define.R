@@ -230,7 +230,10 @@ run_model_ <- function(uneval_strategy_list,
     plyr::l_ply(
       eval_strategy_list,
       function(x) {
-        if ("try-error" %in% class(x)) stop(clean_err_msg(x), call. = F)
+        if ("try-error" %in% class(x)) {
+          err_string <- as.character(attr(x,'condition')[[3]])
+          stop(clean_err_msg(err_string), call. = F)
+        }
       }
     )
   } else {

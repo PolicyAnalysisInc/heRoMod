@@ -175,6 +175,8 @@
 #' @importFrom Matrix sparseMatrix
 #' 
 #' @importFrom stringr str_interp
+#' @importFrom stringr str_replace
+#' @importFrom stringr str_trim
 NULL
 
 #' @export

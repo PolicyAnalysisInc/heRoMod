@@ -687,11 +687,7 @@ reshape_wide <- function(data, key_col, value_col, fill = NA) {
 }
 
 clean_err_msg <- function(x) {
-  if (startsWith(x, "Error : ")) {
-    substring(x, 9)
-  } else {
-    x
-  }
+  str_trim(str_replace(x, "^Error[ ]?: ",""))
 }
 
 is_equal_mat <- function(x, y) {
