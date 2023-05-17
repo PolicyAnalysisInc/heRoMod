@@ -1,3 +1,6 @@
+library(dplyr)
+library(purrr)
+
 #' Helper functions for testing the results of heRo models
 
 #' Test All Results of a Model
@@ -183,7 +186,7 @@ test_dsa_results <- function(model, name, path, vbp = F) {
       select(strat, value) %>%
       arrange(strat)
     
-    dsa_bc_vbp_res <-  purrr::map(
+    dsa_bc_vbp_res <-  map(
       dsa_res_test$vbp$prices,
       function(x) transmute(x$data[1, ], strat = x$series, value =  base)
     ) %>%
@@ -332,7 +335,7 @@ test_twsa_results <- function(model, name, path, vbp = F) {
       select(strat, value) %>%
       arrange(strat)
 
-    twsa_bc_vbp_res <- purrr::map(
+    twsa_bc_vbp_res <- map(
       twsa_res_test$vbp$prices,
       function(analysis) transmute(filter(analysis$data, isBaseCase), id = analysis$id, strat =analysis$series, value = value)
     ) %>%
@@ -398,6 +401,7 @@ test_scen_results <- function(model, name, path, vbp = F) {
 test_psa_results <- function(model, name, path) {
   model$psa$n <- 5
   psa_res <- do.call(run_hero_psa,model)
+  
 }
 
 #' Test Exporting to Excel

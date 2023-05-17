@@ -188,3 +188,21 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @useDynLib heRomod
 ## usethis namespace: end
 NULL
+
+inner_join <- function(...) {
+  varnames <- names(lapply(substitute(list(...))[-1], deparse))
+  if ('relationship' %in% varnames) {
+    dplyr::inner_join(...)
+  } else {
+    dplyr::inner_join(..., relationship = 'many-to-many')
+  }
+}
+
+left_join <- function(...) {
+  varnames <- names(lapply(substitute(list(...))[-1], deparse))
+  if ('relationship' %in% varnames) {
+    dplyr::left_join(...)
+  } else {
+    dplyr::left_join(..., relationship = 'many-to-many')
+  }
+}
