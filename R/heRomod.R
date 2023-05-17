@@ -128,6 +128,11 @@
 #' @importFrom openxlsx freezePane
 #' @importFrom openxlsx saveWorkbook
 #' 
+#' @importFrom xml2 write_html
+#' @importFrom xml2 as_list
+#' @importFrom xml2 as_xml_document
+#' @importFrom xml2 read_html
+#' 
 #' @importFrom data.table as.data.table
 #' @importFrom data.table :=
 #' 
@@ -183,3 +188,21 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @useDynLib heRomod
 ## usethis namespace: end
 NULL
+
+inner_join <- function(...) {
+  varnames <- names(lapply(substitute(list(...))[-1], deparse))
+  if ('relationship' %in% varnames) {
+    dplyr::inner_join(...)
+  } else {
+    dplyr::inner_join(..., relationship = 'many-to-many')
+  }
+}
+
+left_join <- function(...) {
+  varnames <- names(lapply(substitute(list(...))[-1], deparse))
+  if ('relationship' %in% varnames) {
+    dplyr::left_join(...)
+  } else {
+    dplyr::left_join(..., relationship = 'many-to-many')
+  }
+}

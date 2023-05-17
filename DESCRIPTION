@@ -61,11 +61,12 @@ Imports:
     magrittr,
     rlang,
     Rcpp,
-    rgho
+    rgho,
+    xml2
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 URL: https://github.com/PolicyAnalysisInc/heRoMod
 BugReports: https://github.com/PolicyAnalysisInc/heRoMod/issues
 Roxygen: list(markdown = TRUE)

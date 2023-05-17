@@ -120,6 +120,18 @@ test_that(
 )
 
 test_that(
+  "Threshold analysis only runs active analyses",
+  {
+    local_edition(3)
+    test_model1<- model
+    test_model1$threshold_analyses$active <- c('On', 'On', 'Off', 'Off', 'Off', 'Off', 'Off')
+    suppressMessages(res <- do.call(run_hero_threshold, test_model1))
+    expect_equal(2, nrow(res$threshold_values))
+    expect_snapshot_value(res, style = 'serialize', cran = TRUE)
+  }
+)
+
+test_that(
     "Throws with normal error if model won't run",
     {
         test_model1<- model
