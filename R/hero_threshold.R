@@ -20,35 +20,43 @@ run_hero_threshold <- function(...) {
     max_prog <- get_threshold_max_progress(model)
     progress_reporter$report_max_progress(max_prog)
 
-    check_threshold_analyses(model)
+    threshold_analyses <- get_and_check_threshold_analyses(model)
     progress_reporter$report_progress(5)
-
-    n_analyses <- nrow(model$threshold_analyses)
+    n_analyses <- nrow(threshold_analyses)
 
     res_list <- list()
     for (i in seq_len(n_analyses)) {
-        res_list[[i]] <- run_single_analysis(model, model$threshold_analyses[i, ], progress_reporter)
+        res_list[[i]] <- run_single_analysis(model, threshold_analyses[i, ], progress_reporter)
     }
     
-    res <- aggregate_threshold_analysis_results(model$threshold_analyses, res_list)
+    res <- aggregate_threshold_analysis_results(threshold_analyses, res_list)
     progress_reporter$report_progress(5)
 
     res
 }
 
-check_threshold_analyses <- function(model) {
-    analyses <- model$threshold_analyses
+get_and_check_threshold_analyses <- function(model) {
+  
+    # Filter to analyses that are active if active field exists
+    all_analyses <- model$threshold_analyses
+    if (!is.null(all_analyses$active)) {
+      active_analyses <- filter(all_analyses, active == 'On')
+    } else {
+      active_analyses <- all_analyses
+    }
 
     # Check that it is a data.frame and isn't empty
-    if (is.null(analyses) || !("data.frame" %in% class(analyses)) || nrow(analyses) == 0) {
+    if (is.null(active_analyses) || !("data.frame" %in% class(active_analyses)) || nrow(active_analyses) == 0) {
         stop(error_codes$threshold_no_analyses, call. = F)
     }
 
     # Check each analysis
-    model$threshold_analyses %>%
+    active_analyses %>%
         rowwise() %>%
         group_split() %>%
         walk(check_threshold_analysis, model)
+    
+    active_analyses
 }
 
 isNumericOrInteger <- function(x) {
