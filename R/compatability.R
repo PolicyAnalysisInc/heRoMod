@@ -331,7 +331,7 @@ get_hc_method <- function(settings) {
     )
 }
 get_disc_method <- function(settings) {
-    if (is.null(settings$disc_method)) {
+    if (is.null(settings$discMethod)) {
         return("start")
     }
     settings$discMethod
