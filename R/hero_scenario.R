@@ -30,7 +30,9 @@ run_hero_scen <- function(...) {
   if (vbp_name %in% colnames(sa_table)) {
     indices <- !is.na(sa_table$.vbp_param)
   }
-  sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
+  if (run_vbp) {
+    sa_table[[vbp_name]][indices] <- sa_table$.vbp_param[indices]
+  }
   sa_table <- select(sa_table, -.vbp_param) %>%
     dplyr::relocate(.scenario, .group_scen, .group_weight, .vbp_scen, .vbp_price)
   
