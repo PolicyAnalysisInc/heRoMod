@@ -105,7 +105,7 @@ check_matrix.data.frame <- function(x) {
     }
     
     problem_rows <- x %>%
-      filter(is_equal(pmax(abs(.value-0.5), 0.5), 0.5)) %>%
+      filter(!is_equal(pmax(abs(.value-0.5), 0.5), 0.5)) %>%
       group_by(.from_e, .to_e) %>%
       group_split() %>%
       map(function(x) {
