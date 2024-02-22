@@ -18,19 +18,19 @@ If you want to run the package locally from source
 1. Install R (>= 3.4.0) for your platform.
     1. For Windows users, it is recommended to check Save version number in registry during installation so that the R extension can find the R executable automatically.
     1. For mac users, use brew to install R and dependencies in terminal
-        1. `brew install R`
+        1. `brew install r`
         1. `brew install libgit2 harfbuzz fribidi freetype2 libpng libtiff libjpeg pandoc`
-1. Install languageserver in R.
-1. Open an R terminal
+1. Install R packages by opening terminal and typing `r`
 
-```R
+```r
 install.packages("languageserver")
 install.packages("usethis")
 install.packages("pkgdown")
 install.packages("devtools")
 ```
 
-1. Install the R extension for Visual Studio Code.
+1. Install the R extension for VS Code from the [VS Code Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=reditorsupport.r)
+
 1. Test the build command
     1. `devtools::build(vignettes=T)`
     1. `devtools::install(dependencies=F)`
@@ -54,7 +54,7 @@ remotes::install_github("PolicyAnalysisInc/herosurv")
 1. Install heromod
 1. If prompted you can install "All"
 
-```R
+```r
 remotes::install_github("PolicyAnalysisInc/heRomod")
 ```
 
