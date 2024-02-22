@@ -20,14 +20,28 @@ If you want to run the package locally from source
     1. For mac users, use brew to install R and dependencies in terminal
         1. `brew install r`
         1. `brew install libgit2 harfbuzz fribidi freetype2 libpng libtiff libjpeg pandoc`
-1. Install R packages by opening terminal and typing `r`
+1. Open an R terminal executing `r` in your terminal
 
-```r
-install.packages("languageserver")
-install.packages("usethis")
-install.packages("pkgdown")
-install.packages("devtools")
-```
+    - In some shells, `r` is a built-in command to re-run the last command.
+        - You can verify it running `which r`.
+        - If the response is `r: shell built-in command` you will need to alias it.
+        - First check the path: `whereis r`
+        - Then open you `rc` file (`.bashrc`, `.zshrc` or the one you use it) and add:
+          `alias r='<your-path-to-r>'`.
+        - For example: `alias r='/opt/homebrew/bin/r'`
+        - Restart your shell
+
+1. Run the following into your R terminal:
+
+    ```r
+    install.packages("remotes")
+    install.packages("languageserver")
+    install.packages("usethis")
+    install.packages("pkgdown")
+    install.packages("devtools")
+    remotes::install_github("PolicyAnalysisInc/herotools")
+    remotes::install_github("PolicyAnalysisInc/herosurv")
+    ```
 
 1. Install the R extension for VS Code from the [VS Code Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=reditorsupport.r)
 
@@ -41,22 +55,20 @@ install.packages("devtools")
 
 1. Install the Github package manager and Hero remotes
 
-```R
+    ```r
 
-if(!require(remotes)) {
-  install.packages('remotes')
-}
-Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
-remotes::install_github("PolicyAnalysisInc/herotools")
-remotes::install_github("PolicyAnalysisInc/herosurv")
-```
+    if(!require(remotes)) {
+      install.packages('remotes')
+    }
+    Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
+    remotes::install_github("PolicyAnalysisInc/herotools")
+    remotes::install_github("PolicyAnalysisInc/herosurv")
+    ```
 
-1. Install heromod
-1. If prompted you can install "All"
-
-```r
-remotes::install_github("PolicyAnalysisInc/heRomod")
-```
+1. Install heromod (if prompted you can install "All")
+    ```r
+    remotes::install_github("PolicyAnalysisInc/heRomod")
+    ```
 
 ## Features
 
