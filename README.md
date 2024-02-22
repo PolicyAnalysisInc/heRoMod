@@ -7,7 +7,7 @@
 
 # heRomod - A Package for Health Economic Modeling
 
-The heRomod package allows users to develop and run cost-effectiveness models in R and is the calculation engine used in the heRo web-based modeling platform. A fork of the HEEMOD package.
+The heRomod package allows users to develop and run cost-effectiveness models in R and is the calculation engine used in the heRo web-based modeling platform. A fork of the [HEEMOD](https://www.rdocumentation.org/packages/heemod/versions/1.0.1) package.
 
 You can install the latest released version from github with:
 
