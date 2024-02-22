@@ -46,8 +46,8 @@ If you want to run the package locally from source
 1. Install the R extension for VS Code from the [VS Code Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=reditorsupport.r)
 
 1. Test the build command
-    1. `devtools::build(vignettes=T)`
     1. `devtools::install(dependencies=F)`
+    1. `devtools::build(vignettes=T)`
 1. Run the tests (note - this will take significant time, especially running the heRo model)
     1. `devtools::test()`
 
@@ -56,7 +56,6 @@ If you want to run the package locally from source
 1. Install the Github package manager and Hero remotes
 
     ```r
-
     if(!require(remotes)) {
       install.packages('remotes')
     }
