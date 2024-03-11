@@ -166,30 +166,54 @@ export_hero_xlsx <- function(...) {
   }
   ret <- wb_list
   
+  list()
 }
 
 compile_parameters <- function(x) {
-  if (is.null(x$demographics)) {
-    # Homogenous model
-    lapply(x$model_runs$eval_strategy_list, function(x) x$parameters) %>%
-      do.call(rbind, .) %>%
-      as_tibble()
-  } else {
-    # Heterogeneous model
-    lapply(x$demographics$model_list, function(x) {
-      lapply(x$.mod, function(x) x$parameters)
-    }) %>%
-      unlist(recursive=F) %>%
-      do.call(rbind, .) %>%
-      as_tibble()
-  }
-}
-
-compile_parameters <- function(x) {
-  lapply(x$.mod, function(x) x$parameters) %>%
+  
+  row_limit <- 200000
+  res <- lapply(x$.mod, function(x) x$parameters) %>%
     do.call(rbind, .) %>%
     as_tibble() %>%
     select_if(names(.) != '.group_weight')
+  
+  n_rows <- nrow(res)
+  
+  strats <- unique(res$strategy)
+  groups <- suppressWarnings(unique(res$group))
+  
+  if (n_rows < row_limit) {
+    return(res)
+  }
+  
+  df_list <- res %>%
+    group_by(strategy, group) %>%
+    group_split()
+  
+  n_row_groups <- length(df_list)
+  
+  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+  
+  head_rows <- ceiling(n_rows_per_row_group * 0.8)
+  tail_rows <- n_rows_per_row_group - head_rows
+  
+  res <- df_list %>%
+    map(function(x) {
+      sorted <- arrange(x, markov_cycle)
+      rbind(
+        head(x, head_rows),
+        tail(x, tail_rows)
+      )
+    }) %>%
+    bind_rows() %>%
+    arrange(
+      factor(strategy, levels = strats),
+      factor(group, levels = groups),
+      state_time,
+      markov_cycle
+    )
+  
+  res
 }
 
 compile_transitions <- function(x) {
@@ -206,7 +230,10 @@ compile_transitions <- function(x) {
 }
 
 compile_transitions_psm <- function(x) {
-  x %>%
+  
+  row_limit <- 200000
+  
+  res <- x %>%
     rowwise() %>%
     group_split() %>%
     map(function(model_run) {
@@ -220,15 +247,54 @@ compile_transitions_psm <- function(x) {
         mutate(group = suppressWarnings(model_run$.group_scen))
     }) %>%
     bind_rows() %>%
-    select_if(names(.) %in% c("strategy", "group", "cycle", "pfs", "os")) %>%
+    select_if(names(.) %in% c("series", "group", "cycle", "pfs", "os")) %>%
     as_tibble()
+  
+  n_rows <- nrow(res)
+  
+  strats <- unique(res$series)
+  groups <- suppressWarnings(unique(res$group))
+  
+  if (n_rows < row_limit) {
+    return(res)
+  }
+  
+  df_list <- res %>%
+    group_by(series, group) %>%
+    group_split()
+  
+  n_row_groups <- length(df_list)
+  
+  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+  
+  head_rows <- ceiling(n_rows_per_row_group * 0.8)
+  tail_rows <- n_rows_per_row_group - head_rows
+  
+  res <- df_list %>%
+    map(function(x) {
+      sorted <- arrange(x, cycle)
+      rbind(
+        head(x, head_rows),
+        tail(x, tail_rows)
+      )
+    }) %>%
+    bind_rows() %>%
+    arrange(
+      factor(series, levels = strats),
+      factor(group, levels = groups),
+      cycle
+    )
+  
+  res
+  
 }
 
 compile_transitions_markov <- function(x) {
+  
+  row_limit <- 200000
   state_names <- rownames(x$.mod[[1]]$transition[[1]])
-  n_states <- length(state_names)
-  n_cycles <- length(x$.mod[[1]]$transition)
-  x %>%
+  
+  res <- x %>%
     rowwise() %>%
     group_split() %>%
     map(function(model_run) {
@@ -248,6 +314,46 @@ compile_transitions_markov <- function(x) {
     bind_rows() %>%
     select(intersect(c("strategy", "group", "cycle", "from", state_names), names(.))) %>%
     as_tibble()
+  
+  n_rows <- nrow(res)
+  
+  strats <- unique(res$strategy)
+  groups <- suppressWarnings(unique(res$group))
+  from_states <- unique(res$from)
+  
+  if (n_rows < row_limit) {
+    return(res)
+  }
+  
+  df_list <- res %>%
+    group_by(strategy, group) %>%
+    group_split()
+  
+  n_row_groups <- length(df_list)
+  
+  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+  
+  head_rows <- ceiling(n_rows_per_row_group * 0.8)
+  tail_rows <- n_rows_per_row_group - head_rows
+  
+  res <- df_list %>%
+    map(function(x) {
+      sorted <- arrange(x, cycle, from)
+      rbind(
+        head(x, head_rows),
+        tail(x, tail_rows)
+      )
+    }) %>%
+    bind_rows() %>%
+    arrange(
+      factor(strategy, levels = strats),
+      factor(group, levels = groups),
+      cycle, 
+      factor(from, level = from_states)
+    )
+  
+  res
+  
 }
 
 compile_transitions_custom <- function(x) {
@@ -257,7 +363,9 @@ compile_transitions_custom <- function(x) {
 
 compile_unit_values <- function(x) {
   
-  x %>%
+  row_limit <- 200000
+  
+  res <- x %>%
     rowwise() %>%
     group_split() %>%
     map(function(row) {
@@ -274,11 +382,52 @@ compile_unit_values <- function(x) {
     select(intersect(c('strategy', 'group', 'state', names(.)), names(.))) %>%
     arrange(!!!syms(intersect(c('strategy', 'group', 'state', 'cycle'), names(.))))
   
+  n_rows <- nrow(res)
+  
+  strats <- unique(res$strategy)
+  groups <- suppressWarnings(unique(res$group))
+  states <- unique(res$state)
+  
+  if (n_rows < row_limit) {
+    return(res)
+  }
+  
+  df_list <- res %>%
+    group_by(strategy, group, state) %>%
+    group_split()
+  
+  n_row_groups <- length(df_list)
+  
+  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+  
+  head_rows <- ceiling(n_rows_per_row_group * 0.8)
+  tail_rows <- n_rows_per_row_group - head_rows
+  
+  res <- df_list %>%
+    map(function(x) {
+      sorted <- arrange(x, cycle)
+      rbind(
+        head(x, head_rows),
+        tail(x, tail_rows)
+      )
+    }) %>%
+    bind_rows() %>%
+    arrange(
+      factor(strategy, levels = strats),
+      factor(group, levels = groups),
+      cycle, 
+      factor(state, level = states)
+    )
+  
+  res
+
 }
 
 compile_values <- function(x) {
   
-  x %>%
+  row_limit <- 200000
+ 
+  res <- x %>%
     rowwise() %>%
     group_split() %>%
     map(function(row) {
@@ -288,6 +437,43 @@ compile_values <- function(x) {
     rename(cycle = markov_cycle) %>%
     select(intersect(c('strategy', 'group', names(.)), names(.))) %>%
     arrange(!!!syms(intersect(c('strategy', 'group', 'cycle'), names(.))))
+  
+  n_rows <- nrow(res)
+  
+  strats <- unique(res$strategy)
+  groups <- suppressWarnings(unique(res$group))
+  
+  if (n_rows < row_limit) {
+    return(res)
+  }
+  
+  df_list <- res %>%
+    group_by(strategy, group) %>%
+    group_split()
+  
+  n_row_groups <- length(df_list)
+  
+  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+  
+  head_rows <- ceiling(n_rows_per_row_group * 0.8)
+  tail_rows <- n_rows_per_row_group - head_rows
+  
+  res <- df_list %>%
+    map(function(x) {
+      sorted <- arrange(x, cycle)
+      rbind(
+        head(x, head_rows),
+        tail(x, tail_rows)
+      )
+    }) %>%
+    bind_rows() %>%
+    arrange(
+      factor(strategy, levels = strats),
+      factor(group, levels = groups),
+      cycle
+    )
+  
+  res
 }
 
 
