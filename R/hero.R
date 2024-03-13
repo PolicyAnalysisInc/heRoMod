@@ -13,7 +13,7 @@ run_analysis <- function(...) {
     'scen' = run_hero_scen,
     'threshold' = run_hero_threshold,
     'excel' = export_hero_xlsx,
-    'code_preview' = run_code_preview_compat,
+    'code_preview' = heRomod:::run_code_preview_compat,
     'r_project' = package_hero_model,
     stop('Parameter "analysis" must be one of: "bc", "vbp", "dsa", "twsa", "psa", "scen", "excel", "code_preview", "r_project".')
   )
@@ -1349,41 +1349,24 @@ run_markdown <- function(...) {
   }
   try(dots$progress_reporter$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
+  rmd_filename <- paste0(dots$name, ".rmd")
   md_filename <- paste0(dots$name, ".md")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
   try(dots$progress_reporter$report_progress(1L))
-  knitr::spin(r_filename, knit = T, envir = eval_env, precious = F, doc = '^##\\s*')
+  spin(r_filename, knit = F, envir = eval_env, precious = T, doc = '^##\\s*')
   try(dots$progress_reporter$report_progress(1L))
-  html_doc <- read_html(html_filename)
-  html_list <- as_list(html_doc)
-  html_list <- remove_frontmatter_el(html_list)
-  html_doc <- as_xml_document(html_list)
-  write_html(html_doc, html_filename)
-  file.remove(md_filename)
+  render(rmd_filename)
+  try(dots$progress_reporter$report_progress(1L))
   file.remove(r_filename)
-  try(dots$progress_reporter$report_progress(1L))
+  file.remove(rmd_filename)
+  file.remove(md_filename)
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
   }
   list(
     vars = ls(eval_env)
   )
-}
-
-has_frontmatter_class <- function(el) {
-  'frontmatter' %in% attr(el, '.class')
-}
-
-remove_frontmatter_el <- function(html_list) {
-  
-  # Replace any elements with NULL if they have the frontmatter class
-  # This is done to fix the duplicate title bug caused by this element
-  # now automatically being inserted when html is created.
-  indices_to_remove <- map_lgl(html_list$html$body, has_frontmatter_class)
-  html_list$html$body <- html_list$html$body[!indices_to_remove]
-  
-  html_list
 }
 
 #' @export
