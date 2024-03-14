@@ -1350,7 +1350,6 @@ run_markdown <- function(...) {
   try(dots$progress_reporter$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
   rmd_filename <- paste0(dots$name, ".rmd")
-  md_filename <- paste0(dots$name, ".md")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
   try(dots$progress_reporter$report_progress(1L))
@@ -1360,7 +1359,6 @@ run_markdown <- function(...) {
   try(dots$progress_reporter$report_progress(1L))
   file.remove(r_filename)
   file.remove(rmd_filename)
-  file.remove(md_filename)
   if (!is.null(dots$.manifest)) {
     dots$.manifest$register_file('html_output', html_filename, 'Code Editor Preview HTML Output', default = T)
   }

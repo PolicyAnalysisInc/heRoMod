@@ -33,6 +33,7 @@ convert_model <- function(model) {
     )
 }
 
+#' @export
 run_code_preview_compat <- function(...) {
     data <- list(...)
     do.call(
