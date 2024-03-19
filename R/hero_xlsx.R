@@ -171,16 +171,19 @@ export_hero_xlsx <- function(...) {
 
 compile_parameters <- function(x) {
   
-  row_limit <- 200000
+  row_limit <- get_excel_row_limit()
   res <- lapply(x$.mod, function(x) x$parameters) %>%
     do.call(rbind, .) %>%
     as_tibble() %>%
-    select_if(names(.) != '.group_weight')
+    select_if(names(.) != '.group_weight') %>%
+    addGroupColumnIfMissing() %>%
+    rename(cycle = markov_cycle) %>%
+    relocate(strategy, group, state_time, cycle)
   
   n_rows <- nrow(res)
   
   strats <- unique(res$strategy)
-  groups <- suppressWarnings(unique(res$group))
+  groups <- unique(res$group)
   
   if (n_rows < row_limit) {
     return(res)
@@ -199,18 +202,19 @@ compile_parameters <- function(x) {
   
   res <- df_list %>%
     map(function(x) {
-      sorted <- arrange(x, markov_cycle)
+      sorted <- arrange(x, cycle)
       rbind(
         head(x, head_rows),
         tail(x, tail_rows)
       )
     }) %>%
     bind_rows() %>%
+    relocate(strategy, group, state_time, cycle) %>%
     arrange(
       factor(strategy, levels = strats),
       factor(group, levels = groups),
       state_time,
-      markov_cycle
+      cycle
     )
   
   res
@@ -231,7 +235,7 @@ compile_transitions <- function(x) {
 
 compile_transitions_psm <- function(x) {
   
-  row_limit <- 200000
+  row_limit <- get_excel_row_limit()
   
   res <- x %>%
     rowwise() %>%
@@ -248,19 +252,22 @@ compile_transitions_psm <- function(x) {
     }) %>%
     bind_rows() %>%
     select_if(names(.) %in% c("series", "group", "cycle", "pfs", "os")) %>%
-    as_tibble()
+    as_tibble() %>%
+    addGroupColumnIfMissing() %>%
+    rename(strategy = series) %>%
+    relocate(strategy, group, cycle, pfs, os)
   
   n_rows <- nrow(res)
   
-  strats <- unique(res$series)
-  groups <- suppressWarnings(unique(res$group))
+  strats <- unique(res$strategy)
+  groups <- unique(res$group)
   
   if (n_rows < row_limit) {
     return(res)
   }
   
   df_list <- res %>%
-    group_by(series, group) %>%
+    group_by(strategy, group) %>%
     group_split()
   
   n_row_groups <- length(df_list)
@@ -279,8 +286,9 @@ compile_transitions_psm <- function(x) {
       )
     }) %>%
     bind_rows() %>%
+    relocate(strategy, group, cycle) %>%
     arrange(
-      factor(series, levels = strats),
+      factor(strategy, levels = strats),
       factor(group, levels = groups),
       cycle
     )
@@ -291,7 +299,7 @@ compile_transitions_psm <- function(x) {
 
 compile_transitions_markov <- function(x) {
   
-  row_limit <- 200000
+  row_limit <- get_excel_row_limit()
   state_names <- rownames(x$.mod[[1]]$transition[[1]])
   
   res <- x %>%
@@ -313,17 +321,22 @@ compile_transitions_markov <- function(x) {
     }) %>%
     bind_rows() %>%
     select(intersect(c("strategy", "group", "cycle", "from", state_names), names(.))) %>%
-    as_tibble()
+    as_tibble() %>%
+    addGroupColumnIfMissing() %>%
+    relocate(strategy, group, cycle, from)
   
   n_rows <- nrow(res)
-  
-  strats <- unique(res$strategy)
-  groups <- suppressWarnings(unique(res$group))
-  from_states <- unique(res$from)
   
   if (n_rows < row_limit) {
     return(res)
   }
+  
+  groups <- unique(res$group)
+  strats <- unique(res$strategy)
+  from_states <- unique(res$from)
+  group_cols <- c('')
+  
+
   
   df_list <- res %>%
     group_by(strategy, group) %>%
@@ -345,6 +358,7 @@ compile_transitions_markov <- function(x) {
       )
     }) %>%
     bind_rows() %>%
+    relocate(strategy, group, cycle, from) %>%
     arrange(
       factor(strategy, levels = strats),
       factor(group, levels = groups),
@@ -363,7 +377,7 @@ compile_transitions_custom <- function(x) {
 
 compile_unit_values <- function(x) {
   
-  row_limit <- 200000
+  row_limit <- get_excel_row_limit()
   
   res <- x %>%
     rowwise() %>%
@@ -380,12 +394,14 @@ compile_unit_values <- function(x) {
     bind_rows() %>%
     rename(cycle = markov_cycle) %>%
     select(intersect(c('strategy', 'group', 'state', names(.)), names(.))) %>%
-    arrange(!!!syms(intersect(c('strategy', 'group', 'state', 'cycle'), names(.))))
+    arrange(!!!syms(intersect(c('strategy', 'group', 'state', 'cycle'), names(.)))) %>%
+    addGroupColumnIfMissing() %>%
+    relocate(strategy, group, cycle, state)
   
   n_rows <- nrow(res)
   
   strats <- unique(res$strategy)
-  groups <- suppressWarnings(unique(res$group))
+  groups <- unique(res$group)
   states <- unique(res$state)
   
   if (n_rows < row_limit) {
@@ -412,6 +428,7 @@ compile_unit_values <- function(x) {
       )
     }) %>%
     bind_rows() %>%
+    relocate(strategy, group, cycle, state) %>%
     arrange(
       factor(strategy, levels = strats),
       factor(group, levels = groups),
@@ -425,7 +442,7 @@ compile_unit_values <- function(x) {
 
 compile_values <- function(x) {
   
-  row_limit <- 200000
+  row_limit <- get_excel_row_limit()
  
   res <- x %>%
     rowwise() %>%
@@ -436,12 +453,14 @@ compile_values <- function(x) {
     bind_rows() %>%
     rename(cycle = markov_cycle) %>%
     select(intersect(c('strategy', 'group', names(.)), names(.))) %>%
-    arrange(!!!syms(intersect(c('strategy', 'group', 'cycle'), names(.))))
+    arrange(!!!syms(intersect(c('strategy', 'group', 'cycle'), names(.)))) %>%
+    addGroupColumnIfMissing() %>%
+    relocate(strategy, group, cycle)
   
   n_rows <- nrow(res)
   
   strats <- unique(res$strategy)
-  groups <- suppressWarnings(unique(res$group))
+  groups <- unique(res$group)
   
   if (n_rows < row_limit) {
     return(res)
@@ -467,6 +486,7 @@ compile_values <- function(x) {
       )
     }) %>%
     bind_rows() %>%
+    relocate(strategy, group, cycle) %>%
     arrange(
       factor(strategy, levels = strats),
       factor(group, levels = groups),
@@ -474,6 +494,18 @@ compile_values <- function(x) {
     )
   
   res
+}
+
+modelHasGroups <- function(res) {
+  !suppressWarnings(is.null(res$group))
+}
+
+addGroupColumnIfMissing <- function(res) {
+  if (!modelHasGroups(res)) {
+    mutate(res, group = 'All Patients')
+  } else {
+    res
+  }
 }
 
 
@@ -498,4 +530,8 @@ read_workbook <- function(path, ...) {
     USE.NAMES = TRUE
   )
   return(df_list)
+}
+
+get_excel_row_limit <- function() {
+  getOption("heromod_excel_row_limit", default = 200000)
 }
