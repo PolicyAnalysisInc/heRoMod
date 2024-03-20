@@ -1,8 +1,14 @@
 #' @export
 export_hero_xlsx <- function(...) {
+
   # Build model object
   dots <- patch_progress_funcs(list(...))
   args <- do.call(build_hero_model, dots)
+  
+  max_rows <- 200000
+  if (!is.null(dots$excel_max_rows)) {
+    max_rows <- dots$excel_max_rows
+  }
   
   max_prog <- get_excel_max_progress(dots)
   try(dots$progress_reporter$report_max_progress(max_prog))
@@ -110,15 +116,15 @@ export_hero_xlsx <- function(...) {
       "Strategy" = series
     )
   
-  param_res <- compile_parameters(res)
-  trans_res <- compile_transitions(res)
+  param_res <- compile_parameters(res, row_limit = max_rows)
+  trans_res <- compile_transitions(res, row_limit = max_rows)
   
   if (nrow(trans_res) == 0) {
     trans_res <- trace_res
   }
   
-  values_res <- compile_values(res)
-  unit_values_res <- compile_unit_values(res)
+  values_res <- compile_values(res, row_limit = max_rows)
+  unit_values_res <- compile_unit_values(res, row_limit = max_rows)
   
   if(length(dots$tables) > 0) {
     tables_list <- dots$tables
@@ -169,9 +175,8 @@ export_hero_xlsx <- function(...) {
   list()
 }
 
-compile_parameters <- function(x) {
+compile_parameters <- function(x, row_limit = 200000) {
   
-  row_limit <- get_excel_row_limit()
   res <- lapply(x$.mod, function(x) x$parameters) %>%
     do.call(rbind, .) %>%
     as_tibble() %>%
@@ -220,22 +225,20 @@ compile_parameters <- function(x) {
   res
 }
 
-compile_transitions <- function(x) {
+compile_transitions <- function(x, row_limit = 200000) {
   the_class <-  class(x$.mod[[1]]$transition)
   if("eval_part_surv" %in% the_class) {
-    compile_transitions_psm(x)
+    compile_transitions_psm(x, row_limit = row_limit)
   } else {
     if("eval_part_surv_custom" %in% the_class) {
       compile_transitions_custom(x)
     } else {
-      compile_transitions_markov(x)
+      compile_transitions_markov(x, row_limit = row_limit)
     }
   }
 }
 
-compile_transitions_psm <- function(x) {
-  
-  row_limit <- get_excel_row_limit()
+compile_transitions_psm <- function(x, row_limit = 200000) {
   
   res <- x %>%
     rowwise() %>%
@@ -297,9 +300,8 @@ compile_transitions_psm <- function(x) {
   
 }
 
-compile_transitions_markov <- function(x) {
+compile_transitions_markov <- function(x, row_limit = 200000) {
   
-  row_limit <- get_excel_row_limit()
   state_names <- rownames(x$.mod[[1]]$transition[[1]])
   
   res <- x %>%
@@ -375,9 +377,7 @@ compile_transitions_custom <- function(x) {
 }
 
 
-compile_unit_values <- function(x) {
-  
-  row_limit <- get_excel_row_limit()
+compile_unit_values <- function(x, row_limit = 200000) {
   
   res <- x %>%
     rowwise() %>%
@@ -440,9 +440,7 @@ compile_unit_values <- function(x) {
 
 }
 
-compile_values <- function(x) {
-  
-  row_limit <- get_excel_row_limit()
+compile_values <- function(x, row_limit = 200000) {
  
   res <- x %>%
     rowwise() %>%
