@@ -425,7 +425,7 @@ test_export_results <- function(model, name, path) {
     model$excel_max_rows <- 20
     suppressMessages(do.call(export_hero_xlsx, model))
     exported_limited <- read_workbook('test.xlsx')
-    expect_snapshot(exported)
+    expect_snapshot(exported_limited)
     file.remove('test.xlsx')
     
     # Export to R

@@ -295,7 +295,7 @@
 ---
 
     Code
-      exported
+      exported_limited
     Output
       $`Inputs - Settings`
       # A tibble: 4 × 2
@@ -392,7 +392,7 @@
       4 os_target  "apply_hr(os_chemo, os_hr_target)"                         
       
       $`Calc - Params`
-      # A tibble: 480 × 31
+      # A tibble: 20 × 31
          strategy group        state_time cycle model_time cycle_length_days
          <chr>    <chr>             <dbl> <dbl>      <dbl>             <dbl>
        1 CHEMO    All Patients          1     1          1              30.4
@@ -403,70 +403,98 @@
        6 CHEMO    All Patients          1     6          6              30.4
        7 CHEMO    All Patients          1     7          7              30.4
        8 CHEMO    All Patients          1     8          8              30.4
-       9 CHEMO    All Patients          1     9          9              30.4
-      10 CHEMO    All Patients          1    10         10              30.4
-      # ℹ 470 more rows
+       9 CHEMO    All Patients          1   239        239              30.4
+      10 CHEMO    All Patients          1   240        240              30.4
+      11 TARGET   All Patients          1     1          1              30.4
+      12 TARGET   All Patients          1     2          2              30.4
+      13 TARGET   All Patients          1     3          3              30.4
+      14 TARGET   All Patients          1     4          4              30.4
+      15 TARGET   All Patients          1     5          5              30.4
+      16 TARGET   All Patients          1     6          6              30.4
+      17 TARGET   All Patients          1     7          7              30.4
+      18 TARGET   All Patients          1     8          8              30.4
+      19 TARGET   All Patients          1   239        239              30.4
+      20 TARGET   All Patients          1   240        240              30.4
       # ℹ 25 more variables: cycle_length_weeks <dbl>, cycle_length_months <dbl>,
       #   cycle_length_years <dbl>, model_day <dbl>, model_week <dbl>,
       #   model_month <dbl>, model_year <dbl>, state_day <dbl>, state_week <dbl>,
       #   state_month <dbl>, state_year <dbl>, disc_h <dbl>, disc_e <dbl>,
       #   pfs_shape <dbl>, pfs_scale <dbl>, pfs_hr_target <dbl>, os_shape <dbl>,
-      #   os_scale <dbl>, os_hr_target <dbl>, chemo_cost <dbl>, target_cost <dbl>, …
+      #   os_scale <dbl>, os_hr_target <dbl>, chemo_cost <dbl>, target_cost <dbl>,
+      #   pfs_cost <dbl>, pps_cost <dbl>, pfs_util <dbl>, pps_util <dbl>
       
       $`Calc - Trans`
-      # A tibble: 482 × 5
-         strategy group        cycle   pfs    os
-         <chr>    <chr>        <dbl> <dbl> <dbl>
-       1 CHEMO    All Patients     0 1     1    
-       2 CHEMO    All Patients     1 0.988 0.991
-       3 CHEMO    All Patients     2 0.973 0.980
-       4 CHEMO    All Patients     3 0.957 0.969
-       5 CHEMO    All Patients     4 0.939 0.958
-       6 CHEMO    All Patients     5 0.922 0.947
-       7 CHEMO    All Patients     6 0.903 0.936
-       8 CHEMO    All Patients     7 0.885 0.924
-       9 CHEMO    All Patients     8 0.866 0.913
-      10 CHEMO    All Patients     9 0.847 0.901
-      # ℹ 472 more rows
+      # A tibble: 20 × 5
+         strategy group        cycle      pfs     os
+         <chr>    <chr>        <dbl>    <dbl>  <dbl>
+       1 CHEMO    All Patients     0 1        1     
+       2 CHEMO    All Patients     1 0.988    0.991 
+       3 CHEMO    All Patients     2 0.973    0.980 
+       4 CHEMO    All Patients     3 0.957    0.969 
+       5 CHEMO    All Patients     4 0.939    0.958 
+       6 CHEMO    All Patients     5 0.922    0.947 
+       7 CHEMO    All Patients     6 0.903    0.936 
+       8 CHEMO    All Patients     7 0.885    0.924 
+       9 CHEMO    All Patients   239 0.000210 0.0216
+      10 CHEMO    All Patients   240 0.000202 0.0212
+      11 TARGET   All Patients     0 1        1     
+      12 TARGET   All Patients     1 0.992    0.993 
+      13 TARGET   All Patients     2 0.982    0.985 
+      14 TARGET   All Patients     3 0.971    0.977 
+      15 TARGET   All Patients     4 0.959    0.969 
+      16 TARGET   All Patients     5 0.947    0.960 
+      17 TARGET   All Patients     6 0.934    0.952 
+      18 TARGET   All Patients     7 0.921    0.943 
+      19 TARGET   All Patients   239 0.00344  0.0585
+      20 TARGET   All Patients   240 0.00334  0.0577
       
       $`Calc - Unit Values`
-      # A tibble: 1,440 × 24
-         strategy group cycle state pf_ly pp_ly pf_qalys pp_qalys   lys qalys med_cost
-         <chr>    <chr> <dbl> <chr> <dbl> <dbl>    <dbl>    <dbl> <dbl> <dbl>    <dbl>
-       1 CHEMO    All …     1 DEAD      0     0        0        0     0     0        0
-       2 CHEMO    All …     2 DEAD      0     0        0        0     0     0        0
-       3 CHEMO    All …     3 DEAD      0     0        0        0     0     0        0
-       4 CHEMO    All …     4 DEAD      0     0        0        0     0     0        0
-       5 CHEMO    All …     5 DEAD      0     0        0        0     0     0        0
-       6 CHEMO    All …     6 DEAD      0     0        0        0     0     0        0
-       7 CHEMO    All …     7 DEAD      0     0        0        0     0     0        0
-       8 CHEMO    All …     8 DEAD      0     0        0        0     0     0        0
-       9 CHEMO    All …     9 DEAD      0     0        0        0     0     0        0
-      10 CHEMO    All …    10 DEAD      0     0        0        0     0     0        0
-      # ℹ 1,430 more rows
-      # ℹ 13 more variables: pf_care_cost <dbl>, pp_care_cost <dbl>, cost_hc <dbl>,
-      #   .disc_pf_ly <dbl>, .disc_pp_ly <dbl>, .disc_pf_qalys <dbl>,
+      # A tibble: 24 × 24
+         strategy group      cycle state  pf_ly  pp_ly pf_qalys pp_qalys    lys  qalys
+         <chr>    <chr>      <dbl> <chr>  <dbl>  <dbl>    <dbl>    <dbl>  <dbl>  <dbl>
+       1 CHEMO    All Patie…     1 DEAD  0      0        0        0      0      0     
+       2 CHEMO    All Patie…     1 PF    0.0833 0        0.0683   0      0.0833 0.0683
+       3 CHEMO    All Patie…     1 PP    0      0.0833   0        0.0567 0.0833 0.0567
+       4 CHEMO    All Patie…     2 DEAD  0      0        0        0      0      0     
+       5 CHEMO    All Patie…     2 PF    0.0833 0        0.0683   0      0.0833 0.0683
+       6 CHEMO    All Patie…     2 PP    0      0.0833   0        0.0567 0.0833 0.0567
+       7 CHEMO    All Patie…     3 DEAD  0      0        0        0      0      0     
+       8 CHEMO    All Patie…     3 PF    0.0833 0        0.0683   0      0.0833 0.0683
+       9 CHEMO    All Patie…     3 PP    0      0.0833   0        0.0567 0.0833 0.0567
+      10 CHEMO    All Patie…     4 DEAD  0      0        0        0      0      0     
+      # ℹ 14 more rows
+      # ℹ 14 more variables: med_cost <dbl>, pf_care_cost <dbl>, pp_care_cost <dbl>,
+      #   cost_hc <dbl>, .disc_pf_ly <dbl>, .disc_pp_ly <dbl>, .disc_pf_qalys <dbl>,
       #   .disc_pp_qalys <dbl>, .disc_lys <dbl>, .disc_qalys <dbl>,
       #   .disc_med_cost <dbl>, .disc_pf_care_cost <dbl>, .disc_pp_care_cost <dbl>,
       #   .disc_cost_hc <dbl>
       
       $`Calc - Values`
-      # A tibble: 480 × 23
-         strategy group  cycle  pf_ly   pp_ly pf_qalys pp_qalys    lys  qalys med_cost
-         <chr>    <chr>  <dbl>  <dbl>   <dbl>    <dbl>    <dbl>  <dbl>  <dbl>    <dbl>
-       1 CHEMO    All P…     1 0.0828 1.06e-4   0.0679  7.19e-5 0.0829 0.0680    1988.
-       2 CHEMO    All P…     2 0.0817 4.04e-4   0.0670  2.75e-4 0.0821 0.0673    1961.
-       3 CHEMO    All P…     3 0.0804 8.27e-4   0.0659  5.63e-4 0.0812 0.0665    1930.
-       4 CHEMO    All P…     4 0.0790 1.32e-3   0.0648  8.94e-4 0.0803 0.0657    1896.
-       5 CHEMO    All P…     5 0.0775 1.85e-3   0.0636  1.25e-3 0.0794 0.0648    1861.
-       6 CHEMO    All P…     6 0.0760 2.40e-3   0.0623  1.63e-3 0.0784 0.0640    1825.
-       7 CHEMO    All P…     7 0.0745 2.98e-3   0.0611  2.03e-3 0.0775 0.0631    1788.
-       8 CHEMO    All P…     8 0.0730 3.57e-3   0.0598  2.43e-3 0.0765 0.0623    1751.
-       9 CHEMO    All P…     9 0.0714 4.17e-3   0.0586  2.84e-3 0.0756 0.0614    1714.
-      10 CHEMO    All P…    10 0.0698 4.77e-3   0.0573  3.25e-3 0.0746 0.0605    1676.
-      # ℹ 470 more rows
-      # ℹ 13 more variables: pf_care_cost <dbl>, pp_care_cost <dbl>, cost_hc <dbl>,
-      #   .disc_pf_ly <dbl>, .disc_pp_ly <dbl>, .disc_pf_qalys <dbl>,
+      # A tibble: 20 × 23
+         strategy group        cycle   pf_ly   pp_ly pf_qalys pp_qalys     lys   qalys
+         <chr>    <chr>        <dbl>   <dbl>   <dbl>    <dbl>    <dbl>   <dbl>   <dbl>
+       1 CHEMO    All Patients     1 8.28e-2 1.06e-4  6.79e-2  7.19e-5 0.0829  0.0680 
+       2 CHEMO    All Patients     2 8.17e-2 4.04e-4  6.70e-2  2.75e-4 0.0821  0.0673 
+       3 CHEMO    All Patients     3 8.04e-2 8.27e-4  6.59e-2  5.63e-4 0.0812  0.0665 
+       4 CHEMO    All Patients     4 7.90e-2 1.32e-3  6.48e-2  8.94e-4 0.0803  0.0657 
+       5 CHEMO    All Patients     5 7.75e-2 1.85e-3  6.36e-2  1.25e-3 0.0794  0.0648 
+       6 CHEMO    All Patients     6 7.60e-2 2.40e-3  6.23e-2  1.63e-3 0.0784  0.0640 
+       7 CHEMO    All Patients     7 7.45e-2 2.98e-3  6.11e-2  2.03e-3 0.0775  0.0631 
+       8 CHEMO    All Patients     8 7.30e-2 3.57e-3  5.98e-2  2.43e-3 0.0765  0.0623 
+       9 CHEMO    All Patients   239 1.79e-5 1.80e-3  1.47e-5  1.22e-3 0.00181 0.00124
+      10 CHEMO    All Patients   240 1.72e-5 1.76e-3  1.41e-5  1.20e-3 0.00178 0.00121
+      11 TARGET   All Patients     1 8.30e-2 4.42e-5  6.81e-2  3.01e-5 0.0830  0.0681 
+      12 TARGET   All Patients     2 8.23e-2 1.88e-4  6.74e-2  1.28e-4 0.0824  0.0676 
+      13 TARGET   All Patients     3 8.14e-2 4.14e-4  6.67e-2  2.82e-4 0.0818  0.0670 
+      14 TARGET   All Patients     4 8.04e-2 6.86e-4  6.59e-2  4.66e-4 0.0811  0.0664 
+      15 TARGET   All Patients     5 7.94e-2 9.88e-4  6.51e-2  6.72e-4 0.0804  0.0658 
+      16 TARGET   All Patients     6 7.84e-2 1.31e-3  6.43e-2  8.93e-4 0.0797  0.0652 
+      17 TARGET   All Patients     7 7.73e-2 1.66e-3  6.34e-2  1.13e-3 0.0790  0.0645 
+      18 TARGET   All Patients     8 7.62e-2 2.01e-3  6.25e-2  1.37e-3 0.0782  0.0639 
+      19 TARGET   All Patients   239 2.91e-4 4.62e-3  2.38e-4  3.14e-3 0.00491 0.00338
+      20 TARGET   All Patients   240 2.83e-4 4.56e-3  2.32e-4  3.10e-3 0.00484 0.00333
+      # ℹ 14 more variables: med_cost <dbl>, pf_care_cost <dbl>, pp_care_cost <dbl>,
+      #   cost_hc <dbl>, .disc_pf_ly <dbl>, .disc_pp_ly <dbl>, .disc_pf_qalys <dbl>,
       #   .disc_pp_qalys <dbl>, .disc_lys <dbl>, .disc_qalys <dbl>,
       #   .disc_med_cost <dbl>, .disc_pf_care_cost <dbl>, .disc_pp_care_cost <dbl>,
       #   .disc_cost_hc <dbl>
@@ -919,7 +947,7 @@
 ---
 
     Code
-      exported
+      exported_limited
     Output
       $`Inputs - Settings`
       # A tibble: 4 × 2
@@ -1023,26 +1051,36 @@
       3 os_nresp "define_survival(rate = os_nresp_rate, dist = \"exp\")"              
       
       $`Calc - Params`
-      # A tibble: 80 × 40
+      # A tibble: 20 × 40
          strategy group        state_time cycle model_time cycle_length_days
          <chr>    <chr>             <dbl> <dbl>      <dbl>             <dbl>
        1 myfo     All Patients          1     1          1               365
        2 myfo     All Patients          1     2          2               365
        3 myfo     All Patients          1     3          3               365
        4 myfo     All Patients          1     4          4               365
-       5 myfo     All Patients          1     5          5               365
-       6 myfo     All Patients          1     6          6               365
-       7 myfo     All Patients          1     7          7               365
-       8 myfo     All Patients          1     8          8               365
-       9 myfo     All Patients          1     9          9               365
-      10 myfo     All Patients          1    10         10               365
-      # ℹ 70 more rows
+       5 myfo     All Patients          1    20         20               365
+       6 chpl     All Patients          1     1          1               365
+       7 chpl     All Patients          1     2          2               365
+       8 chpl     All Patients          1     3          3               365
+       9 chpl     All Patients          1     4          4               365
+      10 chpl     All Patients          1    20         20               365
+      11 chck     All Patients          1     1          1               365
+      12 chck     All Patients          1     2          2               365
+      13 chck     All Patients          1     3          3               365
+      14 chck     All Patients          1     4          4               365
+      15 chck     All Patients          1    20         20               365
+      16 rlps     All Patients          1     1          1               365
+      17 rlps     All Patients          1     2          2               365
+      18 rlps     All Patients          1     3          3               365
+      19 rlps     All Patients          1     4          4               365
+      20 rlps     All Patients          1    20         20               365
       # ℹ 34 more variables: cycle_length_weeks <dbl>, cycle_length_months <dbl>,
       #   cycle_length_years <dbl>, model_day <dbl>, model_week <dbl>,
       #   model_month <dbl>, model_year <dbl>, state_day <dbl>, state_week <dbl>,
       #   state_month <dbl>, state_year <dbl>, disc_h <dbl>, disc_e <dbl>,
       #   rr_myfo <dbl>, rr_chpl <dbl>, rr_chck <dbl>, rr_rlps <dbl>, rr <dbl>,
-      #   rfs_scale <dbl>, rfs_shape <dbl>, os_resp_meanlog <dbl>, …
+      #   rfs_scale <dbl>, rfs_shape <dbl>, os_resp_meanlog <dbl>,
+      #   os_resp_sdlog <dbl>, os_nresp_rate <dbl>, util_resp <dbl>, …
       
       $`Calc - Trans`
       # A tibble: 84 × 9
@@ -1062,20 +1100,20 @@
       # ℹ 1 more variable: DEAD <dbl>
       
       $`Calc - Unit Values`
-      # A tibble: 320 × 26
+      # A tibble: 32 × 26
          strategy group      cycle state ly_resp ly_nresp qalys_resp qalys_nresp   lys
          <chr>    <chr>      <dbl> <chr>   <dbl>    <dbl>      <dbl>       <dbl> <dbl>
-       1 chck     All Patie…     1 DEAD        0        0          0           0     0
-       2 chck     All Patie…     2 DEAD        0        0          0           0     0
-       3 chck     All Patie…     3 DEAD        0        0          0           0     0
-       4 chck     All Patie…     4 DEAD        0        0          0           0     0
-       5 chck     All Patie…     5 DEAD        0        0          0           0     0
-       6 chck     All Patie…     6 DEAD        0        0          0           0     0
-       7 chck     All Patie…     7 DEAD        0        0          0           0     0
-       8 chck     All Patie…     8 DEAD        0        0          0           0     0
-       9 chck     All Patie…     9 DEAD        0        0          0           0     0
-      10 chck     All Patie…    10 DEAD        0        0          0           0     0
-      # ℹ 310 more rows
+       1 chck     All Patie…     1 DEAD        0        0       0           0        0
+       2 chck     All Patie…     1 REF         0        1       0           0.61     1
+       3 chck     All Patie…     1 REL         0        1       0           0.67     1
+       4 chck     All Patie…     1 RESP        1        0       0.81        0        1
+       5 chck     All Patie…     2 DEAD        0        0       0           0        0
+       6 chck     All Patie…     2 REF         0        1       0           0.61     1
+       7 chck     All Patie…     2 REL         0        1       0           0.67     1
+       8 chck     All Patie…     2 RESP        1        0       0.81        0        1
+       9 chpl     All Patie…     1 DEAD        0        0       0           0        0
+      10 chpl     All Patie…     1 REF         0        1       0           0.61     1
+      # ℹ 22 more rows
       # ℹ 17 more variables: qalys <dbl>, cost_med <dbl>, cost_resp <dbl>,
       #   cost_nresp <dbl>, cost_trans <dbl>, cost_hc <dbl>, .disc_ly_resp <dbl>,
       #   .disc_ly_nresp <dbl>, .disc_qalys_resp <dbl>, .disc_qalys_nresp <dbl>,
@@ -1084,20 +1122,29 @@
       #   .disc_cost_hc <dbl>
       
       $`Calc - Values`
-      # A tibble: 80 × 25
-         strategy group    cycle ly_resp ly_nresp qalys_resp qalys_nresp    lys  qalys
-         <chr>    <chr>    <dbl>   <dbl>    <dbl>      <dbl>       <dbl>  <dbl>  <dbl>
-       1 chck     All Pat…     1 2.95e-1   0.514     2.39e-1      0.326  0.809  0.565 
-       2 chck     All Pat…     2 4.82e-2   0.498     3.90e-2      0.329  0.546  0.368 
-       3 chck     All Pat…     3 1.01e-2   0.414     8.16e-3      0.277  0.424  0.285 
-       4 chck     All Pat…     4 2.29e-3   0.332     1.85e-3      0.222  0.334  0.224 
-       5 chck     All Pat…     5 5.48e-4   0.260     4.44e-4      0.174  0.261  0.175 
-       6 chck     All Pat…     6 1.36e-4   0.203     1.10e-4      0.136  0.203  0.136 
-       7 chck     All Pat…     7 3.48e-5   0.158     2.82e-5      0.106  0.158  0.106 
-       8 chck     All Pat…     8 9.14e-6   0.124     7.40e-6      0.0829 0.124  0.0829
-       9 chck     All Pat…     9 2.45e-6   0.0973    1.98e-6      0.0652 0.0973 0.0652
-      10 chck     All Pat…    10 6.67e-7   0.0770    5.40e-7      0.0516 0.0770 0.0516
-      # ℹ 70 more rows
+      # A tibble: 20 × 25
+         strategy group cycle  ly_resp ly_nresp qalys_resp qalys_nresp     lys   qalys
+         <chr>    <chr> <dbl>    <dbl>    <dbl>      <dbl>       <dbl>   <dbl>   <dbl>
+       1 chck     All …     1 2.95e- 1  0.514     2.39e- 1     0.326   0.809   0.565  
+       2 chck     All …     2 4.82e- 2  0.498     3.90e- 2     0.329   0.546   0.368  
+       3 chck     All …     3 1.01e- 2  0.414     8.16e- 3     0.277   0.424   0.285  
+       4 chck     All …     4 2.29e- 3  0.332     1.85e- 3     0.222   0.334   0.224  
+       5 chck     All …    20 2.89e-12  0.0103    2.34e-12     0.00693 0.0103  0.00693
+       6 chpl     All …     1 2.02e- 1  0.547     1.64e- 1     0.342   0.749   0.506  
+       7 chpl     All …     2 3.31e- 2  0.388     2.68e- 2     0.254   0.421   0.281  
+       8 chpl     All …     3 6.91e- 3  0.295     5.60e- 3     0.196   0.302   0.202  
+       9 chpl     All …     4 1.57e- 3  0.230     1.27e- 3     0.154   0.232   0.155  
+      10 chpl     All …    20 1.98e-12  0.00710   1.61e-12     0.00476 0.00710 0.00476
+      11 myfo     All …     1 1.79e- 1  0.555     1.45e- 1     0.346   0.734   0.491  
+      12 myfo     All …     2 2.93e- 2  0.360     2.37e- 2     0.235   0.389   0.259  
+      13 myfo     All …     3 6.12e- 3  0.265     4.96e- 3     0.176   0.272   0.181  
+      14 myfo     All …     4 1.39e- 3  0.205     1.13e- 3     0.137   0.206   0.138  
+      15 myfo     All …    20 1.76e-12  0.00629   1.42e-12     0.00421 0.00629 0.00421
+      16 rlps     All …     1 3.14e- 1  0.507     2.54e- 1     0.323   0.821   0.577  
+      17 rlps     All …     2 5.13e- 2  0.521     4.16e- 2     0.345   0.572   0.386  
+      18 rlps     All …     3 1.07e- 2  0.439     8.69e- 3     0.293   0.450   0.302  
+      19 rlps     All …     4 2.44e- 3  0.352     1.97e- 3     0.236   0.355   0.238  
+      20 rlps     All …    20 3.08e-12  0.0110    2.49e-12     0.00738 0.0110  0.00738
       # ℹ 16 more variables: cost_med <dbl>, cost_resp <dbl>, cost_nresp <dbl>,
       #   cost_trans <dbl>, cost_hc <dbl>, .disc_ly_resp <dbl>, .disc_ly_nresp <dbl>,
       #   .disc_qalys_resp <dbl>, .disc_qalys_nresp <dbl>, .disc_lys <dbl>,
@@ -1548,7 +1595,7 @@
 ---
 
     Code
-      exported
+      exported_limited
     Output
       $`Inputs - Settings`
       # A tibble: 9 × 2
@@ -1674,20 +1721,20 @@
       # ℹ 230 more rows
       
       $`Calc - Params`
-      # A tibble: 600 × 59
-         strategy group  state_time cycle model_time cycle_length_days
-         <chr>    <chr>       <dbl> <dbl>      <dbl>             <dbl>
-       1 immun    adults          1     1          1               365
-       2 immun    adults          1     2          2               365
-       3 immun    adults          1     3          3               365
-       4 immun    adults          1     4          4               365
-       5 immun    adults          1     5          5               365
-       6 immun    adults          1     6          6               365
-       7 immun    adults          1     7          7               365
-       8 immun    adults          1     8          8               365
-       9 immun    adults          1     9          9               365
-      10 immun    adults          1    10         10               365
-      # ℹ 590 more rows
+      # A tibble: 24 × 59
+         strategy group    state_time cycle model_time cycle_length_days
+         <chr>    <chr>         <dbl> <dbl>      <dbl>             <dbl>
+       1 immun    adults            1     1          1               365
+       2 immun    adults            1     2          2               365
+       3 immun    adults            1     3          3               365
+       4 immun    adults            1     4          4               365
+       5 immun    children          1     1          1               365
+       6 immun    children          1     2          2               365
+       7 immun    children          1     3          3               365
+       8 immun    children          1     4          4               365
+       9 target   adults            1     1          1               365
+      10 target   adults            1     2          2               365
+      # ℹ 14 more rows
       # ℹ 53 more variables: cycle_length_weeks <dbl>, cycle_length_months <dbl>,
       #   cycle_length_years <dbl>, model_day <dbl>, model_week <dbl>,
       #   model_month <dbl>, model_year <dbl>, state_day <dbl>, state_week <dbl>,
@@ -1696,37 +1743,37 @@
       #   gp_mort_male <dbl>, gp_mort_female <dbl>, gp_mort <dbl>, …
       
       $`Calc - Trans`
-      # A tibble: 1,320 × 15
+      # A tibble: 24 × 15
          strategy group cycle from  .rf_1 .rf_2 .rf_3 .rf_4 .rf_5 .rel_1 .rel_2 .rel_3
          <chr>    <chr> <dbl> <chr> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl>  <dbl>
-       1 immun    adul…     1 .rf_1     0 0.860 0     0     0      0.116  0      0    
-       2 immun    adul…     1 .rf_2     0 0     0.842 0     0      0.134  0      0    
-       3 immun    adul…     1 .rf_3     0 0     0     0.834 0      0.142  0      0    
-       4 immun    adul…     1 .rf_4     0 0     0     0     0.828  0.148  0      0    
-       5 immun    adul…     1 .rf_5     0 0     0     0     0.824  0.152  0      0    
-       6 immun    adul…     1 .rel…     0 0     0     0     0      0      0.866  0    
-       7 immun    adul…     1 .rel…     0 0     0     0     0      0      0      0.800
-       8 immun    adul…     1 .rel…     0 0     0     0     0      0      0      0    
-       9 immun    adul…     1 .rel…     0 0     0     0     0      0      0      0    
-      10 immun    adul…     1 .rel…     0 0     0     0     0      0      0      0    
-      # ℹ 1,310 more rows
+       1 immun    adul…     1 .rf_1     0 0.860 0     0     0      0.116      0      0
+       2 immun    adul…     1 .rf_2     0 0     0.842 0     0      0.134      0      0
+       3 immun    adul…     1 .rf_3     0 0     0     0.834 0      0.142      0      0
+       4 immun    adul…     1 .rf_4     0 0     0     0     0.828  0.148      0      0
+       5 immun    chil…     1 .rf_1     0 0.881 0     0     0      0.118      0      0
+       6 immun    chil…     1 .rf_2     0 0     0.862 0     0      0.137      0      0
+       7 immun    chil…     1 .rf_3     0 0     0     0.854 0      0.146      0      0
+       8 immun    chil…     1 .rf_4     0 0     0     0     0.848  0.151      0      0
+       9 target   adul…     1 .rf_1     0 0.787 0     0     0      0.189      0      0
+      10 target   adul…     1 .rf_2     0 0     0.758 0     0      0.218      0      0
+      # ℹ 14 more rows
       # ℹ 3 more variables: .rel_4 <dbl>, .rel_5 <dbl>, dead <dbl>
       
       $`Calc - Unit Values`
-      # A tibble: 1,320 × 32
+      # A tibble: 66 × 32
          strategy group cycle state  febn lys_rf lys_rel qalys_rf qalys_rel qalys_febn
          <chr>    <chr> <dbl> <chr> <dbl>  <dbl>   <dbl>    <dbl>     <dbl>      <dbl>
-       1 chemo    adul…     1 .rel…     0      0       1        0      0.55          0
-       2 chemo    adul…     2 .rel…     0      0       1        0      0.55          0
-       3 chemo    adul…     3 .rel…     0      0       1        0      0.55          0
-       4 chemo    adul…     4 .rel…     0      0       1        0      0.55          0
-       5 chemo    adul…     5 .rel…     0      0       1        0      0.55          0
-       6 chemo    adul…     6 .rel…     0      0       1        0      0.55          0
-       7 chemo    adul…     7 .rel…     0      0       1        0      0.55          0
-       8 chemo    adul…     8 .rel…     0      0       1        0      0.55          0
-       9 chemo    adul…     9 .rel…     0      0       1        0      0.55          0
-      10 chemo    adul…    10 .rel…     0      0       1        0      0.55          0
-      # ℹ 1,310 more rows
+       1 chemo    adul…     1 .rel… 0          0       1     0         0.55   0       
+       2 chemo    adul…     1 .rel… 0          0       1     0         0.55   0       
+       3 chemo    adul…     1 .rel… 0          0       1     0         0.55   0       
+       4 chemo    adul…     1 .rel… 0          0       1     0         0.55   0       
+       5 chemo    adul…     1 .rel… 0          0       1     0         0.55   0       
+       6 chemo    adul…     1 .rf_1 0.015      1       0     0.82      0     -0.000518
+       7 chemo    adul…     1 .rf_2 0.015      1       0     0.82      0     -0.000518
+       8 chemo    adul…     1 .rf_3 0.015      1       0     0.82      0     -0.000518
+       9 chemo    adul…     1 .rf_4 0.015      1       0     0.82      0     -0.000518
+      10 chemo    adul…     1 .rf_5 0.015      1       0     0.82      0     -0.000518
+      # ℹ 56 more rows
       # ℹ 22 more variables: lys <dbl>, qalys <dbl>, cost_med <dbl>, cost_febn <dbl>,
       #   cost_rf <dbl>, cost_rel <dbl>, cost_term <dbl>, costs_hc <dbl>,
       #   .disc_febn <dbl>, .disc_lys_rf <dbl>, .disc_lys_rel <dbl>,
@@ -1735,20 +1782,20 @@
       #   .disc_cost_febn <dbl>, .disc_cost_rf <dbl>, .disc_cost_rel <dbl>, …
       
       $`Calc - Values`
-      # A tibble: 120 × 31
-         strategy group  cycle     febn lys_rf lys_rel qalys_rf qalys_rel  qalys_febn
-         <chr>    <chr>  <dbl>    <dbl>  <dbl>   <dbl>    <dbl>     <dbl>       <dbl>
-       1 chemo    adults     1 0.0128   0.850    0.138   0.697     0.0758 -0.000440  
-       2 chemo    adults     2 0.00872  0.581    0.367   0.477     0.202  -0.000301  
-       3 chemo    adults     3 0.00570  0.380    0.496   0.311     0.273  -0.000197  
-       4 chemo    adults     4 0.00363  0.242    0.532   0.199     0.292  -0.000125  
-       5 chemo    adults     5 0.00228  0.152    0.505   0.124     0.278  -0.0000786 
-       6 chemo    adults     6 0.00141  0.0940   0.444   0.0771    0.244  -0.0000487 
-       7 chemo    adults     7 0.000872 0.0581   0.369   0.0477    0.203  -0.0000301 
-       8 chemo    adults     8 0.000537 0.0358   0.296   0.0294    0.163  -0.0000185 
-       9 chemo    adults     9 0.000330 0.0220   0.231   0.0180    0.127  -0.0000114 
-      10 chemo    adults    10 0.000202 0.0135   0.177   0.0110    0.0973 -0.00000697
-      # ℹ 110 more rows
+      # A tibble: 24 × 31
+         strategy group    cycle    febn lys_rf lys_rel qalys_rf qalys_rel qalys_febn
+         <chr>    <chr>    <dbl>   <dbl>  <dbl>   <dbl>    <dbl>     <dbl>      <dbl>
+       1 chemo    adults       1 0.0128   0.850  0.138     0.697    0.0758  -0.000440
+       2 chemo    adults       2 0.00872  0.581  0.367     0.477    0.202   -0.000301
+       3 chemo    adults       3 0.00570  0.380  0.496     0.311    0.273   -0.000197
+       4 chemo    adults       4 0.00363  0.242  0.532     0.199    0.292   -0.000125
+       5 chemo    children     1 0.0129   0.859  0.141     0.704    0.0776  -0.000445
+       6 chemo    children     2 0.00902  0.602  0.380     0.493    0.209   -0.000312
+       7 chemo    children     3 0.00605  0.403  0.522     0.331    0.287   -0.000209
+       8 chemo    children     4 0.00397  0.264  0.569     0.217    0.313   -0.000137
+       9 immun    adults       1 0.00600  0.930  0.0578    0.763    0.0318  -0.000207
+      10 immun    adults       2 0.00511  0.792  0.165     0.649    0.0910  -0.000176
+      # ℹ 14 more rows
       # ℹ 22 more variables: lys <dbl>, qalys <dbl>, cost_med <dbl>, cost_febn <dbl>,
       #   cost_rf <dbl>, cost_rel <dbl>, cost_term <dbl>, costs_hc <dbl>,
       #   .disc_febn <dbl>, .disc_lys_rf <dbl>, .disc_lys_rel <dbl>,
@@ -2138,7 +2185,7 @@
 ---
 
     Code
-      exported
+      exported_limited
     Output
       $`Inputs - Settings`
       # A tibble: 4 × 2
@@ -2228,7 +2275,7 @@
       11 util_sick        Utility value for sick state         util… ""    ""    ""   
       
       $`Calc - Params`
-      # A tibble: 40 × 30
+      # A tibble: 20 × 30
          strategy group        state_time cycle model_time cycle_length_days
          <chr>    <chr>             <dbl> <dbl>      <dbl>             <dbl>
        1 nat      All Patients          1     1          1               365
@@ -2239,18 +2286,28 @@
        6 nat      All Patients          1     6          6               365
        7 nat      All Patients          1     7          7               365
        8 nat      All Patients          1     8          8               365
-       9 nat      All Patients          1     9          9               365
-      10 nat      All Patients          1    10         10               365
-      # ℹ 30 more rows
+       9 nat      All Patients          1    19         19               365
+      10 nat      All Patients          1    20         20               365
+      11 new      All Patients          1     1          1               365
+      12 new      All Patients          1     2          2               365
+      13 new      All Patients          1     3          3               365
+      14 new      All Patients          1     4          4               365
+      15 new      All Patients          1     5          5               365
+      16 new      All Patients          1     6          6               365
+      17 new      All Patients          1     7          7               365
+      18 new      All Patients          1     8          8               365
+      19 new      All Patients          1    19         19               365
+      20 new      All Patients          1    20         20               365
       # ℹ 24 more variables: cycle_length_weeks <dbl>, cycle_length_months <dbl>,
       #   cycle_length_years <dbl>, model_day <dbl>, model_week <dbl>,
       #   model_month <dbl>, model_year <dbl>, state_day <dbl>, state_week <dbl>,
       #   state_month <dbl>, state_year <dbl>, disc_h <dbl>, disc_e <dbl>,
       #   p_sick_nat <dbl>, p_sick_new <dbl>, p_death_well <dbl>, p_death_sick <dbl>,
-      #   cost_new <dbl>, util_well_nat <dbl>, disutil_well_new <dbl>, …
+      #   cost_new <dbl>, util_well_nat <dbl>, disutil_well_new <dbl>,
+      #   disutil_sick <dbl>, cost_hosp_stay <dbl>, util_well_new <dbl>, …
       
       $`Calc - Trans`
-      # A tibble: 120 × 7
+      # A tibble: 20 × 7
          strategy group        cycle from   well  sick  dead
          <chr>    <chr>        <dbl> <chr> <dbl> <dbl> <dbl>
        1 nat      All Patients     1 well  0.495  0.5  0.005
@@ -2261,25 +2318,34 @@
        6 nat      All Patients     2 dead  0      0    1    
        7 nat      All Patients     3 well  0.495  0.5  0.005
        8 nat      All Patients     3 sick  0      0.92 0.08 
-       9 nat      All Patients     3 dead  0      0    1    
-      10 nat      All Patients     4 well  0.495  0.5  0.005
-      # ℹ 110 more rows
+       9 nat      All Patients    20 sick  0      0.92 0.08 
+      10 nat      All Patients    20 dead  0      0    1    
+      11 new      All Patients     1 well  0.695  0.3  0.005
+      12 new      All Patients     1 sick  0      0.92 0.08 
+      13 new      All Patients     1 dead  0      0    1    
+      14 new      All Patients     2 well  0.695  0.3  0.005
+      15 new      All Patients     2 sick  0      0.92 0.08 
+      16 new      All Patients     2 dead  0      0    1    
+      17 new      All Patients     3 well  0.695  0.3  0.005
+      18 new      All Patients     3 sick  0      0.92 0.08 
+      19 new      All Patients    20 sick  0      0.92 0.08 
+      20 new      All Patients    20 dead  0      0    1    
       
       $`Calc - Unit Values`
-      # A tibble: 120 × 24
+      # A tibble: 24 × 24
          strategy group      cycle state well_lys sick_lys well_qalys sick_qalys   lys
          <chr>    <chr>      <dbl> <chr>    <dbl>    <dbl>      <dbl>      <dbl> <dbl>
-       1 nat      All Patie…     1 dead         0        0          0          0     0
-       2 nat      All Patie…     2 dead         0        0          0          0     0
-       3 nat      All Patie…     3 dead         0        0          0          0     0
-       4 nat      All Patie…     4 dead         0        0          0          0     0
-       5 nat      All Patie…     5 dead         0        0          0          0     0
-       6 nat      All Patie…     6 dead         0        0          0          0     0
-       7 nat      All Patie…     7 dead         0        0          0          0     0
-       8 nat      All Patie…     8 dead         0        0          0          0     0
-       9 nat      All Patie…     9 dead         0        0          0          0     0
-      10 nat      All Patie…    10 dead         0        0          0          0     0
-      # ℹ 110 more rows
+       1 nat      All Patie…     1 dead         0        0       0          0        0
+       2 nat      All Patie…     1 sick         0        1       0          0.62     1
+       3 nat      All Patie…     1 well         1        0       0.85       0        1
+       4 nat      All Patie…     2 dead         0        0       0          0        0
+       5 nat      All Patie…     2 sick         0        1       0          0.62     1
+       6 nat      All Patie…     2 well         1        0       0.85       0        1
+       7 nat      All Patie…     3 dead         0        0       0          0        0
+       8 nat      All Patie…     3 sick         0        1       0          0.62     1
+       9 nat      All Patie…     3 well         1        0       0.85       0        1
+      10 nat      All Patie…     4 dead         0        0       0          0        0
+      # ℹ 14 more rows
       # ℹ 15 more variables: qalys <dbl>, med_cost <dbl>, term_cost <dbl>,
       #   ae_cost <dbl>, cost_hc <dbl>, .disc_well_lys <dbl>, .disc_sick_lys <dbl>,
       #   .disc_well_qalys <dbl>, .disc_sick_qalys <dbl>, .disc_lys <dbl>,
@@ -2287,20 +2353,29 @@
       #   .disc_ae_cost <dbl>, .disc_cost_hc <dbl>
       
       $`Calc - Values`
-      # A tibble: 40 × 23
+      # A tibble: 20 × 23
          strategy group      cycle well_lys sick_lys well_qalys sick_qalys   lys qalys
          <chr>    <chr>      <dbl>    <dbl>    <dbl>      <dbl>      <dbl> <dbl> <dbl>
-       1 nat      All Patie…     1  0.748      0.25     0.635        0.155 0.998 0.790
-       2 nat      All Patie…     2  0.370      0.604    0.315        0.374 0.974 0.689
-       3 nat      All Patie…     3  0.183      0.740    0.156        0.459 0.924 0.615
-       4 nat      All Patie…     4  0.0907     0.773    0.0771       0.479 0.863 0.556
-       5 nat      All Patie…     5  0.0449     0.756    0.0381       0.469 0.801 0.507
-       6 nat      All Patie…     6  0.0222     0.718    0.0189       0.445 0.740 0.464
-       7 nat      All Patie…     7  0.0110     0.672    0.00935      0.417 0.683 0.426
-       8 nat      All Patie…     8  0.00544    0.624    0.00463      0.387 0.629 0.391
-       9 nat      All Patie…     9  0.00269    0.576    0.00229      0.357 0.579 0.360
-      10 nat      All Patie…    10  0.00133    0.532    0.00113      0.330 0.533 0.331
-      # ℹ 30 more rows
+       1 nat      All Patie…     1  7.48e-1    0.25  0.635           0.155 0.998 0.790
+       2 nat      All Patie…     2  3.70e-1    0.604 0.315           0.374 0.974 0.689
+       3 nat      All Patie…     3  1.83e-1    0.740 0.156           0.459 0.924 0.615
+       4 nat      All Patie…     4  9.07e-2    0.773 0.0771          0.479 0.863 0.556
+       5 nat      All Patie…     5  4.49e-2    0.756 0.0381          0.469 0.801 0.507
+       6 nat      All Patie…     6  2.22e-2    0.718 0.0189          0.445 0.740 0.464
+       7 nat      All Patie…     7  1.10e-2    0.672 0.00935         0.417 0.683 0.426
+       8 nat      All Patie…     8  5.44e-3    0.624 0.00463         0.387 0.629 0.391
+       9 nat      All Patie…    19  2.38e-6    0.252 0.00000202      0.156 0.252 0.156
+      10 nat      All Patie…    20  1.18e-6    0.232 0.00000100      0.144 0.232 0.144
+      11 new      All Patie…     1  8.48e-1    0.15  0.703           0.093 0.998 0.796
+      12 new      All Patie…     2  5.89e-1    0.392 0.489           0.243 0.981 0.732
+      13 new      All Patie…     3  4.09e-1    0.538 0.340           0.333 0.947 0.673
+      14 new      All Patie…     4  2.85e-1    0.617 0.236           0.383 0.902 0.619
+      15 new      All Patie…     5  1.98e-1    0.653 0.164           0.405 0.851 0.569
+      16 new      All Patie…     6  1.37e-1    0.660 0.114           0.409 0.798 0.524
+      17 new      All Patie…     7  9.55e-2    0.649 0.0793          0.402 0.744 0.482
+      18 new      All Patie…     8  6.64e-2    0.626 0.0551          0.388 0.692 0.443
+      19 new      All Patie…    19  1.21e-3    0.284 0.00101         0.176 0.285 0.177
+      20 new      All Patie…    20  8.43e-4    0.261 0.000700        0.162 0.262 0.163
       # ℹ 14 more variables: med_cost <dbl>, term_cost <dbl>, ae_cost <dbl>,
       #   cost_hc <dbl>, .disc_well_lys <dbl>, .disc_sick_lys <dbl>,
       #   .disc_well_qalys <dbl>, .disc_sick_qalys <dbl>, .disc_lys <dbl>,
