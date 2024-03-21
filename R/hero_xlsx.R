@@ -190,37 +190,36 @@ compile_parameters <- function(x, row_limit = 200000) {
   strats <- unique(res$strategy)
   groups <- unique(res$group)
   
-  if (n_rows < row_limit) {
-    return(res)
-  }
-  
-  df_list <- res %>%
-    group_by(strategy, group) %>%
-    group_split()
-  
-  n_row_groups <- length(df_list)
-  
-  n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
-  
-  head_rows <- ceiling(n_rows_per_row_group * 0.8)
-  tail_rows <- n_rows_per_row_group - head_rows
-  
-  res <- df_list %>%
-    map(function(x) {
-      sorted <- arrange(x, cycle)
-      rbind(
-        head(x, head_rows),
-        tail(x, tail_rows)
+  if (n_rows > row_limit) {
+    
+    df_list <- res %>%
+      group_by(strategy, group) %>%
+      group_split()
+    
+    n_row_groups <- length(df_list)
+    
+    n_rows_per_row_group <- ceiling(row_limit / n_row_groups)
+    
+    head_rows <- ceiling(n_rows_per_row_group * 0.8)
+    tail_rows <- n_rows_per_row_group - head_rows
+    
+    res <- df_list %>%
+      map(function(x) {
+        sorted <- arrange(x, cycle)
+        rbind(
+          head(x, head_rows),
+          tail(x, tail_rows)
+        )
+      }) %>%
+      bind_rows() %>%
+      relocate(strategy, group, state_time, cycle) %>%
+      arrange(
+        factor(strategy, levels = strats),
+        factor(group, levels = groups),
+        state_time,
+        cycle
       )
-    }) %>%
-    bind_rows() %>%
-    relocate(strategy, group, state_time, cycle) %>%
-    arrange(
-      factor(strategy, levels = strats),
-      factor(group, levels = groups),
-      state_time,
-      cycle
-    )
+  }
   
   res
 }
