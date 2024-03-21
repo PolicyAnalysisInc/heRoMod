@@ -9,14 +9,14 @@ test_that("Code preivew generates appropriate HTML when a heading is included", 
     run_markdown(
       text = "## # Foo \n mean(c(1,2,3,4,5))",
       data = list(),
-      name = 'theTitle'
+      name = 'thetitle'
     )
-    html <- read_file_to_string('theTitle.html')
+    html <- read_file_to_string('thetitle.html')
     
     # Title tag is present and properly closed
     title_count <- stringr::str_count(
       html,
-      stringr::fixed("<title>theTitle.knit</title>")
+      stringr::fixed("<title>thetitle.knit</title>")
     )
     expect_equal(title_count, 1)
     
@@ -48,14 +48,14 @@ test_that("Code preivew generates appropriate HTML when a heading is not include
     run_markdown(
       text = "mean(c(1,2,3,4,5))",
       data = list(),
-      name = 'theTitle'
+      name = 'thetitle'
     )
-    html <- read_file_to_string('theTitle.html')
+    html <- read_file_to_string('thetitle.html')
     
     # Title tag is present and properly closed
     title_count <- stringr::str_count(
       html,
-      stringr::fixed("<title>theTitle.knit</title>")
+      stringr::fixed("<title>thetitle.knit</title>")
     )
     expect_equal(title_count, 1)
     
