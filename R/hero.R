@@ -1349,11 +1349,11 @@ run_markdown <- function(...) {
   }
   try(dots$progress_reporter$report_progress(1L))
   r_filename <- paste0(dots$name, ".r")
-  rmd_filename <- paste0(dots$name, ".rmd")
+  rmd_filename <- paste0(dots$name, ".Rmd")
   html_filename <- paste0(dots$name, ".html")
   writeLines(text, con = paste0(dots$name, ".r"))
   try(dots$progress_reporter$report_progress(1L))
-  spin(r_filename, knit = F, envir = eval_env, precious = T, doc = '^##\\s*')
+  spin(r_filename, knit = T, report = T, format = 'Rmd', envir = eval_env, precious = T, doc = '^##\\s*')
   try(dots$progress_reporter$report_progress(1L))
   render(rmd_filename)
   try(dots$progress_reporter$report_progress(1L))
