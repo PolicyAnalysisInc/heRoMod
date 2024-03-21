@@ -151,6 +151,10 @@
 #' 
 #' @importFrom magrittr set_colnames
 #' 
+#' @importFrom knitr spin
+#' 
+#' @importFrom rmarkdown render
+#' 
 #' @importFrom purrr walk
 #' @importFrom purrr walk2
 #' @importFrom purrr map
