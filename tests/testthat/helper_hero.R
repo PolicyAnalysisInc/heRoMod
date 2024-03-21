@@ -2,6 +2,11 @@ library(dplyr)
 library(purrr)
 
 #' Helper functions for testing the results of heRo models
+read_workbook <- function(path) {
+  sheet_names <- getSheetNames(path)
+  names(sheet_names) <- sheet_names
+  lapply(sheet_names, function(x) as_tibble(openxlsx::readWorkbook(path, sheet = x)))
+}
 
 #' Test All Results of a Model
 test_model_results <- function(name, path, bc, vbp, dsa, twsa, scen, psa, export) {
@@ -404,13 +409,26 @@ test_psa_results <- function(model, name, path) {
   
 }
 
-#' Test Exporting to Excel
+#' Test Exporting to Excel and R
 test_export_results <- function(model, name, path) {
   withr::with_dir(new = tempdir(), {
     model$name <- 'test'
+    
+    # Snapshot test with full export
+    model$excel_max_rows <- 200000
     suppressMessages(do.call(export_hero_xlsx, model))
-    xl_file <- openxlsx::read.xlsx('test.xlsx')
+    exported <- read_workbook('test.xlsx')
+    expect_snapshot(exported)
     file.remove('test.xlsx')
+    
+    # Snapshot test with row-limited export
+    model$excel_max_rows <- 20
+    suppressMessages(do.call(export_hero_xlsx, model))
+    exported_limited <- read_workbook('test.xlsx')
+    expect_snapshot(exported_limited)
+    file.remove('test.xlsx')
+    
+    # Export to R
     suppressMessages(do.call(package_hero_model ,model))
     file.remove('test.zip')
   })
