@@ -2,6 +2,7 @@
 % Please edit documentation in R/heRomod.R
 \docType{package}
 \name{heRomod}
+\alias{heRomod-package}
 \alias{heRomod}
 \title{heRomod: Health Economic Evaluation MODelling}
 \description{
@@ -10,4 +11,32 @@ evaluation modelling. It aims to provide a simple and
 consistent interface for Markov models specification and
 comparison. Non-homogeneous Markov models (with time
 varying properties) are supported.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/PolicyAnalysisInc/heRoMod}
+  \item Report bugs at \url{https://github.com/PolicyAnalysisInc/heRoMod/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Jordan Amdahl \email{jrdnmdhl@gmail.com}
+
+Authors:
+\itemize{
+  \item Antoine Filipovic-Pierucci
+  \item Kevin Zarca
+}
+
+Other contributors:
+\itemize{
+  \item Matthew Wiener [contributor]
+  \item Zdenek Kabat [contributor]
+  \item Vojtech Filipec [contributor]
+  \item Yonatan Carranza Alarcon [contributor]
+  \item Vince Daniels [contributor]
+  \item Fernando Alarid-Escudero [contributor]
+}
+
 }

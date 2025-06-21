@@ -103,8 +103,14 @@ run_model <- function(...,
     init = init,
     cycles = cycles,
     method = method,
-    cost = lazy_(substitute(cost), env = parent.frame()),
-    effect = lazy_(substitute(effect), env = parent.frame()),
+    cost = {
+      cost_sub <- substitute(cost)
+      if (is.null(cost_sub)) NULL else lazy_(cost_sub, env = parent.frame())
+    },
+    effect = {
+      effect_sub <- substitute(effect)
+      if (is.null(effect_sub)) NULL else lazy_(effect_sub, env = parent.frame())
+    },
     state_time_limit = state_time_limit,
     central_strategy = central_strategy,
     inflow = inflow,
@@ -165,6 +171,9 @@ run_model_ <- function(uneval_strategy_list,
     .cost = cost,
     .effect = effect
   )
+  
+  # Remove NULL entries from list_ce
+  list_ce <- list_ce[!sapply(list_ce, is.null)]
   
   ce <- c(
     lazy_dots(),
