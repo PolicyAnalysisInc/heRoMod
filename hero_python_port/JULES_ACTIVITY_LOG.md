@@ -115,4 +115,16 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   Used `scipy.optimize.minimize` as the backend optimizer.
     *   `CalibrationTarget` provides flexibility for defining what model output to match.
     *   Objective function uses sum of weighted squared errors.
+
+### Task 6.2: EVPI/EVPPI Calculations
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented:**
+    *   `hero_py/voi.py` (new file):
+        *   `calculate_evpi()`: Calculates Expected Value of Perfect Information from a list of `PSAResults` objects for various WTP thresholds. Uses the opportunity loss formulation.
+        *   `calculate_evppi()`: Initial implementation for Expected Value of Partial Perfect Information using a regression metamodeling approach. Currently uses `sklearn.linear_model.LinearRegression`. Takes a list of `PSAResults`, parameters of interest, and WTP thresholds.
+    *   `scikit-learn` added to `requirements.txt`.
+    *   Unit tests (`tests/test_voi.py`, new file) for `calculate_evpi` (structure, single strategy, dominance) and initial execution checks for `calculate_evppi`.
+*   **Key Decisions:**
+    *   Implemented EVPI using standard methods.
+    *   Chose linear regression (via `scikit-learn`) as the initial method for EVPPI metamodeling due to its simplicity and common use as a starting point. Noted that more complex regression models (e.g., GAMs via `pygam`) could be added later.
 ---

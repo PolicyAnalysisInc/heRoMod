@@ -10,6 +10,7 @@ The primary goal is to enable users to define, run, and analyze various types of
 *   Probabilistic Sensitivity Analysis (PSA)
 *   Deterministic Sensitivity Analysis (DSA)
 *   Model Calibration (initial implementation)
+*   Value of Information (EVPI, initial EVPPI using linear regression)
 
 ## Current Status: Alpha - Under Active Development
 

@@ -10,9 +10,13 @@ pytest>=6.0   # For unit testing
 # Plotting
 matplotlib>=3.4 # For basic plotting
 
+# Machine Learning / Regression (for EVPPI)
+scikit-learn>=0.24 # For LinearRegression, etc.
+
 # To be added as features are implemented:
 # lifelines>=0.25 # For survival analysis
 # scikit-survival>=0.17 # Alternative for survival analysis
+# pygam # For GAM-based EVPPI
 # seaborn>=0.11   # For enhanced statistical plotting
 # plotnine>=0.8   # For ggplot2-like plotting API (optional)
 # openpyxl>=3.0   # For reading/writing Excel files with pandas

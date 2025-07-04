@@ -56,8 +56,9 @@ Once the core functionality from `heRomod` is ported and stabilized (as per `PRO
 *   **Phase 4 (Deterministic Sensitivity Analysis - DSA):** COMPLETED
 *   **Phase 5 (Initial Results, Summaries & Basic Plotting):** COMPLETED
 *   **Phase 6 (Further Analyses):** IN PROGRESS
-    *   Model Calibration: RECENTLY COMPLETED.
-*   **Next Up (Phase 6 Continued):** Focus on EVPI/EVPPI, individual-level simulation, VBP, and scenario analysis.
+    *   Model Calibration: COMPLETED.
+    *   EVPI & EVPPI (initial regression-based): RECENTLY COMPLETED.
+*   **Next Up (Phase 6 Continued):** Focus on full individual-level simulation, Value-Based Pricing, and Scenario Analysis. Enhancements to EVPPI methods (e.g., GAMs) could also be considered.
 
 ## Contribution and Evolution
 This roadmap is a living document. Contributions are welcome via GitHub issues for the future Python repository.

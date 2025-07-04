@@ -62,10 +62,10 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   `matplotlib` added to `requirements.txt`.
 
 *   **Phase 6: Further Analyses:** **IN PROGRESS**
-    *   **Task 6.1: Model Calibration module:** RECENTLY COMPLETED - Implemented `CalibrationTarget` (in `calibration_definitions.py`), `calibrate_model` function and `CalibrationResults` class (in `calibration.py`) using `scipy.optimize.minimize`. Initial unit tests created.
-    *   Task 6.2: EVPPI/EVPI calculations: PENDING.
+    *   **Task 6.1: Model Calibration module:** COMPLETED - Implemented `CalibrationTarget`, `calibrate_model` function, and `CalibrationResults` class.
+    *   **Task 6.2: EVPPI/EVPI calculations:** RECENTLY COMPLETED - Implemented `calculate_evpi` and an initial regression-based `calculate_evppi` (using linear regression). Unit tests created for `calculate_evpi` and basic execution of `calculate_evppi`.
     *   Task 6.3: Individual-level simulation (microsimulation): PENDING.
-    *   Value-Based Pricing.
+    *   Value-Based Pricing: PENDING.
     *   Scenario Analysis features.
 
 *   **Phase 7: Documentation, Examples, and Refinement:** **ONGOING** (Basic docstrings and README are in place, major Sphinx docs effort pending).
