@@ -7,10 +7,12 @@ scipy>=1.7    # For statistical functions, optimization
 # Testing
 pytest>=6.0   # For unit testing
 
+# Plotting
+matplotlib>=3.4 # For basic plotting
+
 # To be added as features are implemented:
 # lifelines>=0.25 # For survival analysis
 # scikit-survival>=0.17 # Alternative for survival analysis
-# matplotlib>=3.4 # For plotting
 # seaborn>=0.11   # For enhanced statistical plotting
 # plotnine>=0.8   # For ggplot2-like plotting API (optional)
 # openpyxl>=3.0   # For reading/writing Excel files with pandas

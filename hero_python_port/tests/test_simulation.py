@@ -84,13 +84,51 @@ def strategy_psm_simple(states_list_psm: List[State], psm_definition_simple: PSM
 # --- End PSM Fixtures ---
 
 
-def test_simulation_output_initialization():
-    output = SimulationOutput("TestStrat", 10, ["s1", "s2"], {"cost":0.03, "effect":0.03})
+def test_simulation_output_initialization_and_accessors():
+    value_attrs = ["cost", "effect"]
+    output = SimulationOutput(
+        strategy_name="TestStrat",
+        num_cycles=2,
+        state_names=["s1", "s2"],
+        value_attributes_tracked=value_attrs,
+        discount_rates={"cost":0.03, "effect":0.03}
+    )
     assert output.strategy_name == "TestStrat"
-    assert output.num_cycles == 10
+    assert output.num_cycles == 2
     assert output.state_names == ["s1", "s2"]
-    assert output.cohort_distribution.shape == (11, 2)
+    assert output.value_attributes_tracked == value_attrs
+    assert output.cohort_distribution.shape == (3, 2) # num_cycles + 1 rows
     assert output.discount_rates["cost"] == 0.03
+
+    # Test initial empty state of value stores
+    assert "cost" in output.cycle_values_per_state
+    assert output.cycle_values_per_state["cost"].shape == (2, 2) # num_cycles rows
+    assert np.all(output.cycle_values_per_state["cost"] == 0)
+    assert "effect" in output.aggregated_cycle_values
+    assert len(output.aggregated_cycle_values["effect"]) == 2 # num_cycles
+    assert np.all(output.aggregated_cycle_values["effect"] == 0)
+    assert output.total_discounted_values["cost"] == 0.0
+    assert output.total_undiscounted_values["effect"] == 0.0
+
+    # Test summary on empty/initial data
+    summary_df_init = output.summary()
+    assert isinstance(summary_df_init, pd.DataFrame)
+    assert list(summary_df_init.columns) == ["Undiscounted Total", "Discounted Total"]
+    assert list(summary_df_init.index) == value_attrs
+    assert np.all(summary_df_init == 0.0)
+
+    # Test get_cohort_trace on initial data
+    trace_df_init = output.get_cohort_trace()
+    assert trace_df_init.shape == (3,2)
+    assert np.all(trace_df_init == 0.0) # Before record_cohort_distribution
+
+    # Test get_aggregated_cycle_values_for_attribute on initial data
+    agg_cost_init = output.get_aggregated_cycle_values_for_attribute("cost")
+    assert isinstance(agg_cost_init, pd.Series)
+    assert len(agg_cost_init) == 2
+    assert np.all(agg_cost_init == 0.0)
+    assert output.get_aggregated_cycle_values_for_attribute("non_existent_attr") is None
+
 
 # --- Markov Model Simulation Tests (from previous implementation) ---
 def test_run_simulation_markov_zero_cycles(strategy_markov_simple, global_params_empty):
@@ -210,6 +248,55 @@ def test_run_simulation_psm_one_cycle_no_discount(
 
     assert output.total_undiscounted_values["cost"] == pytest.approx(expected_cost_cycle0)
     assert output.total_undiscounted_values["qaly"] == pytest.approx(expected_qaly_cycle0)
+
+def test_simulation_output_methods_after_run(strategy_markov_simple, global_params_empty, s1_markov):
+    """Test summary, get_cohort_trace, get_aggregated_cycle_values after a run."""
+    initial_pop = {"Well": 1000.0, "Sick": 0.0}
+    value_attrs = ["cost", "effect"]
+    discount_r = {"cost": 0.03, "effect": 0.03}
+    num_cycles = 2
+    output = run_simulation(
+        strategy_markov_simple, global_params_empty, num_cycles, initial_pop,
+        value_attributes=value_attrs, discount_rates=discount_r
+    )
+
+    # Test summary()
+    summary_df = output.summary()
+    assert isinstance(summary_df, pd.DataFrame)
+    assert list(summary_df.index) == value_attrs
+    assert "Undiscounted Total" in summary_df.columns
+    assert "Discounted Total" in summary_df.columns
+    assert summary_df.loc["cost", "Undiscounted Total"] > 0
+    assert summary_df.loc["effect", "Discounted Total"] > 0
+    assert summary_df.loc["cost", "Discounted Total"] <= summary_df.loc["cost", "Undiscounted Total"]
+
+    # Test get_cohort_trace()
+    trace_all = output.get_cohort_trace()
+    assert isinstance(trace_all, pd.DataFrame)
+    assert trace_all.shape == (num_cycles + 1, 2) # 2 states
+    assert list(trace_all.columns) == ["Well", "Sick"]
+    assert np.isclose(trace_all.iloc[0]["Well"], 1000.0)
+    assert np.isclose(trace_all.sum(axis=1).iloc[0], 1000.0) # Pop conservation (approx)
+    assert np.isclose(trace_all.sum(axis=1).iloc[num_cycles], 1000.0)
+
+
+    trace_well = output.get_cohort_trace(states_to_plot=["Well"])
+    assert isinstance(trace_well, pd.DataFrame)
+    assert list(trace_well.columns) == ["Well"]
+    assert len(trace_well) == num_cycles + 1
+
+    with pytest.raises(ValueError, match="States not found in simulation output: \\['NonExistentState'\\]"):
+        output.get_cohort_trace(states_to_plot=["NonExistentState"])
+
+    # Test get_aggregated_cycle_values_for_attribute()
+    agg_cost_series = output.get_aggregated_cycle_values_for_attribute("cost")
+    assert isinstance(agg_cost_series, pd.Series)
+    assert len(agg_cost_series) == num_cycles
+    assert agg_cost_series.name == "cost"
+    # Cost for cycle 0: 1000 people in "Well" (cost 100) = 1000 * 100 = 100000
+    assert agg_cost_series.iloc[0] == pytest.approx(1000.0 * s1_markov.get_value("cost"))
+
+    assert output.get_aggregated_cycle_values_for_attribute("non_existent_attr") is None
 
 
 def test_run_simulation_psm_initial_pop_validation(strategy_psm_simple, global_params_empty):

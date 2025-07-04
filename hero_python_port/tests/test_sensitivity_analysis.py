@@ -55,6 +55,55 @@ def test_run_psa_execution(psa_strategy_fixture: Strategy, psa_global_params_fix
     assert len(psa_output.get_outputs()) == 5
     assert psa_output.get_outputs()["cost"].nunique() > 1 # Results should vary
 
+def test_psa_results_summary_method(psa_strategy_fixture: Strategy, psa_global_params_fixture: Parameters):
+    num_iter = 50
+    value_attrs = ["cost", "effect"]
+    psa_output = run_psa(
+        strategy=psa_strategy_fixture, global_parameters=psa_global_params_fixture,
+        num_cycles_for_sim=2, num_iterations=num_iter, initial_population_dist={"s1": 1000, "s2": 0},
+        value_attributes=value_attrs, discount_rates={"cost": 0.0, "effect": 0.0},
+        cost_attr_name="cost", effect_attr_name="effect", seed=12345
+    )
+
+    summary_default_percentiles = psa_output.summary()
+    assert isinstance(summary_default_percentiles, pd.DataFrame)
+    assert list(summary_default_percentiles.index) == value_attrs # Index should be attributes
+    expected_cols = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
+    assert all(col in summary_default_percentiles.columns for col in expected_cols)
+    assert summary_default_percentiles.loc["cost", "count"] == num_iter
+    assert summary_default_percentiles.loc["effect", "mean"] != 0 # Basic check it's populated
+
+    custom_percentiles = [0.025, 0.5, 0.975]
+    summary_custom_percentiles = psa_output.summary(percentiles=custom_percentiles)
+    assert isinstance(summary_custom_percentiles, pd.DataFrame)
+
+    # Check for presence of custom percentile columns (names might vary slightly e.g. "2.5%" vs "2%")
+    assert any(col in summary_custom_percentiles.columns for col in ["2.5%", "2%"])
+    assert "50%" in summary_custom_percentiles.columns
+    assert any(col in summary_custom_percentiles.columns for col in ["97.5%", "97%"])
+
+    empty_psa_res = PSAResults("Empty", 0, [], [], None, None)
+    empty_summary = empty_psa_res.summary() # Test with no value_attributes
+    assert empty_summary.empty
+
+    # Test with value_attributes but no data (0 iterations)
+    empty_psa_res_with_attrs = PSAResults("EmptyWithAttrs", 0, ["cost"], ["p1"], None, None)
+    empty_summary_attrs = empty_psa_res_with_attrs.summary()
+    assert isinstance(empty_summary_attrs, pd.DataFrame)
+    assert list(empty_summary_attrs.index) == ["cost"] # Attributes as index
+    assert empty_summary_attrs.empty # No rows, but columns from describe() might exist if df not empty
+
+    # Test with PSAResults having data but no specified percentiles
+    res_no_percentiles = PSAResults("TestNP", 2, ["val"], ["p1"])
+    res_no_percentiles.add_iteration_result(0, {"p1":1}, {"val":10.0}) # Ensure float
+    res_no_percentiles.add_iteration_result(1, {"p1":2}, {"val":20.0})
+    summary_np = res_no_percentiles.summary()
+    assert "25%" in summary_np.columns
+    assert "50%" in summary_np.columns
+    assert "75%" in summary_np.columns
+    assert summary_np.loc["val", "mean"] == 15.0
+
+
 # --- DSA Fixtures ---
 @pytest.fixture
 def dsa_s1() -> State:
@@ -219,6 +268,76 @@ def test_dsa_results_get_tornado_data(dsa_strategy: Strategy, dsa_global_params:
 # - Test DSA where the varied parameter's baseline definition is a callable.
 # - Test DSA where a non-varied parameter is a ProbabilisticDistribution object (should remain as object).
 # - Test DSA with strategy-specific parameters being varied (more complex setup).
+
+def test_dsa_results_summary_method(dsa_strategy: Strategy, dsa_global_params: Parameters):
+    dsa_output = run_dsa(
+        strategy=dsa_strategy,
+        global_parameters=dsa_global_params,
+        dsa_parameter_names=["p_well_to_sick", "c_well_base"],
+        num_cycles_for_sim=2, # Use 2 cycles for more impact
+        initial_population_dist={"Well": 1000, "Sick": 0},
+        value_attributes=["cost_base", "qaly"],
+        discount_rates={"cost_base":0, "qaly":0},
+        cost_attr_name="cost_base", effect_attr_name="qaly"
+    )
+
+    # Test "impact_from_baseline" format (default)
+    summary_impact = dsa_output.summary()
+    assert isinstance(summary_impact, pd.DataFrame)
+    assert summary_impact.index.names == ["outcome_attribute", "parameter"]
+    assert "low_outcome" in summary_impact.columns
+    assert "impact_from_high" in summary_impact.columns
+    assert len(summary_impact) == 2 * 2 # 2 attrs * 2 params (assuming both had full data)
+
+    cost_summary = summary_impact.xs("cost_base", level="outcome_attribute")
+    assert "p_well_to_sick" in cost_summary.index
+    assert "c_well_base" in cost_summary.index
+    # Check that baseline for p_well_to_sick cost is higher than low, and high is higher than baseline
+    # (p_well_to_sick: 0.1 (low), 0.2 (base), 0.3 (high) -> higher prob of sick state (more expensive))
+    # (c_well_base: 80 (low), 100 (base), 120 (high) -> directly impacts cost_base in Well state)
+
+    # Example check for p_well_to_sick on cost_base
+    p_w_s_cost_summary = cost_summary.loc["p_well_to_sick"]
+    assert p_w_s_cost_summary["low_outcome"] < p_w_s_cost_summary["baseline_outcome"]
+    assert p_w_s_cost_summary["high_outcome"] > p_w_s_cost_summary["baseline_outcome"]
+    assert p_w_s_cost_summary["parameter_at_low"] == 0.1
+    assert p_w_s_cost_summary["parameter_at_baseline"] == 0.2
+    assert p_w_s_cost_summary["parameter_at_high"] == 0.3
+
+
+    # Test "percent_change" format
+    summary_pc = dsa_output.summary(output_format="percent_change")
+    assert isinstance(summary_pc, pd.DataFrame)
+    assert "percent_change_at_low" in summary_pc.columns
+    assert "percent_change_at_high" in summary_pc.columns
+    assert len(summary_pc) == 2 * 2
+
+    pc_cost_summary = summary_pc.xs("cost_base", level="outcome_attribute")
+    p_w_s_pc_cost = pc_cost_summary.loc["p_well_to_sick"]
+    assert p_w_s_pc_cost["percent_change_at_low"] < 0 # Low p_w_s -> lower cost
+    assert p_w_s_pc_cost["percent_change_at_high"] > 0 # High p_w_s -> higher cost
+
+    # Test tornado data (which now uses summary)
+    tornado_cost = dsa_output.get_tornado_data("cost_base")
+    assert isinstance(tornado_cost, pd.DataFrame)
+    assert len(tornado_cost) == 2 # For 2 params
+    assert "impact_from_low" in tornado_cost.columns
+
+
+    # Test with an empty DSAResults
+    empty_dsa = DSAResults("Empty", [], [])
+    empty_summary = empty_dsa.summary()
+    assert empty_summary.empty
+
+    # Test with a DSAResults that has one param with missing levels
+    res_missing_levels = DSAResults("Missing", ["p1", "p2"], ["cost"])
+    res_missing_levels.add_dsa_point_result("p1", "low", 0.1, {"cost": 10})
+    res_missing_levels.add_dsa_point_result("p1", "baseline", 0.2, {"cost": 12})
+    # "high" for p1 is missing. "p2" has no data.
+    summary_missing = res_missing_levels.summary()
+    # p1 should not appear in the summary because it's incomplete
+    # p2 should not appear because it has no data
+    assert summary_missing.empty
 
 ```
 This `test_sensitivity_analysis.py` now includes:
