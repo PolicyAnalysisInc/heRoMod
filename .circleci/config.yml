@@ -1,86 +1,70 @@
-version: 2
-jobs:
-  build_and_test:
-      docker:
-        - image: rocker/verse:latest
-      environment:
-        R_LIBS: ~/R/Library
-      steps:
-        - restore_cache:
-            keys:
-              - r-pkg-cache-{{ arch }}-{{ .Branch }}
-              - r-pkg-cache-{{ arch }}-
-        - checkout
-        - run:
-            name: Install package dependencies
-            command: |
-              mkdir -p ~/R/Library
-              Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
-              Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
-              Rscript -e 'remotes::install_github("cran/rgho")'
-              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herotools")'
-              Rscript -e 'remotes::install_github("PolicyAnalysisInc/herosurv")'
-              Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
-        - run:
-            name: Session information and installed package versions
-            command: |
-              Rscript -e 'sessionInfo()'
-              Rscript -e 'installed.packages()[, c("Package", "Version")]'
-              Rscript -e 'rmarkdown::pandoc_version()'
-        - run:
-            name: Build package
-            command: R CMD build .
-        - run:
-            name: Check package
-            no_output_timeout: 55m
-            command: R CMD check --as-cran --no-manual *tar.gz
-        - store_artifacts:
-            path: heRomod.Rcheck/
-        - save_cache:
-            key: r-pkg-cache-{{ arch }}-{{ .Branch }}
-            paths:
-              - "~/R/Library"
-  build_and_coverage:
-    docker:
-      - image: rocker/verse:latest
-    environment:
-      R_LIBS: ~/R/Library
-    steps:
-      - restore_cache:
-          keys:
-            - r-pkg-cache-{{ arch }}-{{ .Branch }}
-            - r-pkg-cache-{{ arch }}-
-      - checkout
-      - run:
-          name: Install package dependencies
-          command: |
-            mkdir -p ~/R/Library
-            Rscript -e 'install.packages("devtools", repos = "https://cran.case.edu")'
-            Rscript -e 'install.packages("remotes", repos = "https://cran.case.edu")'
-            Rscript -e 'remotes::install_github("cran/rgho")'
-            Rscript -e 'remotes::install_github("PolicyAnalysisInc/herotools")'
-            Rscript -e 'remotes::install_github("PolicyAnalysisInc/herosurv")'
-            Rscript -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cran.case.edu")'
-      - run:
-          name: Session information and installed package versions
-          command: |
-            Rscript -e 'sessionInfo()'
-            Rscript -e 'installed.packages()[, c("Package", "Version")]'
-            Rscript -e 'rmarkdown::pandoc_version()'
-      - run:
-          name: Build package
-          command: R CMD build .
-      - run:
-          name: Code Coverage
-          command: Rscript -e 'library(covr); codecov()'
-          no_output_timeout: 55m
-    post-steps:
-      - jira/notify
+version: 2.1
+
 orbs:
   jira: circleci/jira@1.3.1
+
+jobs:
+  build_test_coverage:
+    docker:
+      - image: rocker/verse:latest # Consider pinning to a specific version for more stability
+    # environment: # Optional: Define RENV_PATHS_CACHE if not default
+      # RENV_PATHS_CACHE: "~/.local/share/renv"
+    steps:
+      - checkout
+      - restore_cache: # Cache for renv's global package cache
+          keys:
+            - renv-cache-v1-{{ checksum "renv.lock" }}
+            # Fallback if lockfile hasn't changed
+            - renv-cache-v1-
+      - run:
+          name: Install Renv and Restore Dependencies
+          command: |
+            # Ensure Rscript can find renv if installed in a non-standard user library initially
+            # R -e 'dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE, showWarnings = FALSE)'
+            # R -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv", repos = "https://cloud.r-project.org", lib = Sys.getenv("R_LIBS_USER"))'
+            # R -e 'library(renv, lib.loc = Sys.getenv("R_LIBS_USER")); renv::restore()'
+            # Simpler approach if R's default lib paths are writable or renv is already expected:
+            Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv", repos = "https://cloud.r-project.org")'
+            Rscript -e 'renv::restore()'
+      - save_cache: # Save renv's global package cache
+          key: renv-cache-v1-{{ checksum "renv.lock" }}
+          paths:
+            - "~/.local/share/renv" # Common default for renv cache on Linux
+            # Add other potential renv cache locations if needed, e.g. for macOS runners if used
+            # - "~/Library/Application Support/renv"
+      - run:
+          name: Session Information and Installed Packages
+          command: |
+            Rscript -e 'sessionInfo()'
+            Rscript -e 'print(installed.packages()[, c("Package", "Version")])'
+            Rscript -e 'if(requireNamespace("rmarkdown", quietly = TRUE)) print(rmarkdown::pandoc_version())'
+      - run:
+          name: Lint Package
+          command: |
+            # renv::restore() should install lintr if it's in renv.lock (from DESCRIPTION Suggests)
+            Rscript -e 'lintr::lint_package()' # Assumes .lintr file is used at project root
+      - run:
+          name: Build Package
+          command: R CMD build .
+      - run:
+          name: Check Package (as CRAN)
+          command: R CMD check --as-cran --no-manual *tar.gz
+          no_output_timeout: 55m
+      - store_artifacts:
+          path: heRomod.Rcheck/
+      - run:
+          name: Code Coverage
+          command: |
+            # renv::restore() should install covr if it's in renv.lock (from DESCRIPTION Suggests)
+            Rscript -e 'covr::codecov(quiet = FALSE)' # Upload to Codecov
+          no_output_timeout: 55m
+    # post-steps: # This was under build_and_coverage, might need adjustment if Jira orb expects specific job name
+    #   - jira/notify # Ensure this step is correctly configured if re-enabled
+
 workflows:
-    version: 2
-    build:
-        jobs:
-            - build_and_test
-            - build_and_coverage
+  version: 2
+  build_and_validate:
+    jobs:
+      - build_test_coverage
+        # context: # If Jira orb requires context (e.g. for secrets for jira/notify)
+        #   - jira-secrets

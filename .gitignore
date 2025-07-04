@@ -13,3 +13,7 @@ trying_state_time.xlsx
 *env.RData
 .Rapp.history
 .xlsx
+
+# renv
+renv/library/
+renv/staging/

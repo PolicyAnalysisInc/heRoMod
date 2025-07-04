@@ -1,0 +1,7 @@
+# This file ensures the renv directory is tracked by Git.
+# It should be empty or contain rules for files within renv/
+# that should NOT be ignored if a broader rule (e.g. in top-level .gitignore)
+# would otherwise ignore them.
+# For renv, typically activate.R and settings.dcf should be tracked.
+!activate.R
+!settings.dcf

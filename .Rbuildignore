@@ -12,3 +12,5 @@
 ^_pkgdown\.yml$
 ^\.circleci$
 ^\.circleci/config\.yml$
+^renv$
+^renv\.lock$

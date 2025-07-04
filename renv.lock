@@ -1,0 +1,66 @@
+{
+  "R": {
+    "Version": "4.3.0",  // Placeholder, renv would detect this
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      }
+    ]
+  },
+  "Packages": {
+    "Rcpp": {
+      "Package": "Rcpp",
+      "Version": "LATEST_CRAN_VERSION_HERE",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "BCEA": { "Package": "BCEA", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "data.table": { "Package": "data.table", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "dplyr": { "Package": "dplyr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "diagram": { "Package": "diagram", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "flexsurv": { "Package": "flexsurv", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "flexsurvcure": { "Package": "flexsurvcure", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "formula.tools": { "Package": "formula.tools", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "ggplot2": { "Package": "ggplot2", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "glue": { "Package": "glue", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "gtools": { "Package": "gtools", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "herosurv": { "Package": "herosurv", "Version": "GH_VERSION_HERE", "Source": "GitHub", "RemoteRepo": "herosurv", "RemoteUsername": "PolicyAnalysisInc", "RemoteSha": "LATEST_COMMIT_SHA_HERE" },
+    "jsonlite": { "Package": "jsonlite", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "lazyeval": { "Package": "lazyeval", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "logitnorm": { "Package": "logitnorm", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "lpSolve": { "Package": "lpSolve", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "magrittr": { "Package": "magrittr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "Matrix": { "Package": "Matrix", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "matrixStats": { "Package": "matrixStats", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "memoise": { "Package": "memoise", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "mgcv": { "Package": "mgcv", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "msm": { "Package": "msm", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "mvnfast": { "Package": "mvnfast", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "openxlsx": { "Package": "openxlsx", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "optimx": { "Package": "optimx", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "parallel": { "Package": "parallel", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "plyr": { "Package": "plyr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "pryr": { "Package": "pryr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "purrr": { "Package": "purrr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "reshape2": { "Package": "reshape2", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "rgho": { "Package": "rgho", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "rlang": { "Package": "rlang", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "stringr": { "Package": "stringr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "survival": { "Package": "survival", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "tibble": { "Package": "tibble", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "tidyr": { "Package": "tidyr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "tools": { "Package": "tools", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "triangle": { "Package": "triangle", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "utils": { "Package": "utils", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "xml2": { "Package": "xml2", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "covr": { "Package": "covr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "knitr": { "Package": "knitr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "lintr": { "Package": "lintr", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "markdown": { "Package": "markdown", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "rmarkdown": { "Package": "rmarkdown", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "styler": { "Package": "styler", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "testthat": { "Package": "testthat", "Version": "LATEST_CRAN_VERSION_HERE", "Source": "Repository", "Repository": "CRAN" },
+    "herotools": { "Package": "herotools", "Version": "GH_VERSION_HERE", "Source": "GitHub", "RemoteRepo": "herotools", "RemoteUsername": "PolicyAnalysisInc", "RemoteSha": "LATEST_COMMIT_SHA_HERE" }
+  }
+}

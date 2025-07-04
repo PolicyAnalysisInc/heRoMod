@@ -53,10 +53,9 @@
 #' @importFrom dplyr filter_all
 #' @importFrom dplyr select_if
 #' @importFrom dplyr distinct_at
-#' 
-#' @importFrom plyr ldply
-#' @importFrom plyr ddply
-#' @importFrom plyr rbind.fill
+#'
+#' @importFrom parallel mclapply
+#' @importFrom parallel mclapply_socket
 #' 
 #' @importFrom reshape2 dcast
 #' @importFrom reshape2 acast

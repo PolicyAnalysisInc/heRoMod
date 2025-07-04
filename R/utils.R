@@ -82,7 +82,7 @@ discount_hack <- function(.dots, method = "start") {
         if (method == "start") offset <- 1
         else if (method == "end") offset <- 0
         else if (method == 'midpoint') offset <- 0.5
-        else stop('Invalid discounting method selected.', call. = F)
+        else stop('Invalid discounting method selected.', call. = FALSE)
         x$time <- substitute(markov_cycle - offset)
       }
       as.call(lapply(x, f, env = env))
@@ -338,18 +338,6 @@ as_integer_safe <- function(x) {
 #'   
 #' @return A data frame.
 #'   
-#' @keywords internal
-clean_factors <- function(x) {
-  if (any(unlist(lapply(x, is.factor)))){
-    for (i in seq_along(x)) {
-      if (is.factor(x[[i]])) {
-        x[[i]] <- as.character(x[[i]])
-      }
-    }
-  }
-  x
-}
-
 to_text_dots <- function(x, name = TRUE) {
   n <- names(x)
   ex <- if (is.atomic(x)) {
@@ -553,7 +541,7 @@ resolve_dependencies.default <- function(x) {
     if(length(to_remove) == 0) {
       quoted_params <- paste0('"', unordered, '"')
       param_string <- paste(quoted_params, collapse = ", ")
-      stop(paste0('Circular reference in parameters: ', param_string), call. = F)
+      stop(paste0('Circular reference in parameters: ', param_string), call. = FALSE)
     } else {
       unordered <- unordered[-to_remove]
     }
@@ -588,7 +576,7 @@ resolve_dependencies.uneval_state_list <- function(x) {
       disc_index <- !grepl('^.disc', params)
       quoted_params <- paste0('"', params[disc_index], '"')
       param_string <- paste(quoted_params, collapse = ", ")
-      stop(paste0('Circular reference in values: ', param_string), call. = F)
+      stop(paste0('Circular reference in values: ', param_string), call. = FALSE)
     } else {
       unordered <- unordered[-to_remove]
     }
@@ -795,7 +783,7 @@ apply_model_patch <- function(model, values) {
     if (is.null(model[[key]])) {
       model[[key]] <- values[[key]]
     } else {
-      stop(error_codes$patch_model_bad_key, key = key, call. = F)
+      stop(error_codes$patch_model_bad_key, key = key, call. = FALSE)
     }
   }
   model
@@ -859,10 +847,10 @@ to_comparison_name <- function(x, y) {
 }
 
 is_comparison_name <- function(x) {
-  grepl(' vs. ', x, fixed = T)
+  grepl(' vs. ', x, fixed = TRUE)
 }
 
-vector_to_cs_string <- function(x, quoted = F) {
+vector_to_cs_string <- function(x, quoted = FALSE) {
   if (quoted) {
     base_str <- paste0('"', x, '"')
   } else {
