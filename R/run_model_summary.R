@@ -18,9 +18,19 @@
 #**************************************************************************
 
 
+#' Print run_model Object
+#'
+#' Prints a summary of a `run_model` object. This is achieved by calling
+#' `summary.run_model()` and printing its result.
+#'
+#' @param x An object of class \code{run_model}.
+#' @param ... Further arguments passed to \code{summary.run_model}.
+#' @return Invisibly returns the original \code{run_model} object \code{x}.
 #' @export
+#' @keywords internal S3method
 print.run_model <- function(x, ...) {
   print(summary(x, ...))
+  invisible(x)
 }
 
 #' Summarise Markov Model Results
@@ -28,11 +38,34 @@ print.run_model <- function(x, ...) {
 #' @param object Output from [run_model()].
 #' @param threshold ICER threshold (possibly several) for
 #'   net monetary benefit computation.
-#' @param ... additional arguments affecting the summary 
-#'   produced.
+#' @param strategy_order Optional character vector. Order in which strategies
+#'   should be sorted in the ICER calculation and summary table.
+#'   Defaults to ordering by increasing effect. See [compute_icer()].
+#' @param ... additional arguments affecting the summary (currently unused by this method but
+#'   available for extensibility or if passed to other internal functions).
 #'   
-#' @return A `summary_run_model` object.
+#' @return A `summary_run_model` object, which has a custom print method.
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Assuming 'mod1' and 'mod2' are defined uneval_model objects
+#' # (e.g., from the README or example_run_model.R)
+#' model_run <- run_model(mod1, mod2, cycles = 10, cost = cost, effect = ly)
+#'
+#' # Basic summary
+#' s1 <- summary(model_run)
+#' print(s1)
+#'
+#' # Summary with NMB calculation at a specific threshold
+#' s2 <- summary(model_run, threshold = 20000)
+#' print(s2)
+#'
+#' # Summary with a different strategy order for ICERs
+#' # (assuming strategy names are "mod1", "mod2")
+#' s3 <- summary(model_run, strategy_order = c("mod2", "mod1"))
+#' print(s3)
+#' }
 summary.run_model <- function(object, threshold = NULL, strategy_order = NULL, ...) {
   if (! all(c(".cost", ".effect") %in% names(get_model_results(object)))) {
     warning("No cost and/or effect defined, model summary unavailable.")

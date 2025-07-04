@@ -90,7 +90,7 @@ strategy_1 <- define_strategy(
 # Run the model
 model_results <- run_model(
   strategy_1,
-  init = c(population_in_state_1 = 100, population_in_state_2 = 0), # Initial distribution
+  init = c(state_1 = 100, state_2 = 0), # Initial distribution matching state names
   cycles = 10,      # Number of cycles to run
   cost = cost,      # Name of the cost variable in states
   effect = ly       # Name of the effectiveness variable in states
@@ -104,6 +104,30 @@ print(model_results)
 # model_results$run_model_summary
 ```
 For more detailed examples and advanced features, please see the package vignettes.
+
+## Learning More with Vignettes
+
+`heRomod` comes with a comprehensive suite of vignettes to help you master its features.
+You can access them using `browseVignettes(package = "heRomod")` in R after installing the package.
+Key vignettes include:
+
+*   **Introduction to `heRomod`**: `vignette("a_introduction", package = "heRomod")`
+*   **Defining and Running Markov Models**:
+    *   Homogeneous Models: `vignette("c_homogeneous", package = "heRomod")`
+    *   Time-Dependent Models: `vignette("b_time_dependency", package = "heRomod")`
+    *   Non-Homogeneous Models: `vignette("d_non_homogeneous", package = "heRomod")`
+*   **Sensitivity Analyses**:
+    *   Probabilistic Sensitivity Analysis (PSA): `vignette("e_probabilistic", package = "heRomod")`
+    *   Deterministic Sensitivity Analysis (DSA): `vignette("f_sensitivity", package = "heRomod")`
+*   **Advanced Topics**:
+    *   Handling Heterogeneity: `vignette("g_heterogeneity", package = "heRomod")`
+    *   Using Tabular Input for Model Definition: `vignette("h_tabular", package = "heRomod")`
+    *   Model Calibration: `vignette("k_calibration", package = "heRomod")`
+    *   Value-Based Pricing: `vignette("l_value_based_pricing", package = "heRomod")`
+    *   Expected Value of Partial Perfect Information (EVPPI): `vignette("m_expected_value_partial_perfect_information", package = "heRomod")`
+    *   Reproducing Published Models: `vignette("i_reproduction", package = "heRomod")`
+
+We recommend starting with the `a_introduction` vignette.
 
 ## Features
 

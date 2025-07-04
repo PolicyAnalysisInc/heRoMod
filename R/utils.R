@@ -741,10 +741,33 @@ as_sparse_matrix <- function(x) {
   )
 }
   
+#' Set Maximum Cores for heRomod Parallel Operations
+#'
+#' Specifies the maximum number of CPU cores that heRomod functions
+#' (like `run_model` with `parallel = TRUE`) should attempt to use.
+#'
+#' @note The mechanism of setting this value in the parent frame (`parent$.max_cores`)
+#' is unconventional for package options and might be revised in future versions.
+#' Consider passing the `cores` argument directly to functions like `run_model`.
+#'
+#' @param n An integer. The maximum number of cores to use.
+#'
+#' @return This function is called for its side effect and does not return a meaningful value (implicitly NULL).
 #' @export
+#'
+#' @examples
+#' # Suggest heRomod use a maximum of 2 cores for parallel tasks
+#' set_max_cores(2)
+#'
+#' # To use this, functions like run_model might need to be called
+#' # with their 'cores' parameter set to respect this global value,
+#' # or this function's behavior might be more integrated in the future.
 set_max_cores <- function(n) {
+  # Design note: Storing this in parent frame is not standard for package options.
+  # Consider options(heRomod.max_cores = n) or an internal package environment.
   parent <- parent.frame()
   parent$.max_cores <- as.integer(n)
+  invisible() # Explicitly return nothing
 }
 
 is_empty_sa_var <- function(x) {

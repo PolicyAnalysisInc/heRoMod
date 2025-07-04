@@ -59,6 +59,24 @@
 #'   (actually a named list of `lazy` expressions).
 #' @export
 #' 
+#' @examples
+#' # Simple parameter definition
+#' params <- define_parameters(
+#'   cost_treatment = 1000,
+#'   prob_cure = 0.75
+#' )
+#' print(params)
+#'
+#' # Time-dependent parameter using markov_cycle
+#' params_time_dep <- define_parameters(
+#'   effectiveness = ifelse(markov_cycle <= 5, 0.8, 0.6)
+#' )
+#' # To evaluate, you'd need to run it within a model context
+#' # where markov_cycle is defined.
+#'
+#' # For more examples:
+#' # source(system.file("examples/example_define_parameters.R", package = "heRomod"))
+#'
 #' @example inst/examples/example_define_parameters.R
 #'   
 define_parameters <- function(...) {
@@ -152,9 +170,19 @@ modify_.uneval_parameters <- function(.OBJECT, .dots) {
 #'   inflow counts.
 #' @param .dots Used to work around non-standard evaluation.
 #'   
-#' @return An object similar to the return value of
-#'   [define_parameters()].
+#' @return An object of class `uneval_inflow` (similar in structure to `uneval_parameters`),
+#'   representing unevaluated expressions for inflow counts.
 #' @export
+#'
+#' @examples
+#' # Define inflow for two states, 'healthy' and 'sick'
+#' inflow_definition <- define_inflow(
+#'   healthy = 10, # 10 new individuals enter 'healthy' state each cycle
+#'   sick = 5      # 5 new individuals enter 'sick' state each cycle
+#' )
+#' print(inflow_definition)
+#'
+#' @seealso [run_model()] which uses these definitions.
 define_inflow <- function(...) {
   .dots <- lazyeval::lazy_dots(...)
   define_inflow_(.dots)
@@ -174,9 +202,19 @@ define_inflow_ <- function(.dots) {
 #'   initial counts.
 #' @param .dots Used to work around non-standard evaluation.
 #'   
-#' @return An object similar to the return value of
-#'   [define_parameters()].
+#' @return An object of class `uneval_init` (similar in structure to `uneval_parameters`),
+#'   representing unevaluated expressions for initial cohort counts in each state.
 #' @export
+#'
+#' @examples
+#' # Define initial cohort distribution for 'healthy' and 'sick' states
+#' initial_counts <- define_init(
+#'   healthy = 1000, # Model starts with 1000 individuals in 'healthy' state
+#'   sick = 0        # Model starts with 0 individuals in 'sick' state
+#' )
+#' print(initial_counts)
+#'
+#' @seealso [run_model()] which uses these definitions.
 define_init <- function(...) {
   .dots <- lazyeval::lazy_dots(...)
   define_init_(.dots)
@@ -196,9 +234,20 @@ define_init_ <- function(.dots) {
 #'   starting values.
 #' @param .dots Used to work around non-standard evaluation.
 #'
-#' @return An object similar to the return value of
-#'   [define_parameters()].
+#' @return An object of class `uneval_starting_values` (similar in structure to `uneval_parameters`),
+#'  representing unevaluated expressions for starting values of state attributes (e.g., for tunnel states).
 #' @export
+#'
+#' @examples
+#' # Define starting values for state attributes like accumulated costs or QALYs
+#' # at the beginning of a tunnel state, or initial values for any state.
+#' starting_state_values <- define_starting_values(
+#'   initial_cost_for_state_A = 150,
+#'   qaly_acc_at_entry_B = 0.95
+#' )
+#' print(starting_state_values)
+#'
+#' @seealso [define_state()] which can use these definitions.
 define_starting_values <- function(...) {
   .dots <- lazyeval::lazy_dots(...)
   define_starting_values_(.dots)

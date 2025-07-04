@@ -18,16 +18,48 @@
 #* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #**************************************************************************
 
-#' heRomod: Health Economic Evaluation MODelling
-#' 
-#' `heRomod` is an R toolset for health economic 
-#' evaluation modelling. It aims to provide a simple and 
-#' consistent interface for Markov models specification and
-#' comparison. Non-homogeneous Markov models (with time
-#' varying properties) are supported.
-#' 
+#' heRomod: A Comprehensive R Package for Health Economic Modeling
+#'
+#' The `heRomod` package provides a robust and flexible toolkit for constructing,
+#' evaluating, and analyzing health economic models in R. It supports a variety
+#' of modeling approaches including cohort-based Markov models (homogeneous and
+#' non-homogeneous with time-varying properties), partitioned survival models,
+#' and individual-level simulations.
+#'
+#' Key features include deterministic and probabilistic sensitivity analysis (DSA/PSA),
+#' expected value of information (EVPI, EVPPI), calibration, value-based pricing,
+#' and extensive options for defining complex model parameters, transitions, and state characteristics.
+#'
+#' `heRomod` aims to offer a consistent and intuitive interface, leveraging
+#' `dplyr`-like syntax for definitions and providing clear S3 methods for summarizing
+#' and plotting results. It is the calculation engine for the heRo web platform.
+#'
+#' @section Getting Started:
+#' The best way to get started with `heRomod` is to explore the vignettes:
+#' \itemize{
+#'   \item \code{vignette("a_introduction", package = "heRomod")} for a general overview.
+#'   \item \code{vignette("c_homogeneous", package = "heRomod")} for basic Markov models.
+#'   \item \code{vignette("e_probabilistic", package = "heRomod")} for PSA.
+#'   \item \code{vignette("f_sensitivity", package = "heRomod")} for DSA.
+#'   \item ... and many others covering specific topics like time dependency, heterogeneity, tabular input, etc.
+#' }
+#'
+#' The core modeling workflow typically involves:
+#' \enumerate{
+#'   \item Defining model components: [define_parameters()], [define_state()], [define_transition()], [define_strategy()].
+#'   \item Running the model: [run_model()].
+#'   \item Analyzing results: [summary.run_model()], [plot.run_model()], [run_psa()], [run_dsa()].
+#' }
+#'
+#' @section More Information:
+#' \itemize{
+#'   \item GitHub Repository (for code, issues, contributions): \url{https://github.com/PolicyAnalysisInc/heRoMod}
+#'   \item heRo Platform: \url{https://heroapps.io/}
+#' }
+#'
 #' @docType package
 #' @name heRomod
+NULL # NULL is important at the end of package documentation
 #'   
 #' @importFrom dplyr filter_
 #' @importFrom dplyr mutate_
