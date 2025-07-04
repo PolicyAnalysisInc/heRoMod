@@ -240,6 +240,161 @@ def test_deterministic_eval_for_psa_param_definition_phase():
     assert eval_results['p_fixed'] == 10
     assert eval_results['p_callable'] == 12 # 10 + 2
 
+# --- Tests for DSA Parameter Set Generation ---
+from hero_py.dsa_definitions import DSAParameterRange
+
+def test_add_param_with_dsa_range():
+    params = Parameters()
+    dsa_r = DSAParameterRange(low=80, high=120)
+    params.add_param("cost_A", 100, dsa_range=dsa_r)
+
+    assert params.get_param_definition("cost_A") == 100
+    assert params.get_dsa_definition("cost_A") is dsa_r
+    assert params.get_dsa_definition("cost_A").low == 80
+
+    # Update param without DSA range, should remove it
+    params.add_param("cost_A", 105)
+    assert params.get_dsa_definition("cost_A") is None
+
+    # Add it back
+    params.add_param("cost_A", 100, dsa_range=dsa_r)
+    assert params.get_dsa_definition("cost_A") is dsa_r
+
+    # Test initialization with DSA range
+    params_init = Parameters(cost_B=(200, DSAParameterRange(low=150, high=250)))
+    assert params_init.get_param_definition("cost_B") == 200
+    assert params_init.get_dsa_definition("cost_B").high == 250
+
+
+def test_get_dsa_iteration_parameter_sets_fixed_param():
+    dsa_r = DSAParameterRange(low=80, high=120) # Baseline from main def: 100
+    params = Parameters(
+        cost_A=100,
+        cost_B=200,
+        dsa_range_for_cost_A=dsa_r # Not how it's linked, use add_param or init tuple
+    )
+    params.add_param("cost_A", 100, dsa_range=dsa_r) # Correctly link DSA range
+
+    dsa_sets = params.get_dsa_iteration_parameter_sets("cost_A", cycle=0)
+
+    assert len(dsa_sets) == 3
+    levels = [s[0] for s in dsa_sets]
+    assert levels == ["low", "baseline", "high"]
+
+    # Low set
+    assert dsa_sets[0][1]["cost_A"] == 80
+    assert dsa_sets[0][1]["cost_B"] == 200 # Other params at baseline
+    # Baseline set
+    assert dsa_sets[1][1]["cost_A"] == 100
+    assert dsa_sets[1][1]["cost_B"] == 200
+    # High set
+    assert dsa_sets[2][1]["cost_A"] == 120
+    assert dsa_sets[2][1]["cost_B"] == 200
+
+def test_get_dsa_iteration_parameter_sets_callable_param():
+    # Varied param is callable, other is fixed
+    # cost_A = lambda p,c: p['base_A'] + c*10. Baseline at c=1: 50 + 10 = 60
+    dsa_r_A = DSAParameterRange(low=45, high=75) # Explicit baseline in DSARange will be used by its get_values_for_dsa
+                                                # but Parameters.get_dsa_iteration_parameter_sets
+                                                # recalculates actual baseline.
+    params = Parameters(base_A=50)
+    params.add_param("cost_A", lambda p,c: p['base_A'] + c*10, dsa_range=dsa_r_A)
+    params.add_param("fixed_B", 300)
+
+    dsa_sets_c1 = params.get_dsa_iteration_parameter_sets("cost_A", cycle=1)
+
+    # Low set for cost_A
+    assert dsa_sets_c1[0][1]["cost_A"] == 45
+    assert dsa_sets_c1[0][1]["base_A"] == 50 # Other params at baseline
+    assert dsa_sets_c1[0][1]["fixed_B"] == 300
+    # Baseline set for cost_A
+    assert dsa_sets_c1[1][1]["cost_A"] == 60 # 50 + 1*10
+    assert dsa_sets_c1[1][1]["base_A"] == 50
+    # High set for cost_A
+    assert dsa_sets_c1[2][1]["cost_A"] == 75
+    assert dsa_sets_c1[2][1]["base_A"] == 50
+
+def test_get_dsa_iteration_parameter_sets_other_param_callable():
+    # Varied param is fixed, another param is callable
+    dsa_r_B = DSAParameterRange(low=250, high=350)
+    params = Parameters(base_A=50)
+    params.add_param("cost_A", lambda p,c: p['base_A'] + c*10)
+    params.add_param("fixed_B", 300, dsa_range=dsa_r_B) # Varying fixed_B
+
+    dsa_sets_c2 = params.get_dsa_iteration_parameter_sets("fixed_B", cycle=2)
+
+    # Low set for fixed_B
+    assert dsa_sets_c2[0][1]["fixed_B"] == 250
+    assert dsa_sets_c2[0][1]["base_A"] == 50
+    assert dsa_sets_c2[0][1]["cost_A"] == 70 # 50 + 2*10 (cost_A at its baseline for c=2)
+    # Baseline set
+    assert dsa_sets_c2[1][1]["fixed_B"] == 300
+    assert dsa_sets_c2[1][1]["cost_A"] == 70
+    # High set
+    assert dsa_sets_c2[2][1]["fixed_B"] == 350
+    assert dsa_sets_c2[2][1]["cost_A"] == 70
+
+
+def test_get_dsa_iteration_parameter_sets_with_probabilistic_as_other():
+    # If a non-varied parameter has a ProbabilisticDistribution as its main definition,
+    # evaluate_all_deterministic will return the distribution object itself.
+    norm_dist = Normal(mean=10, std=1)
+    params = Parameters(
+        p_varied=("A", DSAParameterRange(low=5, high=15)), # Baseline for p_varied is "A"
+        p_prob = norm_dist
+    )
+    dsa_sets = params.get_dsa_iteration_parameter_sets("p_varied")
+
+    assert dsa_sets[0][1]["p_varied"] == 5
+    assert dsa_sets[0][1]["p_prob"] is norm_dist # Other param is the dist object
+    assert dsa_sets[1][1]["p_varied"] == "A"
+    assert dsa_sets[1][1]["p_prob"] is norm_dist
+    assert dsa_sets[2][1]["p_varied"] == 15
+    assert dsa_sets[2][1]["p_prob"] is norm_dist
+
+def test_get_dsa_iteration_parameter_sets_no_dsa_def():
+    params = Parameters(cost_A=100)
+    with pytest.raises(KeyError, match="Parameter 'cost_A' has no DSA range defined."):
+        params.get_dsa_iteration_parameter_sets("cost_A")
+
+    with pytest.raises(KeyError, match="Parameter 'cost_X' not defined."): # Param itself not defined
+        params.get_dsa_iteration_parameter_sets("cost_X")
+
+def test_dsa_range_baseline_override_in_get_values():
+    # DSAParameterRange can take an explicit baseline.
+    # get_values_for_dsa in DSAParameterRange uses it if present.
+    # Parameters.get_dsa_iteration_parameter_sets recalculates actual baseline of the *varied* param.
+
+    # Case 1: DSARange has baseline, it should be used for that point by DSAParameterRange
+    dsa_r_explicit_baseline = DSAParameterRange(low=0.1, high=0.3, baseline=0.25)
+    points = dsa_r_explicit_baseline.get_values_for_dsa(actual_baseline_value=0.2) # actual baseline ignored by this
+    assert points["low"] == 0.1
+    assert points["baseline"] == 0.25 # Uses its own baseline
+    assert points["high"] == 0.3
+
+    # Case 2: DSARange has no baseline, uses provided actual_baseline_value
+    dsa_r_no_baseline = DSAParameterRange(low=0.1, high=0.3)
+    points2 = dsa_r_no_baseline.get_values_for_dsa(actual_baseline_value=0.22)
+    assert points2["low"] == 0.1
+    assert points2["baseline"] == 0.22 # Uses the actual one
+    assert points2["high"] == 0.3
+
+    # Test how Parameters.get_dsa_iteration_parameter_sets uses this.
+    # It always determines the 'actual_baseline_for_varied_param' from the main definition.
+    # Then DSAParameterRange.get_values_for_dsa decides which baseline to use for the "baseline" point.
+    params = Parameters()
+    params.add_param("my_param", 0.2, dsa_range=dsa_r_explicit_baseline) # main def is 0.2
+
+    dsa_sets = params.get_dsa_iteration_parameter_sets("my_param")
+    # The "baseline" run for my_param should use the dsa_r_explicit_baseline's baseline (0.25)
+    assert dsa_sets[1][1]["my_param"] == 0.25
+
+    params2 = Parameters()
+    params2.add_param("my_param2", 0.22, dsa_range=dsa_r_no_baseline) # main def is 0.22
+    dsa_sets2 = params2.get_dsa_iteration_parameter_sets("my_param2")
+    # The "baseline" run for my_param2 should use its main definition (0.22)
+    assert dsa_sets2[1][1]["my_param2"] == 0.22
+
 ```
 This file `test_parameters.py` includes basic tests for creating `Parameters` objects, adding parameters, and evaluating them (both fixed and callable). It also includes a test for `evaluate_all` which is important for inter-dependent parameters. It notes areas for further testing as the `Parameters` class becomes more sophisticated.
 
