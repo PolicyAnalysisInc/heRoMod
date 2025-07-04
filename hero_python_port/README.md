@@ -9,6 +9,7 @@ The primary goal is to enable users to define, run, and analyze various types of
 *   Partitioned Survival Models (PSMs)
 *   Probabilistic Sensitivity Analysis (PSA)
 *   Deterministic Sensitivity Analysis (DSA)
+*   Model Calibration (initial implementation)
 
 ## Current Status: Alpha - Under Active Development
 

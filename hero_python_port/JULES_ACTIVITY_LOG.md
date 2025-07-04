@@ -99,4 +99,20 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   `hero_python_port/ROADMAP_PYTHON.md` updated to reflect new capabilities.
 *   **Key Decisions:**
     *   Chose `matplotlib` for initial basic plotting methods directly within result objects.
+
+## Phase 6: Further Analyses (Partial)
+
+### Task 6.1: Model Calibration
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented:**
+    *   `hero_py/calibration_definitions.py`: `CalibrationTarget` class for specifying targets (via custom function or predefined extractors for value attributes/cohort size).
+    *   `hero_py/calibration.py`:
+        *   `_objective_function_for_scipy`: Internal function to calculate sum of weighted squared errors.
+        *   `CalibrationResults` class: Stores and summarizes results from `scipy.optimize.minimize`, including best parameters and objective value.
+        *   `calibrate_model()` function: Main user-facing function. Takes strategy, parameters, calibration targets, bounds, initial guesses, and optimization settings. Uses `scipy.optimize.minimize` to find optimal parameter values.
+    *   Unit tests (`tests/test_calibration.py`) for `CalibrationTarget`, `calibrate_model` (simple cases, multiple starting points), and `CalibrationResults`.
+*   **Key Decisions:**
+    *   Used `scipy.optimize.minimize` as the backend optimizer.
+    *   `CalibrationTarget` provides flexibility for defining what model output to match.
+    *   Objective function uses sum of weighted squared errors.
 ---

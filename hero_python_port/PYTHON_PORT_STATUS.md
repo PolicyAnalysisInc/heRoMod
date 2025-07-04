@@ -61,10 +61,10 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   Unit tests for new summary and plotting methods (execution checks).
     *   `matplotlib` added to `requirements.txt`.
 
-*   **Phase 6: Further Analyses:** **PENDING**
-    *   Model Calibration module.
-    *   EVPPI/EVPI calculations (extending from `heRomod`).
-    *   Individual-level simulation (microsimulation) - initial stubs in `run_simulation` might exist but needs full implementation.
+*   **Phase 6: Further Analyses:** **IN PROGRESS**
+    *   **Task 6.1: Model Calibration module:** RECENTLY COMPLETED - Implemented `CalibrationTarget` (in `calibration_definitions.py`), `calibrate_model` function and `CalibrationResults` class (in `calibration.py`) using `scipy.optimize.minimize`. Initial unit tests created.
+    *   Task 6.2: EVPPI/EVPI calculations: PENDING.
+    *   Task 6.3: Individual-level simulation (microsimulation): PENDING.
     *   Value-Based Pricing.
     *   Scenario Analysis features.
 

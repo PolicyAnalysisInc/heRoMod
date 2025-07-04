@@ -54,8 +54,10 @@ Once the core functionality from `heRomod` is ported and stabilized (as per `PRO
 *   **Phase 2 (Partitioned Survival Models - PSM):** COMPLETED
 *   **Phase 3 (Probabilistic Sensitivity Analysis - PSA):** COMPLETED
 *   **Phase 4 (Deterministic Sensitivity Analysis - DSA):** COMPLETED
-*   **Phase 5 (Initial Results, Summaries & Basic Plotting):** RECENTLY COMPLETED - Core summary and plotting methods for `SimulationOutput`, `PSAResults`, `DSAResults` implemented.
-*   **Next Up (Phase 6):** Focus on implementing further analyses like Model Calibration, advanced EVPI/EVPPI, and full individual-level simulation capabilities.
+*   **Phase 5 (Initial Results, Summaries & Basic Plotting):** COMPLETED
+*   **Phase 6 (Further Analyses):** IN PROGRESS
+    *   Model Calibration: RECENTLY COMPLETED.
+*   **Next Up (Phase 6 Continued):** Focus on EVPI/EVPPI, individual-level simulation, VBP, and scenario analysis.
 
 ## Contribution and Evolution
 This roadmap is a living document. Contributions are welcome via GitHub issues for the future Python repository.
