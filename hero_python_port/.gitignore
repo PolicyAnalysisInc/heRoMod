@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.prof
+*.lprof
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Secrets (if any, though should be in a separate .env usually)
+*.env
+secrets.py
