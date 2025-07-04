@@ -7,10 +7,13 @@ from .parameters import Parameters
 from .state import State
 from .transitions import TransitionMatrix
 from .strategy import Strategy
+from .simulation import SimulationOutput, run_simulation
 
 __all__ = [
     "Parameters",
     "State",
     "TransitionMatrix",
-    "Strategy"
+    "Strategy",
+    "SimulationOutput",
+    "run_simulation"
 ]
