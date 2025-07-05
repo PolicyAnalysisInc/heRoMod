@@ -58,8 +58,9 @@ Once the core functionality from `heRomod` is ported and stabilized (as per `PRO
 *   **Phase 6 (Further Analyses):** IN PROGRESS
     *   Model Calibration: COMPLETED.
     *   EVPI & EVPPI (initial regression-based): COMPLETED.
-    *   Scenario Analysis (parameter-based): RECENTLY COMPLETED.
-*   **Next Up (Phase 6 Continued):** Focus on full individual-level simulation and Value-Based Pricing. Enhancements to EVPPI methods (e.g., GAMs) could also be considered.
+    *   Scenario Analysis (parameter-based): COMPLETED.
+    *   Value-Based Pricing (VBP - initial implementation): RECENTLY COMPLETED.
+*   **Next Up (Phase 6 Continued):** Focus on full individual-level simulation. Enhancements to EVPPI (e.g., GAMs) and other analysis modules could also be considered.
 
 ## Contribution and Evolution
 This roadmap is a living document. Contributions are welcome via GitHub issues for the future Python repository.

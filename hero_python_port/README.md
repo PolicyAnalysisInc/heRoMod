@@ -12,6 +12,7 @@ The primary goal is to enable users to define, run, and analyze various types of
 *   Model Calibration (initial implementation)
 *   Value of Information (EVPI, initial EVPPI using linear regression)
 *   Scenario Analysis (parameter-based)
+*   Value-Based Pricing (VBP - initial implementation)
 
 ## Current Status: Alpha - Under Active Development
 
@@ -105,6 +106,11 @@ pytest
 # # high_cost_scenario = Scenario("High Cost", parameter_overrides={"cost_treatment": 1500})
 # # scenario_results = run_scenario_analysis(..., scenarios=[high_cost_scenario])
 # # print(scenario_results.get_comparison_summary())
+#
+# # vbp_results = calculate_value_based_price(...)
+# # print(vbp_results.summary())
+# # ax_vbp = vbp_results.plot_vbp_distribution(wtp=30000)
+# # if ax_vbp: ax_vbp.figure.show()
 ```
 
 ## Project Documentation & Planning

@@ -139,4 +139,15 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Key Decisions:**
     *   Adopted a parameter-override approach for defining scenarios for initial simplicity. Structural model changes per scenario are out of scope for this version.
     *   `ScenarioAnalysisResults` stores full `SimulationOutput` for each run, allowing detailed inspection, with a convenience summary for comparison.
+
+### Task 6.4: Value-Based Pricing (VBP)
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented:**
+    *   `hero_py/vbp.py` (new file):
+        *   `calculate_value_based_price()`: Calculates the distribution of Value-Based Prices for a new intervention vs. a comparator using their `PSAResults`. Assumes an additive price component.
+        *   `VBPResults` class: Stores the VBP distributions per WTP. Includes `summary()` method for descriptive statistics and `plot_vbp_distribution()` for visualizing the VBP distribution at a specific WTP.
+    *   Unit tests (`tests/test_vbp.py`, new file) for `calculate_value_based_price` (basic calculations, edge cases like equal effects) and `VBPResults` methods (summary, plotting execution).
+*   **Key Decisions:**
+    *   VBP calculation based on isolating "other costs" from the new intervention's PSA results (which used a placeholder price) and solving for the price that equates ICER to WTP.
+    *   `VBPResults` stores the full distribution of prices per WTP, allowing for probabilistic interpretation.
 ---
