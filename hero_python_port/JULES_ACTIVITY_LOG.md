@@ -195,16 +195,23 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   The process of simulating Sphinx output for API review is useful for identifying docstring gaps.
     *   The first topical guide focuses on parameter definition due to its centrality.
 
-### Task 7.5 (Continued): API Docstring Enhancements for Key Modules
+### Task 7.5 (Continued): API Docstring Enhancements for Key Modules (simulation, parameters, sensitivity_analysis, strategy)
 *   **Date:** (Current Date of this log entry)
 *   **Actions Taken:**
-    *   Recreated Python source files (`simulation.py`, `parameters.py`, `sensitivity_analysis.py`) due to state resets.
+    *   Recreated Python source files (`simulation.py`, `parameters.py`, `sensitivity_analysis.py`, `strategy.py`) due to state resets.
     *   Applied specific docstring enhancements to these modules based on earlier simulated API reviews. Improvements included:
         *   More detailed class and function descriptions.
-        *   Clarification of complex parameters (e.g., `value_attributes`, `base_sim_cycle_for_params`).
+        *   Clarification of complex parameters (e.g., `value_attributes`, `base_sim_cycle_for_params` in `run_simulation` and analysis functions).
         *   Added small inline `Example:` sections to docstrings of key methods in `Parameters` and `SimulationOutput` to illustrate usage and output structure.
-        *   Ensured consistency in documenting parameters, types, and return values.
+        *   Ensured consistency in documenting parameters, types, and return values for all reviewed modules.
 *   **Key Decisions/Notes:**
-    *   Focused on improving clarity and adding examples directly within docstrings for better API reference usability.
-    *   Actual Sphinx build and visual review of rendered docs still pending for full verification.
+    *   Focused on improving clarity and adding examples directly within docstrings for better API reference usability when Sphinx docs are built.
+    *   Actual Sphinx build and visual review of rendered docs still pending for full verification across *all* modules.
+
+### Task 7.4 (Continued): Second Topical User Guide
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Drafted second topical user guide: `docs/guides/simulation_outputs.md`, explaining the `SimulationOutput` object.
+    *   Updated `docs/index.md` to link this new guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` (this entry) updated.
 ---

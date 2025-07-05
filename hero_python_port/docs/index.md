@@ -24,6 +24,7 @@ tutorials/getting_started
 :caption: Guides
 
 guides/defining_parameters
+guides/simulation_outputs
 ```
 *(This is an alternative way to list guides, choose one structure)*
 
