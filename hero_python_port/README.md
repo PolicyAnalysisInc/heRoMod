@@ -11,6 +11,7 @@ The primary goal is to enable users to define, run, and analyze various types of
 *   Deterministic Sensitivity Analysis (DSA)
 *   Model Calibration (initial implementation)
 *   Value of Information (EVPI, initial EVPPI using linear regression)
+*   Scenario Analysis (parameter-based)
 
 ## Current Status: Alpha - Under Active Development
 
@@ -92,6 +93,18 @@ pytest
 # # print(dsa_results.summary(output_format="impact_from_baseline"))
 # # ax_tornado = dsa_results.plot_tornado(outcome_attribute="cost") # Assuming 'cost' was tracked
 # # if ax_tornado: ax_tornado.figure.show()
+#
+# # calibration_results = calibrate_model(...)
+# # print(calibration_results.get_summary_df())
+#
+# # evpi_df = calculate_evpi(...)
+# # print(evpi_df)
+# # evppi_df = calculate_evppi(...)
+# # print(evppi_df)
+#
+# # high_cost_scenario = Scenario("High Cost", parameter_overrides={"cost_treatment": 1500})
+# # scenario_results = run_scenario_analysis(..., scenarios=[high_cost_scenario])
+# # print(scenario_results.get_comparison_summary())
 ```
 
 ## Project Documentation & Planning

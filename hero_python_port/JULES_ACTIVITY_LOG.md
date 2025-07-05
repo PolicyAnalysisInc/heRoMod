@@ -127,4 +127,16 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Key Decisions:**
     *   Implemented EVPI using standard methods.
     *   Chose linear regression (via `scikit-learn`) as the initial method for EVPPI metamodeling due to its simplicity and common use as a starting point. Noted that more complex regression models (e.g., GAMs via `pygam`) could be added later.
+
+### Task 6.5: Scenario Analysis
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented:**
+    *   `hero_py/scenario_analysis.py` (enhancements):
+        *   `Scenario` class: Defines a scenario by a name and a dictionary of parameter overrides.
+        *   `run_scenario_analysis()`: Main function that takes a base strategy, base parameters, and a list of `Scenario` objects. It runs a baseline simulation and then a simulation for each scenario by applying its parameter overrides to a copy of the base parameters.
+        *   `ScenarioAnalysisResults` class: Stores `SimulationOutput` objects for the baseline and each scenario. Provides a `get_comparison_summary()` method to return a DataFrame comparing key outcomes across all runs.
+    *   Unit tests (`tests/test_scenario_analysis.py`, new file) for `Scenario` class, `run_scenario_analysis` function (including checks for correct parameter overriding and differing results), and `ScenarioAnalysisResults` methods.
+*   **Key Decisions:**
+    *   Adopted a parameter-override approach for defining scenarios for initial simplicity. Structural model changes per scenario are out of scope for this version.
+    *   `ScenarioAnalysisResults` stores full `SimulationOutput` for each run, allowing detailed inspection, with a convenience summary for comparison.
 ---

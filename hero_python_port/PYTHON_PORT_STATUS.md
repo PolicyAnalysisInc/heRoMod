@@ -63,10 +63,10 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
 
 *   **Phase 6: Further Analyses:** **IN PROGRESS**
     *   **Task 6.1: Model Calibration module:** COMPLETED - Implemented `CalibrationTarget`, `calibrate_model` function, and `CalibrationResults` class.
-    *   **Task 6.2: EVPPI/EVPI calculations:** RECENTLY COMPLETED - Implemented `calculate_evpi` and an initial regression-based `calculate_evppi` (using linear regression). Unit tests created for `calculate_evpi` and basic execution of `calculate_evppi`.
+    *   **Task 6.2: EVPPI/EVPI calculations:** COMPLETED - Implemented `calculate_evpi` and an initial regression-based `calculate_evppi`.
     *   Task 6.3: Individual-level simulation (microsimulation): PENDING.
-    *   Value-Based Pricing: PENDING.
-    *   Scenario Analysis features.
+    *   Task 6.4: Value-Based Pricing: PENDING.
+    *   **Task 6.5: Scenario Analysis features:** RECENTLY COMPLETED - Implemented `Scenario` class, `run_scenario_analysis` function, and `ScenarioAnalysisResults` class. Unit tests created.
 
 *   **Phase 7: Documentation, Examples, and Refinement:** **ONGOING** (Basic docstrings and README are in place, major Sphinx docs effort pending).
 
