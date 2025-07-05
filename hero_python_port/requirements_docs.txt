@@ -1,0 +1,11 @@
+# Dependencies for building documentation
+
+sphinx>=4.0
+sphinx-rtd-theme>=1.0
+myst_parser>=0.15
+sphinx-autodoc-typehints>=1.12 # For better type hint rendering in API docs
+numpy # Needed for Napoleon to understand numpy docstrings if used, and for type hints
+pandas # Same as numpy
+# Add other dependencies if specific examples or tutorials need them for execution by Sphinx
+# e.g., matplotlib if plots are generated directly in rst/md files via ..plot:: directive.
+# hero_py itself will be installed from source for autodoc.

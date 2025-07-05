@@ -113,6 +113,14 @@ pytest
 # # if ax_vbp: ax_vbp.figure.show()
 ```
 
+## Documentation
+Comprehensive documentation, including a user guide, examples, and API reference, is being built with Sphinx. Once generated, it will be available at [LINK_TO_HOSTED_DOCS_HERE] (e.g., a ReadTheDocs link or GitHub Pages).
+
+To build the documentation locally from the `hero_python_port/` directory:
+1.  Install documentation dependencies: `pip install -r requirements_docs.txt`
+2.  Build the HTML docs: `sphinx-build -b html docs docs/_build/html`
+3.  Open `docs/_build/html/index.html` in your browser.
+
 ## Project Documentation & Planning
 *   **Project Plan:** [PROJECT_PLAN.md](PROJECT_PLAN.md) - Detailed phases and tasks for the porting effort.
 *   **Python Port Roadmap:** [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) - Long-term vision for `hero_py`.

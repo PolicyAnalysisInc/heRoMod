@@ -150,4 +150,24 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Key Decisions:**
     *   VBP calculation based on isolating "other costs" from the new intervention's PSA results (which used a placeholder price) and solving for the price that equates ICER to WTP.
     *   `VBPResults` stores the full distribution of prices per WTP, allowing for probabilistic interpretation.
+
+## Phase 7: Documentation, Examples, and Refinement (Partial - Initial Setup)
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented/Actions Taken:**
+    *   **Sphinx Documentation Structure (`docs/`):**
+        *   Created `requirements_docs.txt` with Sphinx and theme dependencies.
+        *   Configured `docs/conf.py` with project info, necessary extensions (autodoc, napoleon, myst_parser, intersphinx, viewcode, typehints), and RTD theme.
+        *   Created main `docs/index.md` with ToC structure for User Guide, Examples, and API Reference.
+        *   Set up `docs/api/` directory with individual `.md` files for each `hero_py` module, using `automodule` directives to generate API docs from docstrings.
+        *   Created placeholder directories: `docs/_static/`, `docs/_templates/`, `docs/tutorials/`, `docs/examples/`.
+    *   **Initial Content:**
+        *   `docs/tutorials/getting_started.md`: Created a tutorial for building and running a simple 2-state Markov model.
+        *   `examples/basic_psm_example.py` and `docs/examples/psm_example.md`: Created a PSM example script and its explanatory documentation page.
+        *   `examples/basic_psa_example.py` and `docs/examples/psa_example.md`: Created a PSA example script and its explanatory documentation page.
+    *   **Project Meta-Documentation:**
+        *   `hero_python_port/README.md`: Updated to include a "Documentation" section pointing to the Sphinx site (once built) and added conceptual usage of new summary/plot methods.
+        *   `PYTHON_PORT_STATUS.md`, `JULES_ACTIVITY_LOG.md` (this file), `ROADMAP_PYTHON.md`: Updated to reflect current progress through Phase 5 and partial Phase 7.
+*   **Key Decisions:**
+    *   Chose Sphinx with `myst_parser` (for Markdown) and `sphinx_rtd_theme` for documentation.
+    *   Structured API documentation by creating individual `.md` files per Python module, all linked from a central API index page.
 ---

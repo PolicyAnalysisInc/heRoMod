@@ -68,7 +68,12 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   **Task 6.4: Value-Based Pricing (VBP):** RECENTLY COMPLETED - Implemented `calculate_value_based_price` function and `VBPResults` class (with summary and plotting methods). Unit tests created.
     *   **Task 6.5: Scenario Analysis features:** COMPLETED.
 
-*   **Phase 7: Documentation, Examples, and Refinement:** **ONGOING** (Basic docstrings and README are in place, major Sphinx docs effort pending).
+*   **Phase 7: Documentation, Examples, and Refinement:** **IN PROGRESS**
+    *   **Task 7.1: Sphinx Documentation Setup:** RECENTLY COMPLETED - Basic Sphinx structure (`conf.py`, `index.md`), API doc stubs (`docs/api/*.md`), and `requirements_docs.txt` created.
+    *   **Task 7.2: Initial Tutorials & Examples:** RECENTLY COMPLETED - Created `docs/tutorials/getting_started.md`, `examples/basic_psm_example.py` (with `docs/examples/psm_example.md`), and `examples/basic_psa_example.py` (with `docs/examples/psa_example.md`).
+    *   Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios: PENDING.
+    *   Task 7.4: Comprehensive user guides (topical): PENDING.
+    *   Task 7.5: Full API reference review and generation: PENDING (stubs are there, actual build and check needed).
 
 *   **Phase 8: Performance Optimization & Advanced C++ Porting:** **PENDING**
 
