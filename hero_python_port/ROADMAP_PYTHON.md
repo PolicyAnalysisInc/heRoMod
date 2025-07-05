@@ -60,9 +60,9 @@ Once the core functionality from `heRomod` is ported and stabilized (as per `PRO
     *   EVPI & EVPPI (initial regression-based): COMPLETED.
     *   Scenario Analysis (parameter-based): COMPLETED.
     *   Value-Based Pricing (VBP - initial implementation): COMPLETED.
-*   **Documentation & Examples (Phase 7):** IN PROGRESS - Initial Sphinx setup, API stubs, getting started tutorial, and detailed examples for all core analyses completed. Topical guides ("Defining Parameters", "Simulation Outputs", "PSA Workflow", "DSA Workflow", "Calibration Workflow") drafted. API docstring enhancements for key modules applied.
+*   **Documentation & Examples (Phase 7):** IN PROGRESS - Initial Sphinx setup, API stubs, getting started tutorial, and detailed examples for all core analyses completed. Topical guides ("Defining Parameters", "Simulation Outputs", "PSA Workflow", "DSA Workflow", "Calibration Workflow", "VoI Guide") drafted. API docstring enhancements for key modules applied.
 *   **Next Up (Phase 6 Continued):** Focus on full individual-level simulation.
-*   **Next Up (Phase 7 Continued):** More topical guides (VoI, VBP, Scenarios, Plotting), full API doc generation and actual build/review, further docstring refinements for all modules.
+*   **Next Up (Phase 7 Continued):** More topical guides (VBP, Scenarios, Plotting), full API doc generation and actual build/review, further docstring refinements for all modules.
 
 ## Contribution and Evolution
 This roadmap is a living document. Contributions are welcome via GitHub issues for the future Python repository.

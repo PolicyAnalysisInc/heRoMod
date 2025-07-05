@@ -72,7 +72,7 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   **Task 7.1: Sphinx Documentation Setup:** COMPLETED.
     *   **Task 7.2: Initial Tutorials & Examples:** COMPLETED.
     *   **Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios:** COMPLETED.
-    *   **Task 7.4: Comprehensive user guides (topical):** IN PROGRESS - Drafted guides: "Defining and Using Parameters", "Understanding and Using SimulationOutput Results", "Probabilistic Sensitivity Analysis (PSA) Workflow", "Deterministic Sensitivity Analysis (DSA) and Tornado Plots", "Model Calibration Workflow".
+    *   **Task 7.4: Comprehensive user guides (topical):** IN PROGRESS - Drafted guides: "Defining and Using Parameters", "Understanding and Using SimulationOutput Results", "Probabilistic Sensitivity Analysis (PSA) Workflow", "Deterministic Sensitivity Analysis (DSA) and Tornado Plots", "Model Calibration Workflow", "Value of Information (EVPI & EVPPI) Explained".
     *   **Task 7.5: Full API reference review and generation:** IN PROGRESS - Docstring enhancements applied to `simulation.py`, `parameters.py`, `sensitivity_analysis.py`. API review for `strategy.py` completed. Actual Sphinx build and full review still pending.
 
 *   **Phase 8: Performance Optimization & Advanced C++ Porting:** **PENDING**
