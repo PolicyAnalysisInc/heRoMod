@@ -196,7 +196,7 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   The first topical guide focuses on parameter definition due to its centrality.
 
 ### Task 7.5 (Continued): API Docstring Enhancements for Key Modules (simulation, parameters, sensitivity_analysis, strategy)
-*   **Date:** (Current Date of this log entry)
+*   **Date:** (Assumed Prior Date)
 *   **Actions Taken:**
     *   Recreated Python source files (`simulation.py`, `parameters.py`, `sensitivity_analysis.py`, `strategy.py`) due to state resets.
     *   Applied specific docstring enhancements to these modules based on earlier simulated API reviews. Improvements included:
@@ -208,10 +208,17 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   Focused on improving clarity and adding examples directly within docstrings for better API reference usability when Sphinx docs are built.
     *   Actual Sphinx build and visual review of rendered docs still pending for full verification across *all* modules.
 
-### Task 7.4 (Continued): Second Topical User Guide
-*   **Date:** (Current Date of this log entry)
+### Task 7.4 (Continued): Second Topical User Guide ("SimulationOutput")
+*   **Date:** (Assumed Prior Date)
 *   **Actions Taken:**
     *   Drafted second topical user guide: `docs/guides/simulation_outputs.md`, explaining the `SimulationOutput` object.
+    *   Updated `docs/index.md` to link this new guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` updated at that time.
+
+### Task 7.4 (Continued): Third Topical User Guide ("PSA Workflow")
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Drafted third topical user guide: `docs/guides/psa_workflow.md`, explaining how to set up, run, and interpret PSA.
     *   Updated `docs/index.md` to link this new guide.
 *   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` (this entry) updated.
 ---
