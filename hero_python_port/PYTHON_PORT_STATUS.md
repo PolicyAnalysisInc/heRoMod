@@ -74,7 +74,7 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   **Task 7.2: Initial Tutorials & Examples:** COMPLETED.
     *   **Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios:** COMPLETED.
     *   **Task 7.4: Comprehensive user guides (topical):** IN PROGRESS - Drafted initial guide "Defining and Using Parameters in `hero_py`".
-    *   **Task 7.5: Full API reference review and generation:** IN PROGRESS - Simulated and reviewed API docs for `simulation.py`, `parameters.py`, `sensitivity_analysis.py`, `strategy.py`. Identified areas for docstring improvements.
+    *   **Task 7.5: Full API reference review and generation:** IN PROGRESS - Simulated API doc review for key modules completed. Docstrings for `simulation.py`, `parameters.py`, and `sensitivity_analysis.py` enhanced with more detail, examples, and clarifications. Actual Sphinx build and full review still pending.
 
 *   **Phase 8: Performance Optimization & Advanced C++ Porting:** **PENDING**
 

@@ -194,4 +194,17 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Key Decisions/Notes:**
     *   The process of simulating Sphinx output for API review is useful for identifying docstring gaps.
     *   The first topical guide focuses on parameter definition due to its centrality.
+
+### Task 7.5 (Continued): API Docstring Enhancements for Key Modules
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Recreated Python source files (`simulation.py`, `parameters.py`, `sensitivity_analysis.py`) due to state resets.
+    *   Applied specific docstring enhancements to these modules based on earlier simulated API reviews. Improvements included:
+        *   More detailed class and function descriptions.
+        *   Clarification of complex parameters (e.g., `value_attributes`, `base_sim_cycle_for_params`).
+        *   Added small inline `Example:` sections to docstrings of key methods in `Parameters` and `SimulationOutput` to illustrate usage and output structure.
+        *   Ensured consistency in documenting parameters, types, and return values.
+*   **Key Decisions/Notes:**
+    *   Focused on improving clarity and adding examples directly within docstrings for better API reference usability.
+    *   Actual Sphinx build and visual review of rendered docs still pending for full verification.
 ---
