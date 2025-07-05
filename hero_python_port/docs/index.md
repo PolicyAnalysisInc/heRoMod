@@ -26,6 +26,7 @@ tutorials/getting_started
 guides/defining_parameters
 guides/simulation_outputs
 guides/psa_workflow
+guides/dsa_workflow
 ```
 *(This is an alternative way to list guides, choose one structure)*
 
