@@ -184,4 +184,14 @@ This log tracks significant actions, decisions, and phase completions undertaken
     *   Updated `hero_python_port/docs/index.md` to include these new examples in the `toctree`.
 *   **Key Decisions:**
     *   Examples aim to be runnable and illustrate core usage of each analysis type with simple models.
+
+### Task 7.4 (Initial) & 7.5 (Partial): Topical Guide & API Review
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   **API Docstring Review (Simulated):** Recreated Python source files due to state resets. Generated textual representations of Sphinx API docs for `simulation.py`, `parameters.py`, `sensitivity_analysis.py`, `strategy.py`. Reviewed and identified areas for docstring improvement.
+    *   **Topical User Guide (Initial Draft):** Created `docs/guides/defining_parameters.md`. Updated `docs/index.md` to link this guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md`, `JULES_ACTIVITY_LOG.md` (this entry), `ROADMAP_PYTHON.md` updated.
+*   **Key Decisions/Notes:**
+    *   The process of simulating Sphinx output for API review is useful for identifying docstring gaps.
+    *   The first topical guide focuses on parameter definition due to its centrality.
 ---

@@ -17,6 +17,17 @@ New to `hero_py`? Start here:
 tutorials/getting_started
 ```
 
+## User Guides (In-Depth Topics)
+
+```{toctree}
+:maxdepth: 2
+:caption: Guides
+
+guides/defining_parameters
+```
+*(This is an alternative way to list guides, choose one structure)*
+
+
 ## Examples
 
 Explore practical applications:

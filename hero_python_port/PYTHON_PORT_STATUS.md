@@ -63,17 +63,18 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
 
 *   **Phase 6: Further Analyses:** **IN PROGRESS**
     *   **Task 6.1: Model Calibration module:** COMPLETED.
+    *   **Task 6.1: Model Calibration module:** COMPLETED.
     *   **Task 6.2: EVPPI/EVPI calculations:** COMPLETED.
     *   Task 6.3: Individual-level simulation (microsimulation): PENDING.
-    *   **Task 6.4: Value-Based Pricing (VBP):** RECENTLY COMPLETED - Implemented `calculate_value_based_price` function and `VBPResults` class (with summary and plotting methods). Unit tests created.
+    *   **Task 6.4: Value-Based Pricing (VBP):** COMPLETED.
     *   **Task 6.5: Scenario Analysis features:** COMPLETED.
 
 *   **Phase 7: Documentation, Examples, and Refinement:** **IN PROGRESS**
-    *   **Task 7.1: Sphinx Documentation Setup:** COMPLETED - Basic Sphinx structure (`conf.py`, `index.md`), API doc stubs (`docs/api/*.md`), and `requirements_docs.txt` created.
-    *   **Task 7.2: Initial Tutorials & Examples:** COMPLETED - Created `docs/tutorials/getting_started.md`, `examples/basic_psm_example.py` (with `docs/examples/psm_example.md`), and `examples/basic_psa_example.py` (with `docs/examples/psa_example.md`).
-    *   **Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios:** RECENTLY COMPLETED - Created example scripts and corresponding documentation pages for DSA, Calibration, VoI (EVPI/EVPPI), VBP, and Scenario Analysis.
-    *   Task 7.4: Comprehensive user guides (topical): PENDING.
-    *   Task 7.5: Full API reference review and generation: PENDING (stubs are there, actual build and check needed).
+    *   **Task 7.1: Sphinx Documentation Setup:** COMPLETED.
+    *   **Task 7.2: Initial Tutorials & Examples:** COMPLETED.
+    *   **Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios:** COMPLETED.
+    *   **Task 7.4: Comprehensive user guides (topical):** IN PROGRESS - Drafted initial guide "Defining and Using Parameters in `hero_py`".
+    *   **Task 7.5: Full API reference review and generation:** IN PROGRESS - Simulated and reviewed API docs for `simulation.py`, `parameters.py`, `sensitivity_analysis.py`, `strategy.py`. Identified areas for docstring improvements.
 
 *   **Phase 8: Performance Optimization & Advanced C++ Porting:** **PENDING**
 
