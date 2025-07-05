@@ -29,6 +29,7 @@ guides/psa_workflow
 guides/dsa_workflow
 guides/calibration_workflow
 guides/voi_guide
+guides/vbp_guide
 ```
 *(This is an alternative way to list guides, choose one structure)*
 

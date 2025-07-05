@@ -241,5 +241,12 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Actions Taken:**
     *   Drafted sixth topical user guide: `docs/guides/voi_guide.md`, explaining how to set up, run, and interpret EVPI and EVPPI analyses.
     *   Updated `docs/index.md` to link this new guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` updated at that time.
+
+### Task 7.4 (Continued): Seventh Topical User Guide ("VBP Guide")
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Drafted seventh topical user guide: `docs/guides/vbp_guide.md`, explaining how to set up, run, and interpret Value-Based Pricing analyses.
+    *   Updated `docs/index.md` to link this new guide.
 *   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` (this entry) updated.
 ---
