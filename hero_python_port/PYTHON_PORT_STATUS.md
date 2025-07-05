@@ -69,9 +69,9 @@ See [ROADMAP_PYTHON.md](ROADMAP_PYTHON.md) for the long-term vision and developm
     *   **Task 6.5: Scenario Analysis features:** COMPLETED.
 
 *   **Phase 7: Documentation, Examples, and Refinement:** **IN PROGRESS**
-    *   **Task 7.1: Sphinx Documentation Setup:** RECENTLY COMPLETED - Basic Sphinx structure (`conf.py`, `index.md`), API doc stubs (`docs/api/*.md`), and `requirements_docs.txt` created.
-    *   **Task 7.2: Initial Tutorials & Examples:** RECENTLY COMPLETED - Created `docs/tutorials/getting_started.md`, `examples/basic_psm_example.py` (with `docs/examples/psm_example.md`), and `examples/basic_psa_example.py` (with `docs/examples/psa_example.md`).
-    *   Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios: PENDING.
+    *   **Task 7.1: Sphinx Documentation Setup:** COMPLETED - Basic Sphinx structure (`conf.py`, `index.md`), API doc stubs (`docs/api/*.md`), and `requirements_docs.txt` created.
+    *   **Task 7.2: Initial Tutorials & Examples:** COMPLETED - Created `docs/tutorials/getting_started.md`, `examples/basic_psm_example.py` (with `docs/examples/psm_example.md`), and `examples/basic_psa_example.py` (with `docs/examples/psa_example.md`).
+    *   **Task 7.3: Further detailed examples for DSA, Calibration, VoI, VBP, Scenarios:** RECENTLY COMPLETED - Created example scripts and corresponding documentation pages for DSA, Calibration, VoI (EVPI/EVPPI), VBP, and Scenario Analysis.
     *   Task 7.4: Comprehensive user guides (topical): PENDING.
     *   Task 7.5: Full API reference review and generation: PENDING (stubs are there, actual build and check needed).
 

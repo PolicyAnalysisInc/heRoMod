@@ -59,7 +59,8 @@ Once the core functionality from `heRomod` is ported and stabilized (as per `PRO
     *   Model Calibration: COMPLETED.
     *   EVPI & EVPPI (initial regression-based): COMPLETED.
     *   Scenario Analysis (parameter-based): COMPLETED.
-    *   Value-Based Pricing (VBP - initial implementation): RECENTLY COMPLETED.
+    *   Value-Based Pricing (VBP - initial implementation): COMPLETED.
+*   **Documentation & Examples (Phase 7):** Initial Sphinx setup, API stubs, getting started tutorial, and detailed examples for core analyses (PSM, PSA, DSA, Calibration, VoI, VBP, Scenario Analysis) are RECENTLY COMPLETED. Further user guides and API refinement are ongoing/next.
 *   **Next Up (Phase 6 Continued):** Focus on full individual-level simulation. Enhancements to EVPPI (e.g., GAMs) and other analysis modules could also be considered.
 
 ## Contribution and Evolution

@@ -27,8 +27,13 @@ Explore practical applications:
 
 examples/psm_example
 examples/psa_example
+examples/dsa_example
+examples/calibration_example
+examples/voi_example
+examples/vbp_example
+examples/scenario_analysis_example
 ```
-*(Note: These example files `psm_example.md` and `psa_example.md` will be created in later steps of this plan).*
+*(Note: The example files `psm_example.md`, `psa_example.md`, `dsa_example.md`, `calibration_example.md`, `voi_example.md`, `vbp_example.md`, and `scenario_analysis_example.md` will be created based on their corresponding Python scripts).*
 
 ## API Reference
 

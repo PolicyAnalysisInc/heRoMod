@@ -170,4 +170,18 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Key Decisions:**
     *   Chose Sphinx with `myst_parser` (for Markdown) and `sphinx_rtd_theme` for documentation.
     *   Structured API documentation by creating individual `.md` files per Python module, all linked from a central API index page.
+
+### Task 7.3: Creation of Detailed Examples
+*   **Date:** (Current Date of this log entry)
+*   **Features Implemented/Actions Taken:**
+    *   Created example Python scripts in `hero_python_port/examples/` for:
+        *   Deterministic Sensitivity Analysis (`dsa_example.py`)
+        *   Model Calibration (`calibration_example.py`)
+        *   Value of Information - EVPI & EVPPI (`voi_example.py`)
+        *   Value-Based Pricing (`vbp_example.py`)
+        *   Scenario Analysis (`scenario_analysis_example.py`)
+    *   Created corresponding Markdown documentation pages in `hero_python_port/docs/examples/` for each script, explaining the example and embedding code snippets.
+    *   Updated `hero_python_port/docs/index.md` to include these new examples in the `toctree`.
+*   **Key Decisions:**
+    *   Examples aim to be runnable and illustrate core usage of each analysis type with simple models.
 ---
