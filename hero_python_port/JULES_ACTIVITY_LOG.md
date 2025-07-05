@@ -223,9 +223,16 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` updated at that time.
 
 ### Task 7.4 (Continued): Fourth Topical User Guide ("DSA Workflow")
-*   **Date:** (Current Date of this log entry)
+*   **Date:** (Assumed Prior Date)
 *   **Actions Taken:**
     *   Drafted fourth topical user guide: `docs/guides/dsa_workflow.md`, explaining how to set up, run, interpret DSA, and generate tornado plots.
+    *   Updated `docs/index.md` to link this new guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` updated at that time.
+
+### Task 7.4 (Continued): Fifth Topical User Guide ("Calibration Workflow")
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Drafted fifth topical user guide: `docs/guides/calibration_workflow.md`, explaining how to set up, run, and interpret model calibration.
     *   Updated `docs/index.md` to link this new guide.
 *   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` (this entry) updated.
 ---
