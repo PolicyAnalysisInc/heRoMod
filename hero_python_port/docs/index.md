@@ -30,6 +30,7 @@ guides/dsa_workflow
 guides/calibration_workflow
 guides/voi_guide
 guides/vbp_guide
+guides/scenario_analysis_guide
 ```
 *(This is an alternative way to list guides, choose one structure)*
 
