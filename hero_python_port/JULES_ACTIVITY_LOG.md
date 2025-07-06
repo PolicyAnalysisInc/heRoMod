@@ -255,5 +255,12 @@ This log tracks significant actions, decisions, and phase completions undertaken
 *   **Actions Taken:**
     *   Drafted eighth topical user guide: `docs/guides/scenario_analysis_guide.md`, explaining how to set up, run, and interpret Scenario Analysis.
     *   Updated `docs/index.md` to link this new guide.
+*   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` updated at that time.
+
+### Task 7.4 (Continued): Ninth Topical User Guide ("Model Types Comparison")
+*   **Date:** (Current Date of this log entry)
+*   **Actions Taken:**
+    *   Drafted ninth topical user guide: `docs/guides/model_types_comparison.md`, explaining and comparing cohort-based Markov models and Partitioned Survival Models (PSMs) in `hero_py`.
+    *   Updated `docs/index.md` to link this new guide.
 *   **Docs Updated:** `PYTHON_PORT_STATUS.md` and `JULES_ACTIVITY_LOG.md` (this entry) updated.
 ---

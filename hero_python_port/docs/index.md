@@ -31,6 +31,7 @@ guides/calibration_workflow
 guides/voi_guide
 guides/vbp_guide
 guides/scenario_analysis_guide
+guides/model_types_comparison
 ```
 *(This is an alternative way to list guides, choose one structure)*
 
