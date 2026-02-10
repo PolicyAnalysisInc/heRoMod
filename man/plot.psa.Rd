@@ -7,7 +7,7 @@
 \method{plot}{psa}(
   x,
   type = c("ce", "ac", "cov", "evpi"),
-  max_wtp = 1e+05,
+  max_wtp = 100000,
   n = 100,
   log_scale = TRUE,
   diff = FALSE,

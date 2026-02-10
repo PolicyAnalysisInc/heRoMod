@@ -1357,6 +1357,17 @@ run_markdown <- function(...) {
   try(dots$progress_reporter$report_progress(1L))
   render(rmd_filename, envir = eval_env)
   try(dots$progress_reporter$report_progress(1L))
+
+  # Remove promoted title from frontmatter to prevent duplicate heading.
+  html_content <- paste(readLines(html_filename), collapse = "\n")
+  html_content <- sub(
+    '(?s)\\s*<div class="frontmatter">.*?(?=<div class="body">)',
+    '',
+    html_content,
+    perl = TRUE
+  )
+  writeLines(html_content, html_filename)
+
   file.remove(r_filename)
   file.remove(rmd_filename)
   if (!is.null(dots$.manifest)) {

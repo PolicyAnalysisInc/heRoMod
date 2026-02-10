@@ -72,13 +72,18 @@ discount <- function(x, r, first = FALSE, time = seq_along(x)) {
 #' @return A modified state object.
 #'   
 #' @keywords internal
+standardise_call <- function(call, env = parent.frame()) {
+  f <- eval(call[[1]], env)
+  match.call(f, call)
+}
+
 discount_hack <- function(.dots, method = "start") {
   f <- function (x, env) {
     if (is.atomic(x) || is.name(x)) {
       x
     } else if (is.call(x)) {
       if (discount_check(x[[1]], env)) {
-        x <- pryr::standardise_call(x)
+        x <- standardise_call(x)
         if (method == "start") offset <- 1
         else if (method == "end") offset <- 0
         else if (method == 'midpoint') offset <- 0.5

@@ -18,7 +18,7 @@ define_part_surv_(pfs, os, state_names, cycle_length = 1)
 \arguments{
 \item{pfs, os}{Either results from
 \code{\link[flexsurv:flexsurvreg]{flexsurv::flexsurvreg()}} or
-\code{\link[=define_survival]{define_survival()}}.}
+\code{\link[herosurv:define_surv_param]{herosurv::define_survival()}}.}
 
 \item{state_names}{named character vector, length 3 or 4.
 State names for progression-free state, progression,

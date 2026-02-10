@@ -68,8 +68,6 @@
 #' @importFrom lazyeval lazy_eval
 #' @importFrom lazyeval interp
 #'   
-#' @importFrom pryr standardise_call
-#'   
 #' @importFrom utils head
 #' @importFrom utils modifyList
 #' @importFrom utils globalVariables

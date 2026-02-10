@@ -187,7 +187,7 @@ dispatch_strategy_hack <- function(.dots) {
       x
     } else if (is.call(x)) {
       if (dispatch_strategy_check(x[[1]], env)) {
-        x <- pryr::standardise_call(x)
+        x <- standardise_call(x)
         if (is.null(x$.strategy)) {
           x$.strategy <- substitute(strategy)
         }
@@ -240,7 +240,7 @@ by_group_hack <- function(.dots) {
       x
     } else if (is.call(x)) {
       if (by_group_check(x[[1]], env)) {
-        x <- pryr::standardise_call(x)
+        x <- standardise_call(x)
         if (is.null(x$.group)) {
           x$.group <- substitute(group)
         }
@@ -309,7 +309,7 @@ dispatch_strategy_substitute <- function(.dots, strategy) {
       x
     } else if (is.call(x)) {
       if (heRomod:::dispatch_strategy_check(x[[1]], env)) {
-        x <- pryr::standardise_call(x)
+        x <- standardise_call(x)
         stratNames <- names(x)
         x <- x[[which(names(x) == strategy)]]
         f(x)

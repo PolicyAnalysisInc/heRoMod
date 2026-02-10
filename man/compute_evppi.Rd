@@ -4,7 +4,7 @@
 \alias{compute_evppi}
 \title{Compute Expected Value of partial Perfect Information (EVPPI)}
 \usage{
-compute_evppi(x, evppi, max_wtp = 1e+05, n = 10, verbose = TRUE)
+compute_evppi(x, evppi, max_wtp = 100000, n = 10, verbose = TRUE)
 }
 \arguments{
 \item{x}{Result from \code{\link[=run_psa]{run_psa()}}.}

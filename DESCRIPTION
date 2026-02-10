@@ -28,7 +28,6 @@ Imports:
     memoise (>= 1.1.0),
     mvnfast (>= 0.2.2),
     plyr (>= 1.8.0),
-    pryr (>= 0.1.2),
     matrixStats,
     msm,
     reshape2,
@@ -66,7 +65,7 @@ Imports:
 License: GPL (>= 3)
 LazyData: true
 VignetteBuilder: knitr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 URL: https://github.com/PolicyAnalysisInc/heRoMod
 BugReports: https://github.com/PolicyAnalysisInc/heRoMod/issues
 Roxygen: list(markdown = TRUE)
